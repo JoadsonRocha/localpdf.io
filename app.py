@@ -108,17 +108,19 @@ HTML_TEMPLATE = """
         .file-thumb { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; border: 1px solid #e2e8f0; background: #f1f5f9; flex-shrink: 0; display: block; }
         .file-thumb-placeholder { width: 38px; height: 38px; border-radius: 6px; background: linear-gradient(90deg, #f0f2f5 25%, #e8ecf0 50%, #f0f2f5 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.4s infinite linear; flex-shrink: 0; }
 
-        /* ── Skeleton loading ────────────────────────────────────── */
+        /* ── Skeleton loading & fade-in for home grid cards ──────── */
         @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .tool-card.skeleton-card { pointer-events: none; }
-        .tool-card.skeleton-card .tool-icon, .tool-card.skeleton-card h3, .tool-card.skeleton-card p {
+        .tools-grid .tool-card.skeleton-card { pointer-events: none; }
+        .tools-grid .tool-card.skeleton-card .tool-icon,
+        .tools-grid .tool-card.skeleton-card h3,
+        .tools-grid .tool-card.skeleton-card p {
             background: linear-gradient(90deg, #f0f2f5 25%, #e8ecf0 50%, #f0f2f5 75%);
             background-size: 200% 100%; animation: skeleton-shimmer 1.4s infinite linear;
             border-radius: 6px; color: transparent !important;
         }
-        .tool-card { opacity: 0; transform: translateY(8px); transition: opacity 0.35s ease, transform 0.35s ease; }
-        .tool-card.card-visible { opacity: 1; transform: translateY(0); }
-        .tool-card.card-hidden { opacity: 0 !important; display: none !important; }
+        .tools-grid .tool-card { opacity: 0; transform: translateY(8px); transition: opacity 0.35s ease, transform 0.35s ease; }
+        .tools-grid .tool-card.card-visible { opacity: 1; transform: translateY(0); }
+        .tools-grid .tool-card.card-hidden { opacity: 0 !important; display: none !important; }
 
         .result-card { margin-top: 24px; padding: 22px; border-radius: 12px; text-align: left; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -192,18 +194,173 @@ HTML_TEMPLATE = """
         .category-tab:hover { border-color: #93c5fd; color: #1d4ed8; background: #eff6ff; }
         .category-tab.active { background: #2563eb; color: #fff; border-color: #2563eb; box-shadow: 0 4px 12px rgba(37,99,235,0.22); }
         .tools-grid { grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 14px; margin-bottom: 58px; }
-        .tool-card { border: 1px solid #e3e5e8; border-radius: 10px; padding: 22px; text-align: left; box-shadow: 0 5px 18px rgba(36,39,43,0.04); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: flex-start; }
-        .tool-card { position: relative; overflow: hidden; min-height: 142px; background: rgba(255,255,255,0.96); }
-        .tool-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: #dbeafe; transition: background 0.2s ease; }
-        .tool-card:hover { transform: translateY(-3px); border-color: #93c5fd; box-shadow: 0 12px 28px rgba(37,99,235,0.12); }
-        .tool-card:hover::before { background: #2563eb; }
-        .tool-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; flex-shrink: 0; }
-        .tool-card:hover .tool-icon { transform: scale(1.08); }
-        .tool-icon svg { width: 22px; height: 22px; display: block; }
+        .tools-grid .tool-card {
+            border: 1px solid #e3e5e8;
+            border-radius: 10px;
+            padding: 22px;
+            text-align: left;
+            box-shadow: 0 5px 18px rgba(36,39,43,0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+            min-height: 142px;
+            background: rgba(255,255,255,0.96);
+            cursor: pointer;
+        }
+        .tools-grid .tool-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: #dbeafe; transition: background 0.2s ease; }
+        .tools-grid .tool-card:hover { transform: translateY(-3px); border-color: #93c5fd; box-shadow: 0 12px 28px rgba(37,99,235,0.12); }
+        .tools-grid .tool-card:hover::before { background: #2563eb; }
+        .tools-grid .tool-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; flex-shrink: 0; }
+        .tools-grid .tool-card:hover .tool-icon { transform: scale(1.08); }
+        .tools-grid .tool-icon svg { width: 22px; height: 22px; display: block; }
         .card-hidden-filter { display: none !important; }
-        .tool-card h3 { color: #24272b; font-size: 1.05rem; margin-bottom: 8px; }
-        .tool-card p { color: #747980; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0; }
+        .tools-grid .tool-card h3 { color: #24272b; font-size: 1.05rem; margin-bottom: 8px; font-family: Georgia, "Times New Roman", serif; }
+        .tools-grid .tool-card p { color: #747980; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0; }
         .tools-grid .tool-card:last-child { border-color: #2563eb; box-shadow: 0 8px 24px rgba(37,99,235,0.14); }
+
+        /* ── Active Tool View & Editor Workspaces ───────────────── */
+        #tool-views, #editor-view {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 8px 0 44px;
+        }
+        #tool-views .tool-card,
+        #editor-view .tool-card {
+            opacity: 1 !important;
+            transform: none !important;
+            cursor: default !important;
+            display: block !important;
+            text-align: center;
+            background: #ffffff;
+            border: 1px solid #e3e5e8;
+            border-radius: 16px;
+            padding: 38px 32px;
+            box-shadow: 0 8px 30px rgba(36, 39, 43, 0.06);
+            min-height: auto;
+            overflow: visible;
+        }
+        #tool-views .tool-card::before,
+        #editor-view .tool-card::before {
+            display: none !important;
+        }
+        #tool-views .tool-card:hover,
+        #editor-view .tool-card:hover {
+            transform: none !important;
+            box-shadow: 0 8px 30px rgba(36, 39, 43, 0.06) !important;
+            border-color: #e3e5e8 !important;
+        }
+        #tool-views .tool-card h3,
+        #editor-view .tool-card h3 {
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+        #tool-views .tool-card p#tool-description,
+        #editor-view .tool-card > p {
+            font-size: 0.96rem;
+            color: #64748b;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        #tool-views .upload-area,
+        #editor-view .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 38px 20px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 18px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        #tool-views .upload-area:hover,
+        #editor-view .upload-area:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        #tool-views .upload-area p,
+        #editor-view .upload-area p {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+        #tool-views .upload-btn,
+        #editor-view .upload-btn {
+            background: #2563eb;
+            color: white;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 999px;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+            font-family: inherit;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.2);
+        }
+        #tool-views .upload-btn:hover,
+        #editor-view .upload-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .convert-btn {
+            background: #2563eb;
+            color: white;
+            padding: 12px 36px;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-top: 20px;
+            transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+            font-family: inherit;
+        }
+        .convert-btn:hover:not(:disabled) {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(37,99,235,0.32);
+        }
+        .convert-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .back-btn {
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 8px 18px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.88rem;
+            font-family: inherit;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+        .back-btn:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+            border-color: #94a3b8;
+        }
         .footer { color: #747980; border-top: 1px solid #e3e5e8; padding-top: 40px; margin-top: 48px; }
         .footer a { color: #2563eb; }
         .footer .social-icons a { color: #747980; }
