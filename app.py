@@ -397,7 +397,8 @@ HTML_TEMPLATE = """
         .upload-area p:first-child { color: #3f4b5a; font-weight: 600; }
         .upload-btn, .convert-btn { border-radius: 9px; font-weight: 700; box-shadow: 0 5px 12px rgba(37,99,235,0.18); }
         .upload-btn:focus-visible, .convert-btn:focus-visible, .back-btn:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
-        .back-btn { background: #334155; border-radius: 9px; font-weight: 700; }
+        .back-btn { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; border-radius: 999px; font-weight: 600; padding: 8px 18px; font-size: 0.88rem; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); margin-bottom: 20px; }
+        .back-btn:hover { background: #f1f5f9; color: #1e293b; border-color: #94a3b8; }
         .result, .error { border: 1px solid rgba(37,99,235,0.12); box-shadow: 0 8px 20px rgba(36,39,43,0.05); }
         .file-item { border: 1px solid #e5e7eb; background: #fff; }
         .editor-page, .editor-insert-panel { box-shadow: 0 8px 20px rgba(36,39,43,0.06); }
@@ -415,7 +416,8 @@ HTML_TEMPLATE = """
             .category-tabs::-webkit-scrollbar { display: none; }
             .category-tab { flex: 0 0 auto; font-size: 0.78rem; padding: 6px 12px; }
             .tools-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 38px; }
-            .tool-card { padding: 18px; }
+            .tools-grid .tool-card { padding: 18px; }
+            #tool-views .tool-card, #editor-view .tool-card { padding: 24px 16px; }
             .editor-shell { padding: 12px; }
             .editor-toolbar { gap: 8px; }
             .editor-toolbar button, .editor-actions button { flex: 1 1 100%; min-height: 42px; }
@@ -447,22 +449,22 @@ HTML_TEMPLATE = """
     <div id="toast-container"></div>
     <div class="container">
         <nav class="site-nav">
-            <a class="site-brand" href="#" onclick="showHome(); return false;">local<span>pdf</span><small>.io</small></a>
+            <a class="site-brand" href="/" onclick="showHome(); return false;">local<span>pdf</span><small>.io</small></a>
             <div class="site-nav-links">
-                <a href="#tools">Juntar PDF</a>
-                <a href="#tools">Dividir PDF</a>
-                <a href="#tools">Comprimir PDF</a>
-                <a href="#tools">Converter PDF</a>
-                <a href="#tools">Todas as ferramentas</a>
+                <a href="/tool/merge-pdf" onclick="showTool('merge-pdf'); return false;">Juntar PDF</a>
+                <a href="/tool/split-pdf" onclick="showTool('split-pdf'); return false;">Dividir PDF</a>
+                <a href="/tool/compress-pdf" onclick="showTool('compress-pdf'); return false;">Comprimir PDF</a>
+                <a href="/tool/pdf-to-word" onclick="showTool('pdf-to-word'); return false;">Converter PDF</a>
+                <a href="/" onclick="showHome(); return false;">Todas as ferramentas</a>
                 <button id="language-toggle" class="language-toggle" type="button" onclick="toggleLanguage()">EN</button>
             </div>
         </nav>
-        <div class="header">
-            <h1>Trabalhe com seus PDFs sem complicação</h1>
-            <p>Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.</p>
-        </div>
 
         <div id="home-view">
+            <div class="header">
+                <h1>Trabalhe com seus PDFs sem complicação</h1>
+                <p>Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.</p>
+            </div>
             <div id="tools" class="category-tabs" role="tablist" aria-label="Categorias de ferramentas">
                 <button type="button" class="category-tab active" data-category="all" onclick="filterCategory('all', this)" role="tab" aria-selected="true">Todas</button>
                 <button type="button" class="category-tab" data-category="organizar" onclick="filterCategory('organizar', this)" role="tab" aria-selected="false">Organizar PDF</button>
@@ -471,112 +473,112 @@ HTML_TEMPLATE = """
                 <button type="button" class="category-tab" data-category="ocr" onclick="filterCategory('ocr', this)" role="tab" aria-selected="false">OCR</button>
             </div>
             <div class="tools-grid">
-                <a class="tool-card" href="/tool/pdf-to-images" target="_blank" rel="noopener noreferrer" data-category="converter">
+                <a class="tool-card" href="/tool/pdf-to-images" onclick="showTool('pdf-to-images'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #eff6ff; color: #2563eb;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="1.5"/><path d="m8 18 3-3 2 2 3-4 2 2"/></svg>
                     </div>
                     <h3>PDF para Imagens</h3>
                     <p>Converta páginas PDF em imagens JPG ou PNG</p>
                 </a>
-                <a class="tool-card" href="/tool/images-to-pdf" target="_blank" rel="noopener noreferrer" data-category="converter">
+                <a class="tool-card" href="/tool/images-to-pdf" onclick="showTool('images-to-pdf'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #f0fdf4; color: #16a34a;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
                     </div>
                     <h3>Imagens para PDF</h3>
                     <p>Combine várias imagens em um único PDF</p>
                 </a>
-                <a class="tool-card" href="/tool/merge-pdf" target="_blank" rel="noopener noreferrer" data-category="organizar">
+                <a class="tool-card" href="/tool/merge-pdf" onclick="showTool('merge-pdf'); return false;" data-category="organizar">
                     <div class="tool-icon" style="background: #fef2f2; color: #dc2626;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4"/><path d="M16 2h4a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-4"/><path d="M12 7v10"/><path d="m9 10 3-3 3 3"/><path d="m9 14 3 3 3-3"/></svg>
                     </div>
                     <h3>Mesclar PDFs</h3>
                     <p>Combine vários PDFs em um documento único</p>
                 </a>
-                <a class="tool-card" href="/tool/split-pdf" target="_blank" rel="noopener noreferrer" data-category="organizar">
+                <a class="tool-card" href="/tool/split-pdf" onclick="showTool('split-pdf'); return false;" data-category="organizar">
                     <div class="tool-icon" style="background: #f5f3ff; color: #7c3aed;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
                     </div>
                     <h3>Dividir PDF</h3>
                     <p>Extraia páginas específicas do seu PDF</p>
                 </a>
-                <a class="tool-card" href="/tool/compress-pdf" target="_blank" rel="noopener noreferrer" data-category="otimizar">
+                <a class="tool-card" href="/tool/compress-pdf" onclick="showTool('compress-pdf'); return false;" data-category="otimizar">
                     <div class="tool-icon" style="background: #ecfdf5; color: #059669;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6m0 0v6m0-6L3 21"/><path d="M20 10h-6m0 0V4m0 6 7-7"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
                     </div>
                     <h3>Comprimir PDF</h3>
                     <p>Reduza o tamanho do seu arquivo PDF</p>
                 </a>
-                <a class="tool-card" href="/tool/protect-pdf" target="_blank" rel="noopener noreferrer" data-category="organizar">
+                <a class="tool-card" href="/tool/protect-pdf" onclick="showTool('protect-pdf'); return false;" data-category="organizar">
                     <div class="tool-icon" style="background: #fffbeb; color: #d97706;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1.5"/></svg>
                     </div>
                     <h3>Proteger PDF</h3>
                     <p>Adicione uma senha local ao seu documento PDF</p>
                 </a>
-                <a class="tool-card" href="/tool/watermark-pdf" target="_blank" rel="noopener noreferrer" data-category="organizar">
+                <a class="tool-card" href="/tool/watermark-pdf" onclick="showTool('watermark-pdf'); return false;" data-category="organizar">
                     <div class="tool-icon" style="background: #f0f9ff; color: #0284c7;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/><path d="M12 12a3 3 0 0 0 3-3"/></svg>
                     </div>
                     <h3>Marca d'água</h3>
                     <p>Adicione uma marca d'água de texto ao PDF</p>
                 </a>
-                <a class="tool-card" href="/tool/page-numbers-pdf" target="_blank" rel="noopener noreferrer" data-category="organizar">
+                <a class="tool-card" href="/tool/page-numbers-pdf" onclick="showTool('page-numbers-pdf'); return false;" data-category="organizar">
                     <div class="tool-icon" style="background: #f0fdfa; color: #0d9488;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h2v6m-2 0h4"/></svg>
                     </div>
                     <h3>Números de página</h3>
                     <p>Numere as páginas do documento localmente</p>
                 </a>
-                <a class="tool-card" href="/tool/pdf-to-pdfa" target="_blank" rel="noopener noreferrer" data-category="otimizar">
+                <a class="tool-card" href="/tool/pdf-to-pdfa" onclick="showTool('pdf-to-pdfa'); return false;" data-category="otimizar">
                     <div class="tool-icon" style="background: #f8fafc; color: #475569;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
                     </div>
                     <h3>PDF para PDF/A</h3>
                     <p>Padronize seu PDF para arquivamento (PDF/A)</p>
                 </a>
-                <a class="tool-card" href="/tool/word-to-pdf" target="_blank" rel="noopener noreferrer" data-category="converter">
+                <a class="tool-card" href="/tool/word-to-pdf" onclick="showTool('word-to-pdf'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #eff6ff; color: #1d4ed8;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13l1.5 5 2-4 2 4 1.5-5"/></svg>
                     </div>
                     <h3>Word para PDF</h3>
                     <p>Converta um ou mais documentos DOCX para PDF</p>
                 </a>
-                <a class="tool-card" href="/tool/excel-to-pdf" target="_blank" rel="noopener noreferrer" data-category="converter">
+                <a class="tool-card" href="/tool/excel-to-pdf" onclick="showTool('excel-to-pdf'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #f0fdf4; color: #15803d;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><rect x="8" y="12" width="8" height="6"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="12" y1="12" x2="12" y2="18"/></svg>
                     </div>
                     <h3>Excel para PDF</h3>
                     <p>Converta planilhas XLSX para PDF</p>
                 </a>
-                <a class="tool-card" href="/tool/txt-to-pdf" target="_blank" rel="noopener noreferrer" data-category="converter">
+                <a class="tool-card" href="/tool/txt-to-pdf" onclick="showTool('txt-to-pdf'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #f1f5f9; color: #475569;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
                     </div>
                     <h3>TXT para PDF</h3>
                     <p>Converta arquivos de texto simples para PDF</p>
                 </a>
-                <a class="tool-card" href="/tool/pdf-to-word" target="_blank" rel="noopener noreferrer" data-category="converter">
+                <a class="tool-card" href="/tool/pdf-to-word" onclick="showTool('pdf-to-word'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #eff6ff; color: #2563eb;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 12h8m-8 4h5"/></svg>
                     </div>
                     <h3>PDF para Word</h3>
                     <p>Converta documentos PDF para Word (.docx) editável</p>
                 </a>
-                <a class="tool-card" href="/tool/pdf-to-text" target="_blank" rel="noopener noreferrer" data-category="converter">
+                <a class="tool-card" href="/tool/pdf-to-text" onclick="showTool('pdf-to-text'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #fdf4ff; color: #a21caf;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
                     </div>
                     <h3>PDF para Texto</h3>
                     <p>Extraia o texto do PDF para um arquivo TXT editável</p>
                 </a>
-                <a class="tool-card" href="/tool/ocr-pdf" target="_blank" rel="noopener noreferrer" data-category="ocr">
+                <a class="tool-card" href="/tool/ocr-pdf" onclick="showTool('ocr-pdf'); return false;" data-category="ocr">
                     <div class="tool-icon" style="background: #faf5ff; color: #9333ea;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="3" y1="12" x2="21" y2="12" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="3"/></svg>
                     </div>
                     <h3>OCR em PDF</h3>
                     <p>Extraia texto de PDFs e imagens escaneadas com OCR</p>
                 </a>
-                <a class="tool-card" href="/editor" target="_blank" rel="noopener noreferrer" data-category="organizar">
+                <a class="tool-card" href="/editor" onclick="showEditor(); return false;" data-category="organizar">
                     <div class="tool-icon" style="background: #fff1f2; color: #e11d48;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </div>
@@ -1019,6 +1021,10 @@ HTML_TEMPLATE = """
             hideResult();
 
             document.title = `${rawTitle} - LocalPDF.io`;
+            if (window.location.pathname !== `/tool/${toolName}`) {
+                history.pushState(null, '', `/tool/${toolName}`);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function renderToolOptions(optionType) {
@@ -1064,6 +1070,7 @@ HTML_TEMPLATE = """
         }
 
         function showHome() {
+            currentTool = null;
             document.getElementById('home-view').classList.remove('hidden');
             document.getElementById('tool-views').classList.add('hidden');
             const editorView = document.getElementById('editor-view');
@@ -1073,6 +1080,7 @@ HTML_TEMPLATE = """
             if (window.location.pathname !== '/') {
                 history.pushState(null, '', '/');
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         async function updateFileList() {
@@ -1463,14 +1471,20 @@ HTML_TEMPLATE = """
         let editorPendingFiles = [];
 
         function showEditor() {
+            currentTool = 'edit-pdf';
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('tool-views').classList.add('hidden');
             document.getElementById('editor-view').classList.remove('hidden');
             resetEditor();
             document.title = (currentLanguage === 'en' ? 'Edit PDF' : 'Editar PDF') + ' - LocalPDF.io';
+            if (window.location.pathname !== '/editor') {
+                history.pushState(null, '', '/editor');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function showHomeFromEditor() {
+            currentTool = null;
             document.getElementById('editor-view').classList.add('hidden');
             document.getElementById('tool-views').classList.add('hidden');
             document.getElementById('home-view').classList.remove('hidden');
@@ -1479,6 +1493,7 @@ HTML_TEMPLATE = """
             if (window.location.pathname !== '/') {
                 history.pushState(null, '', '/');
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetEditor() {
@@ -1795,6 +1810,18 @@ HTML_TEMPLATE = """
                 showTool(initialToolFromRoute);
             }
         }
+
+        window.addEventListener('popstate', () => {
+            const path = window.location.pathname.replace(/^[/]+|[/]+$/g, '');
+            if (!path) {
+                showHome();
+            } else if (path === 'editor' || path === 'tool/edit-pdf') {
+                showEditor();
+            } else if (path.startsWith('tool/')) {
+                const name = path.replace('tool/', '');
+                if (tools[name]) showTool(name);
+            }
+        });
     </script>
 </body>
 </html>
