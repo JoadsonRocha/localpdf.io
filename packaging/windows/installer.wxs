@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="LocalPDF.io" Manufacturer="LocalPDF.io" Version="1.0.0.0" UpgradeCode="7D4DBA9E-93FE-4E42-A2B5-4A1E0B16A8B1">
+  <Package Name="LocalPDF.io"
+           Manufacturer="LocalPDF.io"
+           Version="1.0.0.0"
+           UpgradeCode="7D4DBA9E-93FE-4E42-A2B5-4A1E0B16A8B1"
+           Scope="perMachine">
     <MajorUpgrade DowngradeErrorMessage="A newer version of LocalPDF.io is already installed." />
     <MediaTemplate EmbedCab="yes" />
+
+    <!-- Application Icon and Add/Remove Programs Properties -->
+    <Icon Id="AppIcon" SourceFile="packaging\windows\icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/virgiliojr94/localpdf.io" />
+    <Property Id="ARPURLINFOABOUT" Value="https://localpdf.io" />
+    <Property Id="ARPNOREPAIR" Value="1" />
 
     <Feature Id="MainFeature" Title="LocalPDF.io" Level="1">
       <ComponentGroupRef Id="AppFiles" />
@@ -18,9 +29,18 @@
     </StandardDirectory>
 
     <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder">
-      <Shortcut Id="StartMenuShortcut" Name="LocalPDF.io" Target="[INSTALLFOLDER]LocalPDF.exe" WorkingDirectory="INSTALLFOLDER" />
+      <Shortcut Id="StartMenuShortcut"
+                Name="LocalPDF.io"
+                Target="[INSTALLFOLDER]LocalPDF.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
       <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
-      <RegistryValue Root="HKCU" Key="Software\LocalPDF.io" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKLM"
+                     Key="Software\LocalPDF.io"
+                     Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
     </Component>
   </Package>
 </Wix>

@@ -4,11 +4,26 @@ from pathlib import Path
 from PyInstaller.utils.hooks import collect_all
 
 root = Path(SPECPATH).parents[1]
-datas = [(str(root / "favicon.svg"), ".")]
-binaries = []
-hiddenimports = ["fitz", "pytesseract", "pdf2docx", "ghostscript"]
+icon_file = root / "packaging" / "windows" / "icon.ico"
 
-for package in ("fitz", "pdf2docx", "PIL"):
+datas = [(str(root / "favicon.svg"), ".")]
+if icon_file.exists():
+    datas.append((str(icon_file), "."))
+
+binaries = []
+hiddenimports = [
+    "fitz",
+    "pytesseract",
+    "pdf2docx",
+    "ghostscript",
+    "waitress",
+    "openpyxl",
+    "docx",
+    "reportlab",
+    "pdfplumber",
+]
+
+for package in ("fitz", "pdf2docx", "PIL", "docx", "reportlab", "openpyxl", "pdfplumber"):
     try:
         package_datas, package_binaries, package_hidden = collect_all(package)
         datas.extend(package_datas)
@@ -37,6 +52,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name="LocalPDF",
+    icon=str(icon_file) if icon_file.exists() else None,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
