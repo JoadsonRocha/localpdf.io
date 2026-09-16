@@ -1,20 +1,21 @@
 # Windows distribution
 
-LocalPDF.io has two planned Windows distributions:
+LocalPDF.io has two Windows distribution targets:
 
-- **Portable**: a folder containing `LocalPDF.exe`, bundled Python dependencies and local vendor folders.
-- **MSI**: a WiX installer generated from the portable folder.
+- **Portable**: a folder containing `LocalPDF.exe`, bundled Python dependencies, application icons and local vendor folders.
+- **MSI**: a WiX v4 installer (`LocalPDF.msi`) generated from the portable folder for system installation into `Program Files`.
 
 ## Requirements
 
 - Windows 10 or newer, 64-bit.
 - Python 3.11 or newer for the build environment.
 - PyInstaller and Waitress from `requirements_dev.txt`.
-- WiX Toolset v4 on `PATH` for MSI generation.
-- Windows SDK `signtool.exe` for release signing.
+- .NET 8 SDK and WiX Toolset v4 (`dotnet tool install --global wix`).
+- WiX Heat extension (`wix extension add WixToolset.Heat --global`).
+- Windows SDK `signtool.exe` for release signing (optional during local testing).
 - Windows builds of Tesseract OCR and Ghostscript copied into `dist/LocalPDF/vendor/`.
 
-## Build portable
+## 1. Build portable
 
 From PowerShell at the repository root:
 
@@ -25,7 +26,7 @@ python -m venv .venv
 .\packaging\windows\build-portable.ps1
 ```
 
-The executable is created at `dist/LocalPDF/LocalPDF.exe`. Running it listens only on `127.0.0.1`, chooses a free local port and opens the browser automatically.
+The executable is created at `dist/LocalPDF/LocalPDF.exe` with `icon.ico` embedded. Running it listens only on `127.0.0.1`, ensures single-instance execution via a Windows Mutex, chooses a free local port and opens the browser automatically.
 
 The build script creates these vendor folders:
 
@@ -34,32 +35,45 @@ dist/LocalPDF/vendor/tesseract/tessdata
 dist/LocalPDF/vendor/ghostscript/bin
 ```
 
-Copy the official Windows runtime files and language data into those folders before distributing the portable package. Review the licenses for every bundled dependency.
+Copy the official Windows runtime files (e.g. `gsdll64.dll`, `tesseract.exe`, language `.traineddata`) into those folders before distributing the package.
 
-## Build MSI
+## 2. Sign portable binaries (Release Only)
 
-After building and completing the vendor folders:
+Before generating the MSI, all `.exe` and `.dll` files in `dist/LocalPDF` should be signed so that the payload packaged into the MSI's internal CAB is already trusted:
+
+```powershell
+.\packaging\windows\sign-release.ps1 -CertificateThumbprint "<THUMBPRINT>" -Target Binaries
+```
+
+## 3. Build MSI
+
+Generate the installer package using WiX v4:
 
 ```powershell
 .\packaging\windows\build-msi.ps1
 ```
 
-The result is `dist/LocalPDF.msi`.
+The installer `dist/LocalPDF.msi` is created with:
+- `Scope="perMachine"` for proper multi-user installation into `Program Files`.
+- Start Menu shortcut with application icon and Start Menu grouping.
+- Add/Remove Programs (ARP) metadata and icon.
+- Automated cleanup on uninstall.
 
-## Avoiding Windows warnings
+## 4. Sign MSI installer (Release Only)
 
-A package cannot be made trusted by configuration alone. For public distribution:
+Sign the generated MSI package:
 
-1. Obtain an Authenticode code-signing certificate from a recognized certificate authority.
-2. Sign the executable and MSI with `sign-release.ps1`.
-3. Use SHA-256 and an RFC 3161 timestamp server.
-4. Verify both artifacts with `signtool verify /pa /v`.
-5. Publish SHA-256 hashes and the certificate information with the release.
+```powershell
+.\packaging\windows\sign-release.ps1 -CertificateThumbprint "<THUMBPRINT>" -Target Msi
+```
 
-Unsigned first releases may still show SmartScreen warnings even when the code is safe. Reputation is built over time and cannot be bypassed legitimately.
+Both artifacts can now be verified:
 
-On machines with App Control, WDAC or AppLocker policies, an unsigned portable executable can be blocked before it starts. The generated test build is currently unsigned (`NotSigned`); it must be signed by the release owner and approved by the organization's policy before it can run in a locked-down Windows environment.
+```powershell
+signtool verify /pa /v dist\LocalPDF\LocalPDF.exe
+signtool verify /pa /v dist\LocalPDF.msi
+```
 
 ## Local security model
 
-The Windows launcher forces `LOCALPDF_MODE=local`, binds only to `127.0.0.1`, does not configure firewall rules and does not use Railway. The MSI is not yet a release artifact; these scripts are the initial packaging foundation.
+The Windows launcher forces `LOCALPDF_MODE=local`, binds only to `127.0.0.1`, creates temporary working files in the user's `%TEMP%` directory (never in `C:\Program Files`), does not configure firewall rules, and prevents multiple zombie background processes.
