@@ -1931,4 +1931,6 @@ def build_response(output_files, temp_dir):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5000"))
-    app.run(host="0.0.0.0", port=port)
+    default_host = "127.0.0.1" if os.environ.get("LOCALPDF_MODE") == "local" else "0.0.0.0"
+    host = os.environ.get("LOCALPDF_HOST", default_host)
+    app.run(host=host, port=port)

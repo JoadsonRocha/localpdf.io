@@ -103,6 +103,8 @@ Acesse: **http://localhost:5000**
 
 O futuro MSI para Windows usará a mesma base de processamento local, sem Railway, cadastro ou upload externo. O MSI ainda não foi publicado; consulte o [ROADMAP.md](ROADMAP.md).
 
+Os arquivos iniciais de empacotamento estão em [packaging/windows](packaging/windows/README.md). Eles geram uma versão portable e um MSI com WiX. Para o Windows reconhecer o publicador sem alertas de editor desconhecido, o executável e o MSI precisam ser assinados com um certificado Authenticode real.
+
 ### Deploy no Railway
 
 A aplicação é compatível com o Railway e usa automaticamente a variável `PORT` fornecida pela plataforma.

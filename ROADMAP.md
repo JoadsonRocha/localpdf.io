@@ -193,4 +193,18 @@ O aplicativo aceita a variável de ambiente `PORT` exigida pelo Railway e pode s
 
 ## MSI local
 
-O MSI ainda não foi gerado. A próxima etapa é separar o modo local do deploy Railway, usar `127.0.0.1`, empacotar PyMuPDF, Tesseract e Ghostscript, mover temporários para `%LOCALAPPDATA%` e distribuir um instalador assinado.
+O MSI ainda não foi gerado. A base inicial de empacotamento está em `packaging/windows/` e já contempla:
+
+- Launcher com Waitress, abertura automática do navegador e porta local livre.
+- Bind exclusivo em `127.0.0.1` no modo Windows.
+- Spec do PyInstaller para o pacote portable.
+- Template WiX v4 e script de geração do MSI.
+- Script de assinatura Authenticode com SHA-256 e timestamp.
+
+Ainda faltam para uma release pública:
+
+- Incluir e revisar os binários Windows de Tesseract e Ghostscript.
+- Revisar licenças dos componentes empacotados.
+- Usar certificado Authenticode de uma autoridade reconhecida.
+- Testar instalação, atualização, desinstalação e execução sem privilégios administrativos.
+- Mover todos os temporários para `%LOCALAPPDATA%`.

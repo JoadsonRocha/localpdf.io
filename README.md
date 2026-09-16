@@ -100,6 +100,8 @@ Open: **http://localhost:5000**
 
 The future Windows MSI will package the same local processing base without Railway, accounts or external uploads. The MSI is not published yet; see [ROADMAP.md](ROADMAP.md) for the packaging plan.
 
+Initial Windows packaging files are available in [packaging/windows](packaging/windows/README.md). They build a portable folder and an MSI with WiX. Windows publisher recognition requires signing the executable and MSI with a real Authenticode certificate.
+
 ### Deploy on Railway
 
 The application is compatible with Railway and reads the platform-provided `PORT` variable automatically.
