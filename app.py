@@ -51,10 +51,11 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <title>LocalPDF.io</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .header { text-align: center; color: white; margin-bottom: 40px; }
         .header h1 { font-size: 3em; margin-bottom: 10px; }
@@ -65,18 +66,18 @@ HTML_TEMPLATE = """
         .tool-card h3 { color: #333; margin-bottom: 15px; font-size: 1.5em; }
         .tool-card p { color: #666; margin-bottom: 20px; }
         .upload-area { border: 2px dashed #ddd; border-radius: 10px; padding: 40px; text-align: center; background: #f9f9f9; margin: 20px 0; transition: all 0.3s ease; }
-        .upload-area:hover { border-color: #667eea; background: #f0f4ff; }
-        .upload-area.dragover { border-color: #667eea; background: #e8f0ff; }
+        .upload-area:hover { border-color: #2563eb; background: #eff6ff; }
+        .upload-area.dragover { border-color: #2563eb; background: #dbeafe; }
         .file-input { display: none; }
-        .upload-btn { background: #667eea; color: white; padding: 12px 30px; border: none; border-radius: 25px; cursor: pointer; font-size: 1.1em; transition: background 0.3s ease; }
-        .upload-btn:hover { background: #5a6fd8; }
-        .convert-btn { background: #28a745; color: white; padding: 15px 40px; border: none; border-radius: 25px; cursor: pointer; font-size: 1.2em; margin-top: 20px; transition: background 0.3s ease; }
-        .convert-btn:hover { background: #1e7e34; }
+        .upload-btn { background: #2563eb; color: white; padding: 12px 30px; border: none; border-radius: 25px; cursor: pointer; font-size: 1.1em; transition: background 0.3s ease; }
+        .upload-btn:hover { background: #1d4ed8; }
+        .convert-btn { background: #2563eb; color: white; padding: 15px 40px; border: none; border-radius: 25px; cursor: pointer; font-size: 1.2em; margin-top: 20px; transition: background 0.3s ease; }
+        .convert-btn:hover { background: #1d4ed8; }
         .convert-btn:disabled { background: #ccc; cursor: not-allowed; }
         .file-list { margin-top: 20px; }
         .file-item { background: #f8f9fa; padding: 10px 15px; margin: 5px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
         .progress { width: 100%; background: #f0f0f0; border-radius: 10px; margin: 20px 0; }
-        .progress-bar { height: 20px; background: #667eea; border-radius: 10px; width: 0%; transition: width 0.3s ease; }
+        .progress-bar { height: 20px; background: #2563eb; border-radius: 10px; width: 0%; transition: width 0.3s ease; }
         .result { margin-top: 20px; padding: 20px; background: #d4edda; border-radius: 10px; color: #155724; }
         .error { margin-top: 20px; padding: 20px; background: #f8d7da; border-radius: 10px; color: #721c24; }
         .hidden { display: none; }
@@ -88,10 +89,10 @@ HTML_TEMPLATE = """
         .back-btn:hover { background: #545b62; }
         .footer { text-align: center; color: white; margin-top: 40px; padding: 20px 0; border-top: 1px solid #ddd; }
         .footer p { margin-bottom: 10px; }
-        .footer a { color: #667eea; text-decoration: none; }
+        .footer a { color: #2563eb; text-decoration: none; }
         .footer a:hover { text-decoration: underline; }
         .social-icons { margin-top: 10px; }
-        .social-icons a { margin: 0 10px; color: #667eea; font-size: 1.2em; }
+        .social-icons a { margin: 0 10px; color: #2563eb; font-size: 1.2em; }
         .editor-shell { background: #f8f9fa; border-radius: 15px; padding: 24px; margin-top: 20px; }
         .editor-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; }
         .editor-toolbar button, .editor-actions button { border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
@@ -100,7 +101,7 @@ HTML_TEMPLATE = """
         .editor-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
         .editor-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; min-height: 180px; }
         .editor-page { position: relative; background: white; border: 2px solid transparent; border-radius: 10px; padding: 10px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); cursor: grab; }
-        .editor-page.selected { border-color: #667eea; }
+        .editor-page.selected { border-color: #2563eb; }
         .editor-page.dragging { opacity: 0.45; }
         .editor-page img { display: block; width: 100%; aspect-ratio: 0.72; object-fit: contain; background: #e9ecef; border-radius: 5px; }
         .editor-page-number { font-weight: 700; color: #495057; margin: 8px 0; }
@@ -109,8 +110,8 @@ HTML_TEMPLATE = """
         .editor-page-actions button:hover { background: #dfe4e8; }
         .editor-empty { color: #6c757d; text-align: center; padding: 50px 20px; border: 2px dashed #ced4da; border-radius: 10px; grid-column: 1 / -1; }
         .editor-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; align-items: center; }
-        .editor-actions .primary { background: #28a745; color: white; }
-        .editor-actions .secondary { background: #667eea; color: white; }
+        .editor-actions .primary { background: #2563eb; color: white; }
+        .editor-actions .secondary { background: #1d4ed8; color: white; }
         .editor-status { color: #6c757d; font-size: 0.95em; }
         .editor-file-input { display: none; }
         @media (max-width: 600px) { .editor-pages { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .editor-shell { padding: 14px; } }
@@ -118,27 +119,32 @@ HTML_TEMPLATE = """
         .container { max-width: 1180px; padding: 0 28px; }
         .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; border-bottom: 1px solid #e4e6e9; }
         .site-brand { color: #24272b; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; text-decoration: none; }
-        .site-brand span { color: #e53232; }
+        .site-brand span { color: #2563eb; }
         .site-brand small { font-size: 0.8em; }
         .site-nav-links { display: flex; align-items: center; gap: 22px; }
         .site-nav-links a { color: #5f6368; text-decoration: none; font-size: 0.92rem; font-weight: 600; }
-        .site-nav-links a:hover { color: #e53232; }
-        .privacy-pill { color: #247a52 !important; background: #e8f7ef; border-radius: 999px; padding: 8px 13px; }
+        .site-nav-links a:hover { color: #1d4ed8; }
+        .language-toggle { border: 1px solid #bfdbfe; border-radius: 999px; background: #fff; color: #1d4ed8; padding: 7px 11px; font: inherit; font-size: 0.82rem; font-weight: 800; cursor: pointer; }
+        .language-toggle:hover { background: #eff6ff; }
+        .privacy-pill { color: #1d4ed8 !important; background: #dbeafe; border-radius: 999px; padding: 8px 13px; }
         .header { color: #24272b; margin: 0 auto; padding: 38px 0 24px; max-width: 700px; }
         .header h1 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.05; letter-spacing: -0.045em; margin-bottom: 10px; }
         .header p { color: #6c7178; font-size: 1rem; line-height: 1.5; }
-        .home-eyebrow { display: inline-block; color: #e53232; background: #fff0f0; border-radius: 999px; padding: 6px 11px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 11px; }
+        .home-eyebrow { display: inline-block; color: #1d4ed8; background: #dbeafe; border-radius: 999px; padding: 6px 11px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 11px; }
         .category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 28px; }
         .category-tabs span { background: #fff; border: 1px solid #e3e5e8; border-radius: 999px; color: #656a70; padding: 8px 14px; font-size: 0.86rem; font-weight: 700; }
         .category-tabs span:first-child { background: #24272b; color: #fff; border-color: #24272b; }
         .tools-grid { grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 14px; margin-bottom: 58px; }
         .tool-card { border: 1px solid #e3e5e8; border-radius: 10px; padding: 22px; text-align: left; box-shadow: 0 5px 18px rgba(36,39,43,0.04); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
-        .tool-card:hover { transform: translateY(-3px); border-color: #f0a2a2; box-shadow: 0 12px 28px rgba(36,39,43,0.1); }
+        .tool-card { position: relative; overflow: hidden; min-height: 142px; background: rgba(255,255,255,0.96); }
+        .tool-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: #dbeafe; transition: background 0.2s ease; }
+        .tool-card:hover { transform: translateY(-3px); border-color: #93c5fd; box-shadow: 0 12px 28px rgba(37,99,235,0.12); }
+        .tool-card:hover::before { background: #2563eb; }
         .tool-card h3 { color: #24272b; font-size: 1.05rem; margin-bottom: 8px; }
         .tool-card p { color: #747980; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0; }
-        .tools-grid .tool-card:last-child { border-color: #e53232; box-shadow: 0 8px 24px rgba(229,50,50,0.12); }
+        .tools-grid .tool-card:last-child { border-color: #2563eb; box-shadow: 0 8px 24px rgba(37,99,235,0.14); }
         .footer { color: #747980; border-top: 1px solid #e3e5e8; }
-        .footer a { color: #e53232; }
+        .footer a { color: #2563eb; }
         .footer .social-icons a { color: #747980; }
         .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28px; max-width: 900px; margin: 0 auto 24px; text-align: left; }
         .footer-block h4 { color: #24272b; margin-bottom: 8px; font-family: Georgia, "Times New Roman", serif; }
@@ -147,26 +153,34 @@ HTML_TEMPLATE = """
         .footer-credit { border-top: 1px solid #e3e5e8; padding-top: 18px; }
         body { font-family: "Avenir Next", "Segoe UI", sans-serif; }
         .header h1, .tool-card h3, .editor-page-number { font-family: Georgia, "Times New Roman", serif; }
-        .editor-shell { background: #fff7f5; border: 1px solid #f3d8d3; }
+        .editor-shell { background: #f5f9ff; border: 1px solid #bfdbfe; }
         .editor-toolbar button, .editor-actions button { border: 1px solid #eadbd8; background: #fff; color: #3b3534; }
-        .editor-toolbar button:hover, .editor-actions button:hover { border-color: #e53232; color: #e53232; background: #fff; }
-        .editor-page.selected { border-color: #e53232; box-shadow: 0 0 0 3px #fde0dd; }
-        .editor-insert-panel { background: #fff; border: 1px solid #f0d6d2; border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+        .editor-toolbar button:hover, .editor-actions button:hover { border-color: #2563eb; color: #1d4ed8; background: #fff; }
+        .editor-page.selected { border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+        .editor-insert-panel { background: #fff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 16px; margin-bottom: 18px; }
         .editor-insert-panel h4 { color: #24272b; margin-bottom: 5px; }
         .editor-insert-panel p { color: #747980; font-size: 0.9rem; margin-bottom: 12px; }
         .editor-pending-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; max-height: 300px; overflow: auto; }
         .editor-pending-page { position: relative; border: 2px solid #e8e9eb; border-radius: 8px; padding: 5px; background: #fafafa; cursor: pointer; }
-        .editor-pending-page.selected { border-color: #e53232; background: #fff0ef; }
+        .editor-pending-page.selected { border-color: #2563eb; background: #eff6ff; }
         .editor-pending-page img { display: block; width: 100%; aspect-ratio: 0.72; object-fit: contain; background: #eee; }
         .editor-pending-page label { display: flex; gap: 6px; align-items: center; padding: 6px 2px 2px; font-size: 0.78rem; color: #4c5157; }
         .editor-insert-actions { display: flex; gap: 8px; margin-top: 14px; }
         .editor-insert-actions button { border: 0; border-radius: 7px; padding: 9px 12px; cursor: pointer; font-weight: 700; }
-        .editor-insert-actions .primary { background: #e53232; color: #fff; }
+        .editor-insert-actions .primary { background: #2563eb; color: #fff; }
         .editor-insert-actions .secondary { background: #f1eded; color: #4c4544; }
         #options { display: grid; gap: 7px; margin-top: 18px; text-align: left; }
         #options label { color: #3b3534; font-weight: 700; }
         #options input, #options select { width: 100%; border: 1px solid #d8dadd; border-radius: 7px; padding: 11px 12px; font: inherit; background: #fff; }
         #options small { color: #747980; }
+        .upload-area { border-color: #bfdbfe; background: #fbfdff; box-shadow: inset 0 0 0 1px rgba(37,99,235,0.03); }
+        .upload-area p:first-child { color: #3f4b5a; font-weight: 600; }
+        .upload-btn, .convert-btn { border-radius: 9px; font-weight: 700; box-shadow: 0 5px 12px rgba(37,99,235,0.18); }
+        .upload-btn:focus-visible, .convert-btn:focus-visible, .back-btn:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }
+        .back-btn { background: #334155; border-radius: 9px; font-weight: 700; }
+        .result, .error { border: 1px solid rgba(37,99,235,0.12); box-shadow: 0 8px 20px rgba(36,39,43,0.05); }
+        .file-item { border: 1px solid #e5e7eb; background: #fff; }
+        .editor-page, .editor-insert-panel { box-shadow: 0 8px 20px rgba(36,39,43,0.06); }
         @media (max-width: 700px) {
             .container { padding: 0 16px; }
             .site-nav { gap: 14px; padding: 15px 0; align-items: flex-start; }
@@ -209,6 +223,7 @@ HTML_TEMPLATE = """
                 <a href="#tools">Converter PDF</a>
                 <a href="#tools">Todas as ferramentas</a>
                 <a class="privacy-pill" href="#privacy-note">100% local</a>
+                <button id="language-toggle" class="language-toggle" type="button" onclick="toggleLanguage()">EN</button>
             </div>
         </nav>
         <div class="header">
@@ -377,6 +392,11 @@ HTML_TEMPLATE = """
                     <a href="mailto:virgilio.junior94@gmail.com">virgilio.junior94@gmail.com</a>
                     <a href="https://www.linkedin.com/in/virgiliojunior94/" target="_blank">LinkedIn do Virgilio</a>
                 </div>
+                <div class="footer-block">
+                    <h4>Contribuição</h4>
+                    <p>Joadson Rocha<br>Desenvolvedor Full Stack &amp; Desktop</p>
+                    <a href="https://joadsonrocha.github.io/" target="_blank">Portfólio e repositório</a>
+                </div>
             </div>
             <p class="footer-credit">Licença MIT · Processamento local · <a href="https://github.com/virgiliojr94/localpdf.io" target="_blank">Contribua com o projeto</a></p>
         </div>
@@ -384,6 +404,123 @@ HTML_TEMPLATE = """
 
     <script>
         let currentTool = '';
+        let currentLanguage = localStorage.getItem('localpdf-language') || 'pt';
+
+        const languageTexts = {
+            'PDF simples, privado e local': 'Simple, private and local PDF',
+            'Trabalhe com seus PDFs sem complicação': 'Work with your PDFs without the hassle',
+            'Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.': 'Convert, organize and edit documents directly on your computer. No accounts, no cloud and no files sent elsewhere.',
+            'Juntar PDF': 'Merge PDF',
+            'Dividir PDF': 'Split PDF',
+            'Comprimir PDF': 'Compress PDF',
+            'Converter PDF': 'Convert PDF',
+            'Todas as ferramentas': 'All tools',
+            '100% local': '100% local',
+            'Todas': 'All',
+            'Organizar PDF': 'Organize PDF',
+            'Otimizar PDF': 'Optimize PDF',
+            'OCR': 'OCR',
+            'Desenvolvimento': 'Development',
+            'Contribuição': 'Contribution',
+            'Repositório': 'Repository',
+            'Código no GitHub': 'Code on GitHub',
+            'Documentação': 'Documentation',
+            'Portfólio e repositório': 'Portfolio and repository',
+            'Desenvolvido por Virgilio Borges': 'Developed by Virgilio Borges',
+            'LinkedIn do Virgilio': "Virgilio's LinkedIn",
+            'Licença MIT · Processamento local · ': 'MIT License · Local processing · ',
+            'Contribua com o projeto': 'Contribute to the project',
+            'Desenvolvedor Full Stack & Desktop': 'Full Stack & Desktop Developer',
+            '← Voltar': '← Back',
+            '🖥️ Editor de páginas PDF': '🖥️ PDF page editor',
+            'Organize a estrutura do seu PDF sem alterar o arquivo original.': 'Organize your PDF without changing the original file.',
+            '📁 Escolha um PDF para começar': '📁 Choose a PDF to start',
+            'Abrir PDF': 'Open PDF',
+            '↶ Desfazer': '↶ Undo',
+            '↷ Refazer': '↷ Redo',
+            '＋ Página em branco': '＋ Blank page',
+            '＋ Inserir PDF ou imagem': '＋ Insert PDF or image',
+            'As páginas do PDF aparecerão aqui.': 'PDF pages will appear here.',
+            'Salvar PDF editado': 'Save edited PDF',
+            'Selecionar todas': 'Select all',
+            'Excluir selecionadas': 'Delete selected',
+            'Nenhum PDF aberto.': 'No PDF open.',
+            '📁 Clique aqui ou arraste arquivos para fazer upload': '📁 Click here or drag files to upload',
+            'Escolher Arquivos': 'Choose files',
+            'Converter': 'Convert',
+            'Escolha as páginas para inserir': 'Choose pages to insert',
+            'Selecione uma ou mais páginas do arquivo adicional antes de adicioná-las ao documento.': 'Select one or more pages from the additional file before adding them to the document.',
+            'Inserir selecionadas': 'Insert selected',
+            'Cancelar': 'Cancel',
+            'A senha é usada somente durante o processamento local.': 'The password is used only during local processing.'
+            ,'🖼️ PDF para Imagens': '🖼️ PDF to Images'
+            ,'📄 Imagens para PDF': '📄 Images to PDF'
+            ,'🔗 Mesclar PDFs': '🔗 Merge PDFs'
+            ,'✂️ Dividir PDF': '✂️ Split PDF'
+            ,'📦 Comprimir PDF': '📦 Compress PDF'
+            ,'🔐 Proteger PDF': '🔐 Protect PDF'
+            ,"💧 Marca d'água": '💧 Watermark'
+            ,'🔢 Números de página': '🔢 Page numbers'
+            ,'🔒 PDF para PDF/A': '🔒 PDF to PDF/A'
+            ,'📝 Word para PDF': '📝 Word to PDF'
+            ,'📊 Excel para PDF': '📊 Excel to PDF'
+            ,'📄 TXT para PDF': '📄 TXT to PDF'
+            ,'🔄 PDF para Word': '🔄 PDF to Word'
+            ,'📄 PDF para Texto': '📄 PDF to Text'
+            ,'🔍 OCR em PDF': '🔍 OCR PDF'
+            ,'Converta páginas PDF em imagens JPG ou PNG': 'Convert PDF pages into JPG or PNG images'
+            ,'Combine várias imagens em um único PDF': 'Combine multiple images into one PDF'
+            ,'Combine vários arquivos PDF em um documento único': 'Combine multiple PDF files into one document'
+            ,'Extraia páginas específicas do seu PDF': 'Extract specific pages from your PDF'
+            ,'Reduza o tamanho do seu arquivo PDF': 'Reduce your PDF file size'
+            ,'Adicione uma senha local ao seu documento PDF': 'Add a local password to your PDF'
+            ,"Adicione uma marca d'água de texto ao PDF": 'Add a text watermark to your PDF'
+            ,'Numere as páginas do documento localmente': 'Number your document pages locally'
+            ,'Padronize seu PDF para arquivamento (PDF/A)': 'Convert your PDF to the archival PDF/A standard'
+            ,'Converta um ou mais documentos DOCX para PDF': 'Convert one or more DOCX documents to PDF'
+            ,'Converta planilhas XLSX para PDF': 'Convert XLSX spreadsheets to PDF'
+            ,'Converta arquivos de texto simples para PDF': 'Convert plain text files to PDF'
+            ,'Converta documentos PDF para Word (.docx) editável': 'Convert PDF documents to editable Word (.docx) files'
+            ,'Extraia o texto do PDF para um arquivo TXT editável': 'Extract PDF text into an editable TXT file'
+            ,'Extraia texto de PDFs e imagens escaneadas com OCR': 'Extract text from scanned PDFs and images with OCR'
+        };
+
+        const toolTranslations = {
+            'pdf-to-images': ['🖼️ PDF to Images', 'Convert each PDF page into separate JPG or PNG images'],
+            'images-to-pdf': ['📄 Images to PDF', 'Combine multiple images into one PDF'],
+            'merge-pdf': ['🔗 Merge PDFs', 'Combine multiple PDF files into one document'],
+            'split-pdf': ['✂️ Split PDF', 'Extract specific pages from your PDF'],
+            'compress-pdf': ['📦 Compress PDF', 'Reduce PDF file size while preserving quality'],
+            'protect-pdf': ['🔐 Protect PDF', 'Create a password-protected copy of your PDF'],
+            'watermark-pdf': ["💧 Watermark", 'Add a text watermark to every page'],
+            'page-numbers-pdf': ['🔢 Page numbers', 'Add numbering to your PDF document'],
+            'pdf-to-pdfa': ['🔒 PDF to PDF/A', 'Convert PDFs to the PDF/A-1b archival standard'],
+            'word-to-pdf': ['📝 Word to PDF', 'Convert one or more DOCX files to PDF'],
+            'excel-to-pdf': ['📊 Excel to PDF', 'Convert Excel spreadsheets to PDF'],
+            'txt-to-pdf': ['📄 TXT to PDF', 'Convert plain text files to formatted PDF'],
+            'pdf-to-word': ['🔄 PDF to Word', 'Convert PDF documents into editable DOCX files'],
+            'pdf-to-text': ['📄 PDF to Text', 'Extract selectable text from every PDF page'],
+            'ocr-pdf': ['🔍 OCR PDF', 'Extract text from scanned PDFs and images using OCR']
+        };
+
+        function translatePage() {
+            document.documentElement.lang = currentLanguage === 'en' ? 'en' : 'pt-BR';
+            document.getElementById('language-toggle').textContent = currentLanguage === 'en' ? 'PT' : 'EN';
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            const translations = currentLanguage === 'en' ? languageTexts : Object.fromEntries(Object.entries(languageTexts).map(([pt, en]) => [en, pt]));
+            let node;
+            while ((node = walker.nextNode())) {
+                const value = node.nodeValue.trim();
+                if (translations[value]) node.nodeValue = node.nodeValue.replace(value, translations[value]);
+            }
+        }
+
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'pt' ? 'en' : 'pt';
+            localStorage.setItem('localpdf-language', currentLanguage);
+            translatePage();
+            if (currentTool) showTool(currentTool);
+        }
         let uploadedFiles = [];
 
         const tools = {
@@ -488,8 +625,9 @@ HTML_TEMPLATE = """
 
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('tool-views').classList.remove('hidden');
-            document.getElementById('tool-title').innerText = tool.title;
-            document.getElementById('tool-description').innerText = tool.description;
+            const translatedTool = toolTranslations[toolName];
+            document.getElementById('tool-title').innerText = currentLanguage === 'en' ? translatedTool[0] : tool.title;
+            document.getElementById('tool-description').innerText = currentLanguage === 'en' ? translatedTool[1] : tool.description;
             document.getElementById('file-input').accept = tool.accept;
             document.getElementById('file-input').multiple = tool.multiple;
             renderToolOptions(tool.options);
@@ -975,6 +1113,14 @@ def index():
     return render_template_string(HTML_TEMPLATE)
 
 
+@app.route("/favicon.svg")
+def favicon():
+    return send_file(
+        os.path.join(os.path.dirname(__file__), "favicon.svg"),
+        mimetype="image/svg+xml",
+    )
+
+
 def render_pdf_page(page, scale=0.2):
     pixmap = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
     return "data:image/png;base64," + base64.b64encode(pixmap.tobytes("png")).decode(
@@ -1058,8 +1204,11 @@ def editor_preview():
         if not pages:
             return jsonify({"error": "O arquivo não possui páginas editáveis."}), 400
         return jsonify({"pages": pages})
-    except Exception as error:
-        return jsonify({"error": f"Não foi possível abrir o documento: {error}"}), 400
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except Exception:
+        app.logger.exception("Falha ao gerar preview do editor")
+        return jsonify({"error": "Não foi possível abrir o documento."}), 500
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -1153,8 +1302,11 @@ def editor_export():
             as_attachment=True,
             download_name="localpdf-editado.pdf",
         )
-    except Exception as error:
-        return jsonify({"error": f"Não foi possível exportar o PDF: {error}"}), 400
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except Exception:
+        app.logger.exception("Falha ao exportar PDF do editor")
+        return jsonify({"error": "Não foi possível exportar o PDF."}), 500
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -1326,8 +1478,11 @@ def convert():
 
         response = build_response(output_files, temp_dir)
         return response
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+    except Exception:
+        app.logger.exception("Falha ao processar ferramenta %s", tool)
+        return jsonify({"error": "Não foi possível processar os arquivos."}), 500
     finally:
         # Diretório temporário limpo após preparar resposta (BytesIO) evitando remoção antecipada
         if os.path.exists(temp_dir):

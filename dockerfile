@@ -55,7 +55,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages \
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application source
-COPY app.py .
+COPY app.py favicon.svg .
 
 # Create upload/output dirs with correct ownership
 RUN mkdir -p uploads outputs && chown -R appuser:appuser /app

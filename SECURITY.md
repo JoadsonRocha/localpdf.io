@@ -59,6 +59,16 @@ Ao usar LocalPDF.io:
 - Nenhum dado é enviado para servidores externos
 - Arquivos temporários são automaticamente deletados após processamento
 
+## Testes de segurança
+
+Os testes locais cobrem extensões não permitidas, limite de upload, ferramentas desconhecidas, nomes de arquivo com traversal, senhas fracas, entradas inválidas do editor e ausência de traceback nas respostas.
+
+Execute com:
+
+```bash
+python -m unittest discover -s tests -p "test_*.py" -v
+```
+
 ---
 
 **Obrigado por ajudar a manter o LocalPDF.io seguro! 🔒**

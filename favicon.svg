@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>LocalPDF.io</title>
+  <rect width="64" height="64" rx="14" fill="#2563eb"/>
+  <path d="M18 10h20l10 10v34H18z" fill="#fff"/>
+  <path d="M38 10v12h12" fill="#bfdbfe"/>
+  <path d="M38 10l12 12H38z" fill="#dbeafe"/>
+  <path d="M24 38h18M24 45h14" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+  <path d="M24 27h8" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
+</svg>
