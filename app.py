@@ -1636,10 +1636,15 @@ def editor_export():
         output_path = export_editor_pages(files, pages, temp_dir)
         with open(output_path, "rb") as output_file:
             data = output_file.read()
+        first_base = (
+            os.path.splitext(secure_filename(files[0].filename))[0]
+            if files and files[0].filename
+            else "documento"
+        )
         return send_file(
             io.BytesIO(data),
             as_attachment=True,
-            download_name="localpdf-editado.pdf",
+            download_name=f"{first_base}_editado.pdf",
         )
     except ValueError as error:
         return jsonify({"error": str(error)}), 400
@@ -1651,10 +1656,11 @@ def editor_export():
 
 
 def excel_to_pdf(file, temp_dir):
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "planilha"
     xlsx_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(xlsx_path)
 
-    pdf_path = os.path.join(temp_dir, "excel_to_pdf.pdf")
+    pdf_path = os.path.join(temp_dir, f"{base_name}.pdf")
     c = canvas.Canvas(pdf_path, pagesize=letter)
     width, height = letter
     y_position = height - 50
@@ -1706,10 +1712,11 @@ def excel_to_pdf(file, temp_dir):
 
 
 def txt_to_pdf(file, temp_dir):
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "texto"
     txt_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(txt_path)
 
-    pdf_path = os.path.join(temp_dir, "text_to_pdf.pdf")
+    pdf_path = os.path.join(temp_dir, f"{base_name}.pdf")
     c = canvas.Canvas(pdf_path, pagesize=letter)
     width, height = letter
     y_position = height - 50
@@ -1775,18 +1782,26 @@ def convert():
     temp_dir = tempfile.mkdtemp()
     response = None
     try:
+        first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files and files[0].filename else "localpdf"
+
         if tool == "pdf-to-images":
             output_files = pdf_to_images(files[0], temp_dir)
+            zip_name = f"{first_base}_imagens.zip"
         elif tool == "images-to-pdf":
             output_files = images_to_pdf(files, temp_dir)
+            zip_name = f"{first_base}_convertido.pdf"
         elif tool == "merge-pdf":
             output_files = merge_pdfs(files, temp_dir)
+            zip_name = f"{first_base}_mesclado.pdf"
         elif tool == "split-pdf":
             output_files = split_pdf(files[0], temp_dir)
+            zip_name = f"{first_base}_paginas.zip"
         elif tool == "compress-pdf":
             output_files = compress_pdf(files[0], temp_dir)
+            zip_name = f"{first_base}_comprimido.pdf"
         elif tool == "protect-pdf":
             output_files = protect_pdf(files[0], temp_dir, request.form.get("password", ""))
+            zip_name = f"{first_base}_protegido.pdf"
         elif tool == "watermark-pdf":
             output_files = watermark_pdf(
                 files[0],
@@ -1794,34 +1809,45 @@ def convert():
                 request.form.get("watermark_text", ""),
                 request.form.get("watermark_position", "center"),
             )
+            zip_name = f"{first_base}_marca_dagua.pdf"
         elif tool == "page-numbers-pdf":
             output_files = page_numbers_pdf(
                 files[0], temp_dir, request.form.get("page_number_position", "bottom-center")
             )
+            zip_name = f"{first_base}_numerado.pdf"
         elif tool == "pdf-to-pdfa":
             output_files = pdf_to_pdfa(files, temp_dir)
+            zip_name = f"{first_base}_pdfa.zip"
         elif tool == "word-to-pdf":
             output_files = word_to_pdf(files, temp_dir)
+            zip_name = f"{first_base}.pdf"
         elif tool == "excel-to-pdf":
             output_files = excel_to_pdf(files[0], temp_dir)
+            zip_name = f"{first_base}.pdf"
         elif tool == "txt-to-pdf":
             output_files = txt_to_pdf(files[0], temp_dir)
+            zip_name = f"{first_base}.pdf"
         elif tool == "pdf-to-word":
             output_files = pdf_to_word(files[0], temp_dir)
+            zip_name = f"{first_base}.docx"
         elif tool == "pdf-to-text":
             output_files = pdf_to_text(files[0], temp_dir)
+            zip_name = f"{first_base}.txt"
         elif tool == "ocr-pdf":
             output_files = ocr_pdf(files[0], temp_dir)
+            zip_name = f"{first_base}_ocr.txt"
         else:
             return jsonify({"error": "Ferramenta não suportada"}), 400
 
-        response = build_response(output_files, temp_dir)
+        response = build_response(output_files, temp_dir, default_zip_name=zip_name)
         return response
     except ValueError as error:
         return jsonify({"error": str(error)}), 400
-    except Exception:
+    except RuntimeError as error:
+        return jsonify({"error": str(error)}), 400
+    except Exception as error:
         app.logger.exception("Falha ao processar ferramenta %s", tool)
-        return jsonify({"error": "Não foi possível processar os arquivos."}), 500
+        return jsonify({"error": f"Não foi possível processar os arquivos: {str(error)}"}), 500
     finally:
         # Diretório temporário limpo após preparar resposta (BytesIO) evitando remoção antecipada
         if os.path.exists(temp_dir):
@@ -1829,6 +1855,7 @@ def convert():
 
 
 def pdf_to_images(file, temp_dir):
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
 
@@ -1838,7 +1865,7 @@ def pdf_to_images(file, temp_dir):
     for page_num in range(len(doc)):
         page = doc.load_page(page_num)
         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x resolution
-        img_path = os.path.join(temp_dir, f"page_{page_num + 1}.png")
+        img_path = os.path.join(temp_dir, f"{base_name}_pagina_{page_num + 1}.png")
         pix.save(img_path)
         output_files.append(img_path)
 
@@ -1848,6 +1875,7 @@ def pdf_to_images(file, temp_dir):
 
 def images_to_pdf(files, temp_dir):
     images = []
+    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files and files[0].filename else "imagens"
     for file in files:
         img_path = os.path.join(temp_dir, secure_filename(file.filename))
         file.save(img_path)
@@ -1856,13 +1884,14 @@ def images_to_pdf(files, temp_dir):
             img = img.convert("RGB")
         images.append(img)
 
-    pdf_path = os.path.join(temp_dir, "images_to_pdf.pdf")
+    pdf_path = os.path.join(temp_dir, f"{first_base}_convertido.pdf")
     images[0].save(pdf_path, save_all=True, append_images=images[1:])
 
     return [pdf_path]
 
 
 def merge_pdfs(files, temp_dir):
+    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files and files[0].filename else "localpdf"
     merged_doc = fitz.open()
 
     for file in files:
@@ -1872,7 +1901,7 @@ def merge_pdfs(files, temp_dir):
         merged_doc.insert_pdf(doc)
         doc.close()
 
-    output_path = os.path.join(temp_dir, "merged.pdf")
+    output_path = os.path.join(temp_dir, f"{first_base}_mesclado.pdf")
     merged_doc.save(output_path)
     merged_doc.close()
 
@@ -1880,6 +1909,7 @@ def merge_pdfs(files, temp_dir):
 
 
 def split_pdf(file, temp_dir):
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
 
@@ -1889,7 +1919,7 @@ def split_pdf(file, temp_dir):
     for page_num in range(len(doc)):
         new_doc = fitz.open()
         new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
-        output_path = os.path.join(temp_dir, f"page_{page_num + 1}.pdf")
+        output_path = os.path.join(temp_dir, f"{base_name}_pagina_{page_num + 1}.pdf")
         new_doc.save(output_path)
         new_doc.close()
         output_files.append(output_path)
@@ -1899,11 +1929,12 @@ def split_pdf(file, temp_dir):
 
 
 def compress_pdf(file, temp_dir):
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
 
     doc = fitz.open(pdf_path)
-    output_path = os.path.join(temp_dir, "compressed.pdf")
+    output_path = os.path.join(temp_dir, f"{base_name}_comprimido.pdf")
     doc.save(output_path, garbage=4, deflate=True, clean=True)
     doc.close()
 
@@ -1915,9 +1946,10 @@ def protect_pdf(file, temp_dir, password):
     if len(password) < 4:
         raise ValueError("A senha precisa ter pelo menos 4 caracteres.")
 
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
-    output_path = os.path.join(temp_dir, "protected.pdf")
+    output_path = os.path.join(temp_dir, f"{base_name}_protegido.pdf")
 
     with fitz.open(pdf_path) as document:
         document.save(
@@ -1939,9 +1971,10 @@ def watermark_pdf(file, temp_dir, text, position):
     if position not in {"center", "top", "bottom"}:
         raise ValueError("Posição de marca d'água inválida.")
 
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
-    output_path = os.path.join(temp_dir, "watermarked.pdf")
+    output_path = os.path.join(temp_dir, f"{base_name}_marca_dagua.pdf")
 
     with fitz.open(pdf_path) as document:
         for page in document:
@@ -1972,9 +2005,10 @@ def page_numbers_pdf(file, temp_dir, position):
     if position not in positions:
         raise ValueError("Posição de numeração inválida.")
 
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
-    output_path = os.path.join(temp_dir, "numbered.pdf")
+    output_path = os.path.join(temp_dir, f"{base_name}_numerado.pdf")
 
     with fitz.open(pdf_path) as document:
         total_pages = len(document)
