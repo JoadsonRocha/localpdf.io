@@ -37,17 +37,29 @@ dist/LocalPDF/vendor/ghostscript/bin
 
 Copy the official Windows runtime files (e.g. `gsdll64.dll`, `tesseract.exe`, language `.traineddata`) into those folders before distributing the package.
 
-## 2. Sign portable binaries (Release Only)
+## 2. Assinatura Digital & Certificado (Code Signing)
 
-Before generating the MSI, all `.exe` and `.dll` files in `dist/LocalPDF` should be signed so that the payload packaged into the MSI's internal CAB is already trusted:
+Para evitar alertas do Windows Defender SmartScreen:
 
-```powershell
-.\packaging\windows\sign-release.ps1 -CertificateThumbprint "<THUMBPRINT>" -Target Binaries
-```
+- **Configurar o certificado como confiável na máquina local**:
+  ```powershell
+  .\packaging\windows\install-cert.ps1
+  ```
+  Isso adiciona o certificado da máquina (`Cert:\CurrentUser\My`) às Autoridades Confiáveis do Windows sem armazenar arquivos de chaves no repositório.
+
+- **Assinar binários e instalador**:
+  O script `sign-release.ps1` detecta automaticamente o certificado de assinatura instalado no Windows (`Cert:\CurrentUser\My`) e utiliza `Set-AuthenticodeSignature` nativo do PowerShell com carimbo de tempo SHA256 (DigiCert):
+  ```powershell
+  # Assina automaticamente executáveis e DLLs
+  .\packaging\windows\sign-release.ps1 -Target Binaries
+
+  # Ou assine tudo de uma vez
+  .\packaging\windows\sign-release.ps1 -Target All
+  ```
 
 ## 3. Build MSI
 
-Generate the installer package using WiX v4:
+Generate the installer package using WiX v4 (ele assina automaticamente os binários antes e o MSI após o build):
 
 ```powershell
 .\packaging\windows\build-msi.ps1
@@ -59,19 +71,12 @@ The installer `dist/LocalPDF.msi` is created with:
 - Add/Remove Programs (ARP) metadata and icon.
 - Automated cleanup on uninstall.
 
-## 4. Sign MSI installer (Release Only)
+## 4. Verificação da Assinatura
 
-Sign the generated MSI package:
-
-```powershell
-.\packaging\windows\sign-release.ps1 -CertificateThumbprint "<THUMBPRINT>" -Target Msi
-```
-
-Both artifacts can now be verified:
+Verifique o status da assinatura em qualquer arquivo:
 
 ```powershell
-signtool verify /pa /v dist\LocalPDF\LocalPDF.exe
-signtool verify /pa /v dist\LocalPDF.msi
+Get-AuthenticodeSignature -FilePath .\dist\LocalPDF\LocalPDF.exe
 ```
 
 ## Local security model

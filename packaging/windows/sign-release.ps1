@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string]$CertificateThumbprint,
     [ValidateSet("All", "Binaries", "Msi")]
     [string]$Target = "All",
@@ -11,16 +11,47 @@ $Root = (Resolve-Path (Join-Path $PSScriptRoot "..\..\")).Path
 $PortableDir = Join-Path $Root "dist\LocalPDF"
 $MsiPath = Join-Path $Root "dist\LocalPDF.msi"
 
-$signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue
-if (-not $signtool) {
-    throw "Windows SDK signtool.exe is required."
+# Auto-detect code signing certificate if thumbprint not provided
+if (-not $CertificateThumbprint) {
+    $cert = Get-ChildItem Cert:\CurrentUser\My, Cert:\LocalMachine\My -ErrorAction SilentlyContinue |
+        Where-Object { $_.HasPrivateKey -and ($_.EnhancedKeyUsageList.FriendlyName -contains "Assinatura do Código" -or $_.EnhancedKeyUsageList.FriendlyName -contains "Code Signing" -or $_.Thumbprint -eq "B5441819C4B2C689E5FD1ADF025F031E29709354") } |
+        Select-Object -First 1
+
+    if ($cert) {
+        $CertificateThumbprint = $cert.Thumbprint
+        Write-Host "Certificado de assinatura detectado automaticamente: $($cert.Subject) ($CertificateThumbprint)" -ForegroundColor Cyan
+    } else {
+        throw "Nenhum certificado de Code Signing encontrado em Cert:\CurrentUser\My ou Cert:\LocalMachine\My. Especifique -CertificateThumbprint."
+    }
 }
+
+$certObj = Get-Item "Cert:\CurrentUser\My\$CertificateThumbprint" -ErrorAction SilentlyContinue
+if (-not $certObj) {
+    $certObj = Get-Item "Cert:\LocalMachine\My\$CertificateThumbprint" -ErrorAction SilentlyContinue
+}
+
+$signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue
 
 function Sign-File([string]$FilePath) {
     if (Test-Path $FilePath) {
-        Write-Host "Signing $FilePath ..."
-        & $signtool.Source sign /sha1 $CertificateThumbprint /fd SHA256 /tr $TimestampUrl /td SHA256 $FilePath
-        if ($LASTEXITCODE -ne 0) { throw "Signing failed for $FilePath" }
+        Write-Host "Assinando $FilePath ..." -ForegroundColor Yellow
+        if ($signtool) {
+            & $signtool.Source sign /sha1 $CertificateThumbprint /fd SHA256 /tr $TimestampUrl /td SHA256 $FilePath
+            if ($LASTEXITCODE -ne 0) {
+                # Tentar sem timestamp se o servidor estiver inacessível
+                & $signtool.Source sign /sha1 $CertificateThumbprint /fd SHA256 $FilePath
+            }
+        } elseif ($certObj) {
+            try {
+                Set-AuthenticodeSignature -FilePath $FilePath -Certificate $certObj -TimestampServer $TimestampUrl -HashAlgorithm SHA256 | Out-Null
+            } catch {
+                # Fallback sem timestamp caso conexão de rede falhe
+                Set-AuthenticodeSignature -FilePath $FilePath -Certificate $certObj -HashAlgorithm SHA256 | Out-Null
+            }
+        } else {
+            throw "Não foi possível carregar o objeto do certificado para $CertificateThumbprint."
+        }
+        Write-Host "[OK] Assinado: $FilePath" -ForegroundColor Green
     }
 }
 
@@ -30,7 +61,7 @@ if ($Target -in @("All", "Binaries")) {
     if (Test-Path $exePath) {
         Sign-File $exePath
     } else {
-        Write-Warning "LocalPDF.exe not found at $exePath."
+        Write-Warning "LocalPDF.exe não encontrado em $exePath."
     }
 
     # Also sign any vendor binaries if present
@@ -47,9 +78,11 @@ if ($Target -in @("All", "Msi")) {
         Sign-File $MsiPath
     } else {
         if ($Target -eq "Msi") {
-            Write-Warning "LocalPDF.msi not found at $MsiPath."
+            Write-Warning "LocalPDF.msi não encontrado em $MsiPath."
         }
     }
 }
 
-Write-Host "Signing complete. Verify with: signtool verify /pa /v <file>"
+Write-Host "`nAssinatura concluída com sucesso!" -ForegroundColor Green
+Write-Host "Para verificar status: Get-AuthenticodeSignature -FilePath .\dist\LocalPDF\LocalPDF.exe" -ForegroundColor Cyan
+

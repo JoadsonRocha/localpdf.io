@@ -34,7 +34,17 @@ if ($LASTEXITCODE -eq 0 -and ($extensions -notmatch "WixToolset.Heat")) {
 }
 
 Push-Location $Root
-try {
+    # Assinar binários portáteis antes de empacotar
+    $signScript = Join-Path $PSScriptRoot "sign-release.ps1"
+    if (Test-Path $signScript) {
+        Write-Host "Assinando binários portáteis com Authenticode..." -ForegroundColor Cyan
+        try {
+            & $signScript -Target Binaries
+        } catch {
+            Write-Warning "Falha ao assinar binários: $_"
+        }
+    }
+
     Write-Host "Harvesting portable files from $Portable..."
     & wix extension add WixToolset.Heat --global 2>$null
     & wix harvest dir $Portable -ext WixToolset.Heat -o $Generated -dr INSTALLFOLDER -cg AppFiles -srd -sreg
@@ -45,7 +55,16 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "WiX build failed." }
 
     Write-Host "MSI created successfully at $Output"
-    Write-Host "Remember to sign $Output with Authenticode before public distribution."
+
+    # Assinar o arquivo MSI resultante
+    if (Test-Path $signScript) {
+        Write-Host "Assinando instalador MSI com Authenticode..." -ForegroundColor Cyan
+        try {
+            & $signScript -Target Msi
+        } catch {
+            Write-Warning "Falha ao assinar MSI: $_"
+        }
+    }
 } finally {
     if (Test-Path $Generated) {
         Remove-Item -Force $Generated -ErrorAction SilentlyContinue

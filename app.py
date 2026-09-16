@@ -71,12 +71,38 @@ HTML_TEMPLATE = """
         .convert-btn { background: #2563eb; color: white; padding: 15px 40px; border: none; border-radius: 25px; cursor: pointer; font-size: 1.2em; margin-top: 20px; transition: background 0.3s ease; }
         .convert-btn:hover { background: #1d4ed8; }
         .convert-btn:disabled { background: #ccc; cursor: not-allowed; }
-        .file-list { margin-top: 20px; }
-        .file-item { background: #f8f9fa; padding: 10px 15px; margin: 5px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-        .progress { width: 100%; background: #f0f0f0; border-radius: 10px; margin: 20px 0; }
-        .progress-bar { height: 20px; background: #2563eb; border-radius: 10px; width: 0%; transition: width 0.3s ease; }
-        .result { margin-top: 20px; padding: 20px; background: #d4edda; border-radius: 10px; color: #155724; }
-        .error { margin-top: 20px; padding: 20px; background: #f8d7da; border-radius: 10px; color: #721c24; }
+        .file-list { margin-top: 20px; display: grid; gap: 9px; text-align: left; }
+        .file-item { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: all 0.2s ease; }
+        .file-item:hover { border-color: #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+        .file-info-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .file-ext-badge { background: #eff6ff; color: #2563eb; font-weight: 800; font-size: 0.72rem; padding: 4px 7px; border-radius: 6px; letter-spacing: 0.04em; flex-shrink: 0; }
+        .file-name-text { font-size: 0.92rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+        .file-size-text { font-size: 0.8rem; color: #64748b; margin-left: 6px; flex-shrink: 0; }
+        .file-remove-btn { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; border-radius: 7px; padding: 6px 10px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; font-family: inherit; }
+        .file-remove-btn:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+        .progress-box { margin-top: 24px; padding: 18px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; text-align: left; }
+        .progress-bar-wrapper { width: 100%; height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; position: relative; margin-bottom: 10px; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%); background-size: 200% 100%; animation: progressShimmer 2s infinite linear; border-radius: 999px; transition: width 0.3s ease; }
+        @keyframes progressShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .progress-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; color: #475569; font-weight: 600; }
+        .progress-timer { color: #2563eb; font-variant-numeric: tabular-nums; }
+
+        .result-card { margin-top: 24px; padding: 22px; border-radius: 12px; text-align: left; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .result-card.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .result-card.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .result-header h4 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+        .result-body p { font-size: 0.92rem; margin-bottom: 12px; opacity: 0.95; line-height: 1.5; }
+        .result-filename { font-weight: 700; word-break: break-all; color: #0f172a; background: rgba(255,255,255,0.8); padding: 6px 12px; border-radius: 6px; display: inline-block; margin-bottom: 12px; border: 1px solid rgba(0,0,0,0.06); font-size: 0.9rem; }
+        .result-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+        .btn-download-again { background: #16a34a; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; box-shadow: 0 4px 10px rgba(22,163,74,0.2); font-family: inherit; }
+        .btn-download-again:hover { background: #15803d; }
+        .btn-reset-flow { background: #ffffff; color: #334155; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+        .btn-reset-flow:hover { background: #f8fafc; border-color: #94a3b8; }
+        .btn-try-again { background: #dc2626; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
+        .btn-try-again:hover { background: #b91c1c; }
         .hidden { display: none; }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
         .modal-content { background: white; margin: 5% auto; padding: 30px; width: 80%; max-width: 600px; border-radius: 15px; position: relative; }
@@ -420,8 +446,14 @@ HTML_TEMPLATE = """
 
                 <button id="convert-btn" class="convert-btn hidden" onclick="convertFiles()">Converter</button>
 
-                <div id="progress" class="progress hidden">
-                    <div id="progress-bar" class="progress-bar"></div>
+                <div id="progress" class="progress-box hidden">
+                    <div class="progress-bar-wrapper">
+                        <div id="progress-bar" class="progress-bar"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span id="progress-message">Processando documento localmente...</span>
+                        <span id="progress-timer">⏱️ 00:00</span>
+                    </div>
                 </div>
 
                 <div id="result" class="hidden"></div>

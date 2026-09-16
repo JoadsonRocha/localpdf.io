@@ -4,3 +4,13 @@ __pycache__/
 build/
 dist/
 packaging/windows/generated-files.wxs
+
+# Certificados, chaves privadas e arquivos de assinatura
+*.cer
+*.crt
+*.pfx
+*.p12
+*.key
+*.pem
+*.snk
+
