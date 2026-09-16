@@ -184,7 +184,6 @@ HTML_TEMPLATE = """
         .site-nav-links a:hover { color: #1d4ed8; }
         .language-toggle { border: 1px solid #bfdbfe; border-radius: 999px; background: #fff; color: #1d4ed8; padding: 7px 11px; font: inherit; font-size: 0.82rem; font-weight: 800; cursor: pointer; }
         .language-toggle:hover { background: #eff6ff; }
-        .privacy-pill { color: #1d4ed8 !important; background: #dbeafe; border-radius: 999px; padding: 8px 13px; }
         .header { color: #24272b; margin: 0 auto; padding: 34px 0 20px; max-width: 700px; }
         .header h1 { font-size: clamp(1.4rem, 2.6vw, 1.85rem); line-height: 1.25; letter-spacing: -0.025em; margin-bottom: 8px; font-weight: 700; }
         .header p { color: #6c7178; font-size: 0.98rem; line-height: 1.5; }
@@ -205,14 +204,16 @@ HTML_TEMPLATE = """
         .tool-card h3 { color: #24272b; font-size: 1.05rem; margin-bottom: 8px; }
         .tool-card p { color: #747980; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0; }
         .tools-grid .tool-card:last-child { border-color: #2563eb; box-shadow: 0 8px 24px rgba(37,99,235,0.14); }
-        .footer { color: #747980; border-top: 1px solid #e3e5e8; }
+        .footer { color: #747980; border-top: 1px solid #e3e5e8; padding-top: 40px; margin-top: 48px; }
         .footer a { color: #2563eb; }
         .footer .social-icons a { color: #747980; }
-        .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28px; max-width: 900px; margin: 0 auto 24px; text-align: left; }
-        .footer-block h4 { color: #24272b; margin-bottom: 8px; font-family: Georgia, "Times New Roman", serif; }
-        .footer-block p, .footer-block a { font-size: 0.88rem; line-height: 1.7; }
+        .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 28px; max-width: 960px; margin: 0 auto 32px; text-align: left; }
+        .footer-block h4 { color: #24272b; margin-bottom: 10px; font-family: Georgia, "Times New Roman", serif; font-size: 0.95rem; }
+        .footer-block p, .footer-block a { font-size: 0.875rem; line-height: 1.75; }
         .footer-block a { display: block; }
-        .footer-credit { border-top: 1px solid #e3e5e8; padding-top: 18px; }
+        .footer-credit { border-top: 1px solid #e3e5e8; padding-top: 18px; margin-top: 4px; text-align: center; font-size: 0.82rem; color: #9ca3af; }
+        .footer-credit a { color: #2563eb; text-decoration: none; }
+        .footer-credit a:hover { text-decoration: underline; }
         body { font-family: "Avenir Next", "Segoe UI", sans-serif; }
         .header h1, .tool-card h3, .editor-page-number { font-family: Georgia, "Times New Roman", serif; }
         .editor-shell { background: #f5f9ff; border: 1px solid #bfdbfe; }
@@ -250,7 +251,6 @@ HTML_TEMPLATE = """
             .site-nav-links { min-width: 0; max-width: 72vw; gap: 14px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
             .site-nav-links::-webkit-scrollbar { display: none; }
             .site-nav-links a { flex: 0 0 auto; font-size: 0.78rem; white-space: nowrap; }
-            .privacy-pill { padding: 7px 10px; }
             .header { padding: 24px 0 16px; }
             .header h1 { font-size: 1.35rem; letter-spacing: -0.02em; }
             .header p { font-size: 0.92rem; line-height: 1.45; }
@@ -267,9 +267,22 @@ HTML_TEMPLATE = """
             .editor-page-actions button { min-width: 0; padding: 8px 3px; }
             .editor-pending-pages { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .upload-area { padding: 26px 14px; }
-            .footer { margin-top: 28px; }
-            .footer a { display: inline-block; margin: 4px 0; }
-            .footer-grid { grid-template-columns: 1fr; gap: 18px; text-align: center; }
+            .footer { margin-top: 32px; padding-top: 28px; }
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0;
+                text-align: left;
+            }
+            .footer-block {
+                padding: 18px 16px;
+                border-bottom: 1px solid #f0f2f4;
+            }
+            .footer-block:nth-child(odd) {
+                border-right: 1px solid #f0f2f4;
+            }
+            .footer-block h4 { font-size: 0.88rem; margin-bottom: 7px; }
+            .footer-block p, .footer-block a { font-size: 0.82rem; line-height: 1.65; }
+            .footer-credit { margin-top: 8px; padding: 14px 16px; font-size: 0.78rem; text-align: center; }
         }
     </style>
 </head>
@@ -284,7 +297,6 @@ HTML_TEMPLATE = """
                 <a href="#tools">Comprimir PDF</a>
                 <a href="#tools">Converter PDF</a>
                 <a href="#tools">Todas as ferramentas</a>
-                <a class="privacy-pill" href="#privacy-note">100% local</a>
                 <button id="language-toggle" class="language-toggle" type="button" onclick="toggleLanguage()">EN</button>
             </div>
         </nav>
@@ -591,7 +603,6 @@ HTML_TEMPLATE = """
             'Comprimir PDF': 'Compress PDF',
             'Converter PDF': 'Convert PDF',
             'Todas as ferramentas': 'All tools',
-            '100% local': '100% local',
             'Todas': 'All',
             'Organizar PDF': 'Organize PDF',
             'Otimizar PDF': 'Optimize PDF',
