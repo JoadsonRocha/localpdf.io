@@ -491,6 +491,15 @@ HTML_TEMPLATE = """
     <script>
         let currentTool = '';
         let currentLanguage = localStorage.getItem('localpdf-language') || 'pt';
+        let uploadedFiles = [];
+        let progressInterval = null;
+        let progressSeconds = 0;
+        let lastDownloadedBlob = null;
+        let lastDownloadedFilename = '';
+
+        function t(pt, en) {
+            return currentLanguage === 'en' ? en : pt;
+        }
 
         const languageTexts = {
             'PDF simples, privado e local': 'Simple, private and local PDF',
@@ -538,55 +547,57 @@ HTML_TEMPLATE = """
             'Selecione uma ou mais páginas do arquivo adicional antes de adicioná-las ao documento.': 'Select one or more pages from the additional file before adding them to the document.',
             'Inserir selecionadas': 'Insert selected',
             'Cancelar': 'Cancel',
-            'A senha é usada somente durante o processamento local.': 'The password is used only during local processing.'
-            ,'🖼️ PDF para Imagens': '🖼️ PDF to Images'
-            ,'📄 Imagens para PDF': '📄 Images to PDF'
-            ,'🔗 Mesclar PDFs': '🔗 Merge PDFs'
-            ,'✂️ Dividir PDF': '✂️ Split PDF'
-            ,'📦 Comprimir PDF': '📦 Compress PDF'
-            ,'🔐 Proteger PDF': '🔐 Protect PDF'
-            ,"💧 Marca d'água": '💧 Watermark'
-            ,'🔢 Números de página': '🔢 Page numbers'
-            ,'🔒 PDF para PDF/A': '🔒 PDF to PDF/A'
-            ,'📝 Word para PDF': '📝 Word to PDF'
-            ,'📊 Excel para PDF': '📊 Excel to PDF'
-            ,'📄 TXT para PDF': '📄 TXT to PDF'
-            ,'🔄 PDF para Word': '🔄 PDF to Word'
-            ,'📄 PDF para Texto': '📄 PDF to Text'
-            ,'🔍 OCR em PDF': '🔍 OCR PDF'
-            ,'Converta páginas PDF em imagens JPG ou PNG': 'Convert PDF pages into JPG or PNG images'
-            ,'Combine várias imagens em um único PDF': 'Combine multiple images into one PDF'
-            ,'Combine vários arquivos PDF em um documento único': 'Combine multiple PDF files into one document'
-            ,'Extraia páginas específicas do seu PDF': 'Extract specific pages from your PDF'
-            ,'Reduza o tamanho do seu arquivo PDF': 'Reduce your PDF file size'
-            ,'Adicione uma senha local ao seu documento PDF': 'Add a local password to your PDF'
-            ,"Adicione uma marca d'água de texto ao PDF": 'Add a text watermark to your PDF'
-            ,'Numere as páginas do documento localmente': 'Number your document pages locally'
-            ,'Padronize seu PDF para arquivamento (PDF/A)': 'Convert your PDF to the archival PDF/A standard'
-            ,'Converta um ou mais documentos DOCX para PDF': 'Convert one or more DOCX documents to PDF'
-            ,'Converta planilhas XLSX para PDF': 'Convert XLSX spreadsheets to PDF'
-            ,'Converta arquivos de texto simples para PDF': 'Convert plain text files to PDF'
-            ,'Converta documentos PDF para Word (.docx) editável': 'Convert PDF documents to editable Word (.docx) files'
-            ,'Extraia o texto do PDF para um arquivo TXT editável': 'Extract PDF text into an editable TXT file'
-            ,'Extraia texto de PDFs e imagens escaneadas com OCR': 'Extract text from scanned PDFs and images with OCR'
+            'A senha é usada somente durante o processamento local.': 'The password is used only during local processing.',
+            'PDF para Imagens': 'PDF to Images',
+            'Imagens para PDF': 'Images to PDF',
+            'Mesclar PDFs': 'Merge PDFs',
+            'Dividir PDF': 'Split PDF',
+            'Comprimir PDF': 'Compress PDF',
+            'Proteger PDF': 'Protect PDF',
+            "Marca d'água": 'Watermark',
+            'Números de página': 'Page numbers',
+            'PDF para PDF/A': 'PDF to PDF/A',
+            'Word para PDF': 'Word to PDF',
+            'Excel para PDF': 'Excel to PDF',
+            'TXT para PDF': 'TXT to PDF',
+            'PDF para Word': 'PDF to Word',
+            'PDF para Texto': 'PDF to Text',
+            'OCR em PDF': 'OCR PDF',
+            'Editar PDF': 'Edit PDF',
+            'Converta páginas PDF em imagens JPG ou PNG': 'Convert PDF pages into JPG or PNG images',
+            'Combine várias imagens em um único PDF': 'Combine multiple images into one PDF',
+            'Combine vários arquivos PDF em um documento único': 'Combine multiple PDF files into one document',
+            'Extraia páginas específicas do seu PDF': 'Extract specific pages from your PDF',
+            'Reduza o tamanho do seu arquivo PDF': 'Reduce your PDF file size',
+            'Adicione uma senha local ao seu documento PDF': 'Add a local password to your PDF',
+            "Adicione uma marca d'água de texto ao PDF": 'Add a text watermark to your PDF',
+            'Numere as páginas do documento localmente': 'Number your document pages locally',
+            'Padronize seu PDF para arquivamento (PDF/A)': 'Convert your PDF to the archival PDF/A standard',
+            'Converta um ou mais documentos DOCX para PDF': 'Convert one or more DOCX documents to PDF',
+            'Converta planilhas XLSX para PDF': 'Convert XLSX spreadsheets to PDF',
+            'Converta arquivos de texto simples para PDF': 'Convert plain text files to PDF',
+            'Converta documentos PDF para Word (.docx) editável': 'Convert PDF documents to editable Word (.docx) files',
+            'Extraia o texto do PDF para um arquivo TXT editável': 'Extract PDF text into an editable TXT file',
+            'Extraia texto de PDFs e imagens escaneadas com OCR': 'Extract text from scanned PDFs and images with OCR',
+            'Reordene, insira, gire, duplique e exclua páginas diretamente no PDF': 'Reorder, insert, rotate, duplicate and delete pages directly in the PDF'
         };
 
         const toolTranslations = {
-            'pdf-to-images': ['🖼️ PDF to Images', 'Convert each PDF page into separate JPG or PNG images'],
-            'images-to-pdf': ['📄 Images to PDF', 'Combine multiple images into one PDF'],
-            'merge-pdf': ['🔗 Merge PDFs', 'Combine multiple PDF files into one document'],
-            'split-pdf': ['✂️ Split PDF', 'Extract specific pages from your PDF'],
-            'compress-pdf': ['📦 Compress PDF', 'Reduce PDF file size while preserving quality'],
-            'protect-pdf': ['🔐 Protect PDF', 'Create a password-protected copy of your PDF'],
-            'watermark-pdf': ["💧 Watermark", 'Add a text watermark to every page'],
-            'page-numbers-pdf': ['🔢 Page numbers', 'Add numbering to your PDF document'],
-            'pdf-to-pdfa': ['🔒 PDF to PDF/A', 'Convert PDFs to the PDF/A-1b archival standard'],
-            'word-to-pdf': ['📝 Word to PDF', 'Convert one or more DOCX files to PDF'],
-            'excel-to-pdf': ['📊 Excel to PDF', 'Convert Excel spreadsheets to PDF'],
-            'txt-to-pdf': ['📄 TXT to PDF', 'Convert plain text files to formatted PDF'],
-            'pdf-to-word': ['🔄 PDF to Word', 'Convert PDF documents into editable DOCX files'],
-            'pdf-to-text': ['📄 PDF to Text', 'Extract selectable text from every PDF page'],
-            'ocr-pdf': ['🔍 OCR PDF', 'Extract text from scanned PDFs and images using OCR']
+            'pdf-to-images': ['PDF to Images', 'Convert each PDF page into separate JPG or PNG images'],
+            'images-to-pdf': ['Images to PDF', 'Combine multiple images into one PDF'],
+            'merge-pdf': ['Merge PDFs', 'Combine multiple PDF files into one document'],
+            'split-pdf': ['Split PDF', 'Extract specific pages from your PDF'],
+            'compress-pdf': ['Compress PDF', 'Reduce PDF file size while preserving quality'],
+            'protect-pdf': ['Protect PDF', 'Create a password-protected copy of your PDF'],
+            'watermark-pdf': ["Watermark", 'Add a text watermark to every page'],
+            'page-numbers-pdf': ['Page numbers', 'Add numbering to your PDF document'],
+            'pdf-to-pdfa': ['PDF to PDF/A', 'Convert PDFs to the PDF/A-1b archival standard'],
+            'word-to-pdf': ['Word to PDF', 'Convert one or more DOCX files to PDF'],
+            'excel-to-pdf': ['Excel to PDF', 'Convert Excel spreadsheets to PDF'],
+            'txt-to-pdf': ['TXT to PDF', 'Convert plain text files to formatted PDF'],
+            'pdf-to-word': ['PDF to Word', 'Convert PDF documents into editable DOCX files'],
+            'pdf-to-text': ['PDF to Text', 'Extract selectable text from every PDF page'],
+            'ocr-pdf': ['OCR PDF', 'Extract text from scanned PDFs and images using OCR']
         };
 
         function translatePage() {
@@ -607,103 +618,114 @@ HTML_TEMPLATE = """
             translatePage();
             if (currentTool) showTool(currentTool);
         }
-        let uploadedFiles = [];
 
         const tools = {
             'pdf-to-images': {
-                title: '🖼️ PDF para Imagens',
+                title: 'PDF para Imagens',
                 description: 'Converta cada página do seu PDF em imagens separadas',
                 accept: '.pdf',
                 multiple: false
             },
             'images-to-pdf': {
-                title: '📄 Imagens para PDF',
+                title: 'Imagens para PDF',
                 description: 'Combine múltiplas imagens em um único arquivo PDF',
                 accept: '.jpg,.jpeg,.png',
                 multiple: true
             },
             'merge-pdf': {
-                title: '🔗 Mesclar PDFs',
+                title: 'Mesclar PDFs',
                 description: 'Combine vários arquivos PDF em um documento único',
                 accept: '.pdf',
                 multiple: true
             },
             'split-pdf': {
-                title: '✂️ Dividir PDF',
+                title: 'Dividir PDF',
                 description: 'Extraia páginas específicas do seu PDF',
                 accept: '.pdf',
                 multiple: false
             },
             'compress-pdf': {
-                title: '📦 Comprimir PDF',
+                title: 'Comprimir PDF',
                 description: 'Reduza o tamanho do arquivo PDF mantendo a qualidade',
                 accept: '.pdf',
                 multiple: false
             },
             'protect-pdf': {
-                title: '🔐 Proteger PDF',
+                title: 'Proteger PDF',
                 description: 'Crie uma cópia protegida do seu PDF com senha',
                 accept: '.pdf',
                 multiple: false,
                 options: 'password'
             },
             'watermark-pdf': {
-                title: "💧 Marca d'água",
+                title: "Marca d'água",
                 description: "Adicione uma marca d'água de texto em todas as páginas",
                 accept: '.pdf',
                 multiple: false,
                 options: 'watermark'
             },
             'page-numbers-pdf': {
-                title: '🔢 Números de página',
+                title: 'Números de página',
                 description: 'Adicione numeração ao seu documento PDF',
                 accept: '.pdf',
                 multiple: false,
                 options: 'page-numbers'
             },
             'pdf-to-pdfa': {
-                title: '🔒 PDF para PDF/A',
+                title: 'PDF para PDF/A',
                 description: 'Converta PDFs para o padrão de arquivamento PDF/A-1b',
                 accept: '.pdf',
                 multiple: true
             },
             'word-to-pdf': {
-                title: '📝 Word para PDF',
+                title: 'Word para PDF',
                 description: 'Converta documentos Word (.docx) para PDF - aceita múltiplos arquivos',
                 accept: '.docx',
                 multiple: true
             },
             'excel-to-pdf': {
-                title: '📊 Excel para PDF',
+                title: 'Excel para PDF',
                 description: 'Converta planilhas Excel (.xlsx) para PDF',
                 accept: '.xlsx',
                 multiple: false
             },
             'txt-to-pdf': {
-                title: '📄 TXT para PDF',
+                title: 'TXT para PDF',
                 description: 'Converta arquivos de texto simples (.txt) para PDF',
                 accept: '.txt',
                 multiple: false
             },
             'pdf-to-word': {
-                title: '🔄 PDF para Word',
+                title: 'PDF para Word',
                 description: 'Converta seus documentos PDF para Word (.docx) editável',
                 accept: '.pdf',
                 multiple: false
             },
             'pdf-to-text': {
-                title: '📄 PDF para Texto',
+                title: 'PDF para Texto',
                 description: 'Extraia o texto selecionável de todas as páginas do PDF',
                 accept: '.pdf',
                 multiple: false
             },
             'ocr-pdf': {
-                title: '🔍 OCR em PDF',
-                description: 'Extraia texto de PDFs e imagens escaneadas usando reconhecimento óptico de caracteres (Tesseract)',
+                title: 'OCR em PDF',
+                description: 'Extraia texto de PDFs e imagens escaneadas usando reconhecimento óptico de caracteres',
                 accept: '.pdf,.jpg,.jpeg,.png',
                 multiple: false
             }
         };
+
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function getFileExtension(filename) {
+            return filename.slice((filename.lastIndexOf(".") - 1 >>> 0) + 2).toUpperCase() || 'FILE';
+        }
 
         function filterCategory(category, tabBtn) {
             document.querySelectorAll('.category-tab').forEach(b => {
@@ -746,30 +768,29 @@ HTML_TEMPLATE = """
             updateFileList();
             hideResult();
 
-            const cleanTitle = rawTitle.replace(/^[\\wÀ-ÿ]+/g, '').trim();
-            document.title = `${cleanTitle} - LocalPDF.io`;
+            document.title = `${rawTitle} - LocalPDF.io`;
         }
 
         function renderToolOptions(optionType) {
             const options = document.getElementById('options');
             if (optionType === 'password') {
                 options.innerHTML = `
-                    <label for="pdf-password">Senha do PDF</label>
-                    <input id="pdf-password" type="password" minlength="4" autocomplete="new-password" placeholder="Digite uma senha com pelo menos 4 caracteres">
-                    <small>A senha é usada somente durante o processamento local.</small>
+                    <label for="pdf-password">${t('Senha do PDF', 'PDF Password')}</label>
+                    <input id="pdf-password" type="password" minlength="4" autocomplete="new-password" placeholder="${t('Digite uma senha com pelo menos 4 caracteres', 'Enter a password with at least 4 characters')}">
+                    <small>${t('A senha é usada somente durante o processamento local.', 'The password is used only during local processing.')}</small>
                 `;
                 options.classList.remove('hidden');
                 return;
             }
             if (optionType === 'watermark') {
                 options.innerHTML = `
-                    <label for="watermark-text">Texto da marca d'água</label>
-                    <input id="watermark-text" type="text" maxlength="80" placeholder="Ex.: CONFIDENCIAL">
-                    <label for="watermark-position">Posição</label>
+                    <label for="watermark-text">${t("Texto da marca d'água", 'Watermark text')}</label>
+                    <input id="watermark-text" type="text" maxlength="80" placeholder="${t('Ex.: CONFIDENCIAL', 'e.g.: CONFIDENTIAL')}">
+                    <label for="watermark-position">${t('Posição', 'Position')}</label>
                     <select id="watermark-position">
-                        <option value="center">Centro</option>
-                        <option value="top">Parte superior</option>
-                        <option value="bottom">Parte inferior</option>
+                        <option value="center">${t('Centro', 'Center')}</option>
+                        <option value="top">${t('Parte superior', 'Top')}</option>
+                        <option value="bottom">${t('Parte inferior', 'Bottom')}</option>
                     </select>
                 `;
                 options.classList.remove('hidden');
@@ -777,12 +798,12 @@ HTML_TEMPLATE = """
             }
             if (optionType === 'page-numbers') {
                 options.innerHTML = `
-                    <label for="page-number-position">Posição da numeração</label>
+                    <label for="page-number-position">${t('Posição da numeração', 'Page numbers position')}</label>
                     <select id="page-number-position">
-                        <option value="bottom-center">Rodapé central</option>
-                        <option value="bottom-right">Rodapé direito</option>
-                        <option value="top-center">Cabeçalho central</option>
-                        <option value="top-right">Cabeçalho direito</option>
+                        <option value="bottom-center">${t('Rodapé central', 'Bottom center')}</option>
+                        <option value="bottom-right">${t('Rodapé direito', 'Bottom right')}</option>
+                        <option value="top-center">${t('Cabeçalho central', 'Top center')}</option>
+                        <option value="top-right">${t('Cabeçalho direito', 'Top right')}</option>
                     </select>
                 `;
                 options.classList.remove('hidden');
@@ -814,13 +835,34 @@ HTML_TEMPLATE = """
                 return;
             }
 
-            fileList.innerHTML = uploadedFiles.map((file, index) => `
-                <div class="file-item">
-                    <span>📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                    <button onclick="removeFile(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Remover</button>
-                </div>
-            `).join('');
+            fileList.innerHTML = uploadedFiles.map((file, index) => {
+                const ext = getFileExtension(file.name);
+                const sizeStr = formatFileSize(file.size);
+                return `
+                    <div class="file-item">
+                        <div class="file-info-group">
+                            <span class="file-ext-badge">${ext}</span>
+                            <span class="file-name-text" title="${file.name}">${file.name}</span>
+                            <span class="file-size-text">(${sizeStr})</span>
+                        </div>
+                        <button type="button" class="file-remove-btn" onclick="removeFile(${index})" title="${t('Remover arquivo', 'Remove file')}">
+                            ✕ <span>${t('Remover', 'Remove')}</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
 
+            let btnText = t('Processar Documento', 'Process Document');
+            if (currentTool === 'merge-pdf') btnText = t('Mesclar PDFs', 'Merge PDFs');
+            else if (currentTool === 'compress-pdf') btnText = t('Comprimir PDF', 'Compress PDF');
+            else if (currentTool === 'split-pdf') btnText = t('Dividir PDF', 'Split PDF');
+            else if (currentTool === 'protect-pdf') btnText = t('Proteger PDF', 'Protect PDF');
+            else if (currentTool === 'watermark-pdf') btnText = t("Aplicar Marca d'Água", 'Apply Watermark');
+            else if (currentTool === 'ocr-pdf') btnText = t('Executar OCR', 'Run OCR');
+            else if (currentTool) btnText = t('Converter', 'Convert');
+
+            convertBtn.textContent = btnText;
+            convertBtn.disabled = false;
             convertBtn.classList.remove('hidden');
         }
 
@@ -832,6 +874,88 @@ HTML_TEMPLATE = """
         function hideResult() {
             document.getElementById('result').classList.add('hidden');
             document.getElementById('progress').classList.add('hidden');
+        }
+
+        function resetToolFlow() {
+            uploadedFiles = [];
+            updateFileList();
+            hideResult();
+            const fileInput = document.getElementById('file-input');
+            if (fileInput) fileInput.value = '';
+        }
+
+        function downloadAgain() {
+            if (!lastDownloadedBlob) return;
+            const url = window.URL.createObjectURL(lastDownloadedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = lastDownloadedFilename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function startProgress(tool) {
+            const progressEl = document.getElementById('progress');
+            const progressBar = document.getElementById('progress-bar');
+            const progressMsg = document.getElementById('progress-message');
+            const progressTimer = document.getElementById('progress-timer');
+
+            progressEl.classList.remove('hidden');
+            progressBar.style.width = '15%';
+            progressSeconds = 0;
+            progressTimer.textContent = '⏱️ 00:00';
+
+            const getStageMsg = (sec) => {
+                if (sec < 2) {
+                    return t('Enviando e analisando arquivo...', 'Uploading and analyzing file...');
+                }
+                if (tool === 'ocr-pdf') {
+                    return t('Executando OCR e reconhecendo texto... Isso pode levar alguns segundos.', 'Running OCR and recognizing text... This may take a few seconds.');
+                } else if (tool === 'compress-pdf') {
+                    return t('Otimizando imagens e reestruturando PDF...', 'Optimizing images and restructuring PDF...');
+                } else if (tool === 'word-to-pdf' || tool === 'pdf-to-word' || tool === 'excel-to-pdf') {
+                    return t('Convertendo estrutura, formatação e tabelas...', 'Converting structure, formatting and tables...');
+                } else if (tool === 'merge-pdf') {
+                    return t('Mesclando documentos e organizando páginas...', 'Merging documents and organizing pages...');
+                } else {
+                    return t('Processando documento localmente no seu computador...', 'Processing document locally on your computer...');
+                }
+            };
+
+            progressMsg.textContent = getStageMsg(0);
+
+            let currentWidth = 15;
+            progressInterval = setInterval(() => {
+                progressSeconds++;
+                const mins = String(Math.floor(progressSeconds / 60)).padStart(2, '0');
+                const secs = String(progressSeconds % 60).padStart(2, '0');
+                progressTimer.textContent = `⏱️ ${mins}:${secs}`;
+                progressMsg.textContent = getStageMsg(progressSeconds);
+
+                if (currentWidth < 90) {
+                    currentWidth += (90 - currentWidth) * 0.15;
+                    progressBar.style.width = `${Math.round(currentWidth)}%`;
+                }
+            }, 1000);
+        }
+
+        function stopProgress(success) {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+                progressBar.style.width = success ? '100%' : '0%';
+            }
+            setTimeout(() => {
+                const progressEl = document.getElementById('progress');
+                if (progressEl && success) {
+                    progressEl.classList.add('hidden');
+                }
+            }, 450);
         }
 
         // Upload de arquivos
@@ -881,7 +1005,12 @@ HTML_TEMPLATE = """
             const passwordInput = document.getElementById('pdf-password');
             if (passwordInput) {
                 if (!passwordInput.value || passwordInput.value.length < 4) {
-                    document.getElementById('result').innerHTML = '<h4>⚠️ Senha inválida</h4><p>Informe uma senha com pelo menos 4 caracteres.</p>';
+                    document.getElementById('result').innerHTML = `
+                        <div class="result-card error">
+                            <div class="result-header"><h4>⚠️ ${t('Senha inválida', 'Invalid password')}</h4></div>
+                            <div class="result-body"><p>${t('Informe uma senha com pelo menos 4 caracteres.', 'Enter a password with at least 4 characters.')}</p></div>
+                        </div>
+                    `;
                     document.getElementById('result').classList.remove('hidden');
                     return;
                 }
@@ -890,7 +1019,12 @@ HTML_TEMPLATE = """
             const watermarkText = document.getElementById('watermark-text');
             if (watermarkText) {
                 if (!watermarkText.value.trim()) {
-                    document.getElementById('result').innerHTML = "<h4>⚠️ Texto obrigatório</h4><p>Informe o texto da marca d'água.</p>";
+                    document.getElementById('result').innerHTML = `
+                        <div class="result-card error">
+                            <div class="result-header"><h4>⚠️ ${t('Texto obrigatório', 'Required text')}</h4></div>
+                            <div class="result-body"><p>${t("Informe o texto da marca d'água.", 'Enter the watermark text.')}</p></div>
+                        </div>
+                    `;
                     document.getElementById('result').classList.remove('hidden');
                     return;
                 }
@@ -902,8 +1036,10 @@ HTML_TEMPLATE = """
                 formData.append('page_number_position', pageNumberPosition.value);
             }
 
-            document.getElementById('progress').classList.remove('hidden');
             document.getElementById('convert-btn').disabled = true;
+            document.getElementById('convert-btn').textContent = t('Processando...', 'Processing...');
+            hideResult();
+            startProgress(currentTool);
 
             try {
                 const response = await fetch('/convert', {
@@ -913,26 +1049,87 @@ HTML_TEMPLATE = """
 
                 if (response.ok) {
                     const blob = await response.blob();
+                    stopProgress(true);
+
+                    let downloadFilename = '';
+                    const disposition = response.headers.get('Content-Disposition');
+                    if (disposition && disposition.indexOf('filename=') !== -1) {
+                        let filenamePart = disposition.split('filename=')[1].trim();
+                        if (filenamePart.startsWith('"') && filenamePart.endsWith('"')) {
+                            filenamePart = filenamePart.slice(1, -1);
+                        }
+                        downloadFilename = decodeURIComponent(filenamePart);
+                    }
+                    if (!downloadFilename) {
+                        downloadFilename = 'localpdf_documento.pdf';
+                    }
+
+                    lastDownloadedBlob = blob;
+                    lastDownloadedFilename = downloadFilename;
+
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = response.headers.get('Content-Disposition')?.split('filename=')[1] || 'converted_file.zip';
+                    a.download = downloadFilename;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
 
-                    document.getElementById('result').innerHTML = '<h4>✅ Sucesso!</h4><p>Arquivo convertido e baixado com sucesso!</p>';
+                    document.getElementById('result').innerHTML = `
+                        <div class="result-card success">
+                            <div class="result-header">
+                                <h4>✅ ${t('Concluído com sucesso!', 'Completed successfully!')}</h4>
+                            </div>
+                            <div class="result-body">
+                                <span class="result-filename">📄 ${downloadFilename}</span>
+                                <p>${t('O arquivo foi processado no seu computador e o download foi iniciado automaticamente.', 'The file was processed on your computer and the download started automatically.')}</p>
+                                <div class="result-actions">
+                                    <button type="button" class="btn-download-again" onclick="downloadAgain()">${t('📥 Baixar novamente', '📥 Download again')}</button>
+                                    <button type="button" class="btn-reset-flow" onclick="resetToolFlow()">${t('✨ Processar outro arquivo', '✨ Process another file')}</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                     document.getElementById('result').classList.remove('hidden');
                 } else {
-                    throw new Error('Erro na conversão');
+                    let errorDetail = '';
+                    try {
+                        const errData = await response.json();
+                        errorDetail = errData.error || '';
+                    } catch (e) {}
+                    throw new Error(errorDetail || t('Erro durante o processamento do documento.', 'Error during document processing.'));
                 }
             } catch (error) {
-                document.getElementById('result').innerHTML = '<h4>❌ Erro!</h4><p>Ocorreu um erro durante a conversão. Tente novamente.</p>';
+                stopProgress(false);
+                document.getElementById('result').innerHTML = `
+                    <div class="result-card error">
+                        <div class="result-header">
+                            <h4>⚠️ ${t('Falha no processamento', 'Processing failed')}</h4>
+                        </div>
+                        <div class="result-body">
+                            <p>${error.message || t('Ocorreu um erro ao processar o arquivo. Verifique se o documento é válido e tente novamente.', 'An error occurred while processing the file. Please verify that the document is valid and try again.')}</p>
+                            <div class="result-actions">
+                                <button type="button" class="btn-try-again" onclick="hideResult()">${t('Tentar novamente', 'Try again')}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
                 document.getElementById('result').classList.remove('hidden');
             } finally {
-                document.getElementById('progress').classList.add('hidden');
-                document.getElementById('convert-btn').disabled = false;
+                const convertBtn = document.getElementById('convert-btn');
+                if (convertBtn) {
+                    convertBtn.disabled = false;
+                    let btnText = t('Processar Documento', 'Process Document');
+                    if (currentTool === 'merge-pdf') btnText = t('Mesclar PDFs', 'Merge PDFs');
+                    else if (currentTool === 'compress-pdf') btnText = t('Comprimir PDF', 'Compress PDF');
+                    else if (currentTool === 'split-pdf') btnText = t('Dividir PDF', 'Split PDF');
+                    else if (currentTool === 'protect-pdf') btnText = t('Proteger PDF', 'Protect PDF');
+                    else if (currentTool === 'watermark-pdf') btnText = t("Aplicar Marca d'Água", 'Apply Watermark');
+                    else if (currentTool === 'ocr-pdf') btnText = t('Executar OCR', 'Run OCR');
+                    else if (currentTool) btnText = t('Converter', 'Convert');
+                    convertBtn.textContent = btnText;
+                }
             }
         }
 
