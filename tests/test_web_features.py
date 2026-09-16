@@ -59,6 +59,91 @@ class WebFeaturesTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.mimetype, "image/svg+xml")
 
+    def test_progress_box_and_file_flow_markup(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('class="progress-box hidden"', html)
+        self.assertIn('id="progress-message"', html)
+        self.assertIn('id="progress-timer"', html)
+        self.assertIn('id="file-list"', html)
+        self.assertIn('class="file-remove-btn"', html)
+
+    def test_standardized_renaming_on_convert(self):
+        import io
+        import fitz
+        from PIL import Image
+
+        # Criar PDF de teste
+        doc = fitz.open()
+        p = doc.new_page()
+        p.insert_text((50, 50), "Teste de renomeio")
+        pdf_bytes = doc.tobytes()
+        doc.close()
+
+        # Teste Compressão
+        resp = self.client.post(
+            "/convert",
+            data={
+                "tool": "compress-pdf",
+                "files": (io.BytesIO(pdf_bytes), "meu_relatorio.pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp.status_code, 200)
+        disp = resp.headers.get("Content-Disposition", "")
+        self.assertIn("meu_relatorio_comprimido.pdf", disp)
+
+        # Teste Mesclagem
+        resp_merge = self.client.post(
+            "/convert",
+            data={
+                "tool": "merge-pdf",
+                "files": [
+                    (io.BytesIO(pdf_bytes), "documento_a.pdf"),
+                    (io.BytesIO(pdf_bytes), "documento_b.pdf"),
+                ],
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_merge.status_code, 200)
+        disp_merge = resp_merge.headers.get("Content-Disposition", "")
+        self.assertIn("documento_a_mesclado.pdf", disp_merge)
+
+        # Teste Imagens para PDF
+        img = Image.new("RGB", (100, 100), color="blue")
+        img_bytes = io.BytesIO()
+        img.save(img_bytes, format="PNG")
+        img_bytes.seek(0)
+
+        resp_img = self.client.post(
+            "/convert",
+            data={
+                "tool": "images-to-pdf",
+                "files": [(img_bytes, "foto_viagem.png")],
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_img.status_code, 200)
+        disp_img = resp_img.headers.get("Content-Disposition", "")
+        self.assertIn("foto_viagem_convertido.pdf", disp_img)
+
+    def test_convert_error_returns_json_message(self):
+        import io
+        resp = self.client.post(
+            "/convert",
+            data={
+                "tool": "protect-pdf",
+                "password": "12",  # Senha curta demais (< 4)
+                "files": (io.BytesIO(b"%PDF-1.4 dummy"), "doc.pdf"),
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp.status_code, 400)
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertIn("error", data)
+
 
 if __name__ == "__main__":
     unittest.main()

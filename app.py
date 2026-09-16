@@ -1457,7 +1457,9 @@ def favicon():
     favicon_path = os.path.join(base_dir, "favicon.svg")
     if not os.path.exists(favicon_path):
         favicon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "favicon.svg")
-    return send_file(favicon_path, mimetype="image/svg+xml")
+    with open(favicon_path, "rb") as f:
+        data = f.read()
+    return send_file(io.BytesIO(data), mimetype="image/svg+xml")
 
 
 def render_pdf_page(page, scale=0.2):
@@ -2092,7 +2094,8 @@ def word_to_pdf(files, temp_dir):
     from reportlab.pdfgen import canvas
 
     # Criar PDF de saída
-    pdf_path = os.path.join(temp_dir, "word_to_pdf.pdf")
+    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files and files[0].filename else "documento"
+    pdf_path = os.path.join(temp_dir, f"{first_base}.pdf")
     c = canvas.Canvas(pdf_path, pagesize=letter)
     width, height = letter
     y_position = height - 50
@@ -2301,23 +2304,26 @@ def ocr_pdf(file, temp_dir):
     return [txt_path]
 
 
-def build_response(output_files, temp_dir):
+def build_response(output_files, temp_dir, download_name=None, default_zip_name=None):
     """Monta resposta enviando arquivos como attachment sem risco de remoção prematura do diretório temporário."""
     if len(output_files) == 1:
         file_path = output_files[0]
-        filename = os.path.basename(file_path)
+        filename = download_name or os.path.basename(file_path)
         with open(file_path, "rb") as f:
             data = f.read()
         return send_file(io.BytesIO(data), as_attachment=True, download_name=filename)
     else:
-        zip_path = os.path.join(temp_dir, "converted_files.zip")
+        zip_filename = default_zip_name or download_name or "localpdf_arquivos.zip"
+        if not zip_filename.endswith(".zip"):
+            zip_filename += ".zip"
+        zip_path = os.path.join(temp_dir, zip_filename)
         with zipfile.ZipFile(zip_path, "w") as zipf:
             for file_path in output_files:
                 zipf.write(file_path, os.path.basename(file_path))
         with open(zip_path, "rb") as f:
             data = f.read()
         return send_file(
-            io.BytesIO(data), as_attachment=True, download_name="converted_files.zip"
+            io.BytesIO(data), as_attachment=True, download_name=zip_filename
         )
 
 
