@@ -58,6 +58,8 @@ A package cannot be made trusted by configuration alone. For public distribution
 
 Unsigned first releases may still show SmartScreen warnings even when the code is safe. Reputation is built over time and cannot be bypassed legitimately.
 
+On machines with App Control, WDAC or AppLocker policies, an unsigned portable executable can be blocked before it starts. The generated test build is currently unsigned (`NotSigned`); it must be signed by the release owner and approved by the organization's policy before it can run in a locked-down Windows environment.
+
 ## Local security model
 
 The Windows launcher forces `LOCALPDF_MODE=local`, binds only to `127.0.0.1`, does not configure firewall rules and does not use Railway. The MSI is not yet a release artifact; these scripts are the initial packaging foundation.
