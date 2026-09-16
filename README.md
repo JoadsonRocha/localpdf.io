@@ -22,6 +22,7 @@
 
 [Features](#-features) •
 [Usage](#-usage) •
+[Roadmap](ROADMAP.md) •
 [Contributing](CONTRIBUTING.md) •
 [License](#-license)
 
@@ -56,6 +57,11 @@ No accounts. No cloud. No data leaving your computer.
 - **🔗 Merge PDFs** — Combine multiple PDFs into one document
 - **✂️ Split PDF** — Separate each page into individual files
 - **📦 Compress PDF** — Reduce file size while preserving quality
+
+### 🖥️ PDF page editor
+- **📝 Edit PDF pages** — Visually reorder, insert, duplicate, rotate and delete pages directly in a PDF
+
+The editor preserves the original file and exports a new PDF locally. See the complete implementation plan in [ROADMAP.md](ROADMAP.md).
 
 ## 🚀 Usage
 

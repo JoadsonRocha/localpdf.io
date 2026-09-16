@@ -5,6 +5,16 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Adicionado
+- 🖥️ Editor visual de páginas PDF inspirado em ferramentas de escritório
+- 🔀 Reordenação de páginas por arrastar e soltar
+- ➕ Inserção de páginas de outro PDF, imagens ou páginas em branco
+- 📋 Duplicação, rotação, extração e exclusão de páginas
+- 💾 Exportação do PDF reorganizado em um único arquivo
+- 📚 Plano técnico e critérios de aceite em [ROADMAP.md](ROADMAP.md)
+
 ## [1.0.0] - 2025-11-17
 
 ### Adicionado

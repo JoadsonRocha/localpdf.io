@@ -1,4 +1,6 @@
+import base64
 import io
+import json
 import os
 import shutil
 import tempfile
@@ -86,6 +88,28 @@ HTML_TEMPLATE = """
         .footer a:hover { text-decoration: underline; }
         .social-icons { margin-top: 10px; }
         .social-icons a { margin: 0 10px; color: #667eea; font-size: 1.2em; }
+        .editor-shell { background: #f8f9fa; border-radius: 15px; padding: 24px; margin-top: 20px; }
+        .editor-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; }
+        .editor-toolbar button, .editor-actions button { border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
+        .editor-toolbar button { background: #e9ecef; color: #343a40; }
+        .editor-toolbar button:hover { background: #dee2e6; }
+        .editor-toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .editor-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; min-height: 180px; }
+        .editor-page { position: relative; background: white; border: 2px solid transparent; border-radius: 10px; padding: 10px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); cursor: grab; }
+        .editor-page.selected { border-color: #667eea; }
+        .editor-page.dragging { opacity: 0.45; }
+        .editor-page img { display: block; width: 100%; aspect-ratio: 0.72; object-fit: contain; background: #e9ecef; border-radius: 5px; }
+        .editor-page-number { font-weight: 700; color: #495057; margin: 8px 0; }
+        .editor-page-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+        .editor-page-actions button { flex: 1; min-width: 42px; padding: 7px 5px; border: 0; border-radius: 6px; background: #edf0f2; cursor: pointer; }
+        .editor-page-actions button:hover { background: #dfe4e8; }
+        .editor-empty { color: #6c757d; text-align: center; padding: 50px 20px; border: 2px dashed #ced4da; border-radius: 10px; grid-column: 1 / -1; }
+        .editor-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; align-items: center; }
+        .editor-actions .primary { background: #28a745; color: white; }
+        .editor-actions .secondary { background: #667eea; color: white; }
+        .editor-status { color: #6c757d; font-size: 0.95em; }
+        .editor-file-input { display: none; }
+        @media (max-width: 600px) { .editor-pages { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .editor-shell { padding: 14px; } }
     </style>
 </head>
 <body>
@@ -141,6 +165,42 @@ HTML_TEMPLATE = """
                     <h3>🔍 OCR em PDF</h3>
                     <p>Extraia texto de PDFs e imagens escaneadas com OCR</p>
                 </div>
+                <div class="tool-card" onclick="showEditor()">
+                    <h3>🖥️ Editar PDF</h3>
+                    <p>Reordene, insira, gire, duplique e exclua páginas diretamente no PDF</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="editor-view" class="hidden">
+            <button class="back-btn" onclick="showHomeFromEditor()">← Voltar</button>
+            <div class="tool-card">
+                <h3>🖥️ Editor de páginas PDF</h3>
+                <p>Organize a estrutura do seu PDF sem alterar o arquivo original.</p>
+                <div class="upload-area" id="editor-upload-area" onclick="document.getElementById('editor-file-input').click()">
+                    <input type="file" id="editor-file-input" class="editor-file-input" accept=".pdf">
+                    <p>📁 Escolha um PDF para começar</p>
+                    <button class="upload-btn" type="button">Abrir PDF</button>
+                </div>
+                <div id="editor-shell" class="editor-shell hidden">
+                    <div class="editor-toolbar">
+                        <button id="editor-undo" type="button" onclick="editorUndo()" disabled>↶ Desfazer</button>
+                        <button id="editor-redo" type="button" onclick="editorRedo()" disabled>↷ Refazer</button>
+                        <button type="button" onclick="addBlankEditorPage()">＋ Página em branco</button>
+                        <button type="button" onclick="document.getElementById('editor-add-input').click()">＋ Inserir PDF ou imagem</button>
+                        <input type="file" id="editor-add-input" class="editor-file-input" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                    </div>
+                    <div id="editor-pages" class="editor-pages">
+                        <div class="editor-empty">As páginas do PDF aparecerão aqui.</div>
+                    </div>
+                    <div class="editor-actions">
+                        <button class="primary" type="button" onclick="exportEditedPdf()">Salvar PDF editado</button>
+                        <button class="secondary" type="button" onclick="selectAllEditorPages()">Selecionar todas</button>
+                        <button type="button" onclick="deleteSelectedEditorPages()">Excluir selecionadas</button>
+                        <span id="editor-status" class="editor-status">Nenhum PDF aberto.</span>
+                    </div>
+                </div>
+                <div id="editor-result" class="hidden"></div>
             </div>
         </div>
 
@@ -389,6 +449,242 @@ HTML_TEMPLATE = """
                 document.getElementById('convert-btn').disabled = false;
             }
         }
+
+        let editorFiles = [];
+        let editorPages = [];
+        let editorHistory = [];
+        let editorFuture = [];
+        let editorDraggedIndex = null;
+
+        function showEditor() {
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tool-views').classList.add('hidden');
+            document.getElementById('editor-view').classList.remove('hidden');
+            resetEditor();
+        }
+
+        function showHomeFromEditor() {
+            document.getElementById('editor-view').classList.add('hidden');
+            document.getElementById('home-view').classList.remove('hidden');
+            resetEditor();
+        }
+
+        function resetEditor() {
+            editorFiles = [];
+            editorPages = [];
+            editorHistory = [];
+            editorFuture = [];
+            document.getElementById('editor-file-input').value = '';
+            document.getElementById('editor-add-input').value = '';
+            document.getElementById('editor-shell').classList.add('hidden');
+            document.getElementById('editor-result').classList.add('hidden');
+            renderEditorPages();
+            updateEditorHistoryButtons();
+        }
+
+        function editorSnapshot() {
+            return editorPages.map(page => ({...page, thumbnail: page.thumbnail}));
+        }
+
+        function editorPushHistory() {
+            editorHistory.push(editorSnapshot());
+            editorFuture = [];
+            updateEditorHistoryButtons();
+        }
+
+        function editorUndo() {
+            if (!editorHistory.length) return;
+            editorFuture.push(editorSnapshot());
+            editorPages = editorHistory.pop();
+            renderEditorPages();
+            updateEditorHistoryButtons();
+        }
+
+        function editorRedo() {
+            if (!editorFuture.length) return;
+            editorHistory.push(editorSnapshot());
+            editorPages = editorFuture.pop();
+            renderEditorPages();
+            updateEditorHistoryButtons();
+        }
+
+        function updateEditorHistoryButtons() {
+            document.getElementById('editor-undo').disabled = !editorHistory.length;
+            document.getElementById('editor-redo').disabled = !editorFuture.length;
+        }
+
+        function editorFormData(files) {
+            const formData = new FormData();
+            files.forEach(file => formData.append('files', file));
+            return formData;
+        }
+
+        async function openEditorFiles(files, append = false) {
+            if (!files.length) return;
+            const response = await fetch('/editor/preview', {
+                method: 'POST',
+                body: editorFormData(files)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Não foi possível abrir o arquivo.');
+
+            const sourceOffset = editorFiles.length;
+            const incomingPages = data.pages.map(page => ({
+                ...page,
+                source_file: page.source_file + sourceOffset,
+                selected: false
+            }));
+            if (!append) {
+                editorPages = incomingPages;
+                editorFiles = [...files];
+            } else {
+                editorPushHistory();
+                editorPages = editorPages.concat(incomingPages);
+                editorFiles = editorFiles.concat(files);
+            }
+            document.getElementById('editor-shell').classList.remove('hidden');
+            document.getElementById('editor-status').textContent = `${editorPages.length} página(s) no documento.`;
+            renderEditorPages();
+        }
+
+        function renderEditorPages() {
+            const container = document.getElementById('editor-pages');
+            if (!editorPages.length) {
+                container.innerHTML = '<div class="editor-empty">As páginas do PDF aparecerão aqui.</div>';
+                return;
+            }
+            container.innerHTML = editorPages.map((page, index) => `
+                <div class="editor-page${page.selected ? ' selected' : ''}" draggable="true" data-editor-index="${index}">
+                    <img src="${page.thumbnail}" alt="Página ${index + 1}">
+                    <div class="editor-page-number">Página ${index + 1}</div>
+                    <div class="editor-page-actions">
+                        <button type="button" data-action="rotate" title="Girar página">↻</button>
+                        <button type="button" data-action="duplicate" title="Duplicar página">⧉</button>
+                        <button type="button" data-action="delete" title="Excluir página">✕</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.editor-page').forEach(card => {
+                const index = Number(card.dataset.editorIndex);
+                card.addEventListener('click', event => {
+                    if (event.target.closest('button')) return;
+                    editorPages[index].selected = !editorPages[index].selected;
+                    renderEditorPages();
+                });
+                card.addEventListener('dragstart', () => {
+                    editorDraggedIndex = index;
+                    card.classList.add('dragging');
+                });
+                card.addEventListener('dragend', () => card.classList.remove('dragging'));
+                card.addEventListener('dragover', event => event.preventDefault());
+                card.addEventListener('drop', event => {
+                    event.preventDefault();
+                    if (editorDraggedIndex === null || editorDraggedIndex === index) return;
+                    editorPushHistory();
+                    const [movedPage] = editorPages.splice(editorDraggedIndex, 1);
+                    editorPages.splice(index, 0, movedPage);
+                    editorDraggedIndex = null;
+                    renderEditorPages();
+                });
+                card.querySelector('[data-action="rotate"]').addEventListener('click', () => {
+                    editorPushHistory();
+                    editorPages[index].rotation = (editorPages[index].rotation + 90) % 360;
+                    editorPages[index].selected = false;
+                    renderEditorPages();
+                });
+                card.querySelector('[data-action="duplicate"]').addEventListener('click', () => {
+                    editorPushHistory();
+                    editorPages.splice(index + 1, 0, {...editorPages[index], id: `${editorPages[index].id}-copy-${Date.now()}`, selected: false});
+                    renderEditorPages();
+                });
+                card.querySelector('[data-action="delete"]').addEventListener('click', () => deleteEditorPage(index));
+            });
+        }
+
+        function deleteEditorPage(index) {
+            if (editorPages.length <= 1) {
+                alert('O PDF precisa manter pelo menos uma página.');
+                return;
+            }
+            editorPushHistory();
+            editorPages.splice(index, 1);
+            renderEditorPages();
+        }
+
+        function selectAllEditorPages() {
+            editorPages.forEach(page => page.selected = true);
+            renderEditorPages();
+        }
+
+        function deleteSelectedEditorPages() {
+            const selectedCount = editorPages.filter(page => page.selected).length;
+            if (!selectedCount) return;
+            if (selectedCount >= editorPages.length) {
+                alert('O PDF precisa manter pelo menos uma página.');
+                return;
+            }
+            editorPushHistory();
+            editorPages = editorPages.filter(page => !page.selected);
+            renderEditorPages();
+        }
+
+        function addBlankEditorPage() {
+            editorPushHistory();
+            editorPages.push({
+                id: `blank-${Date.now()}`,
+                kind: 'blank',
+                source_file: -1,
+                page_index: 0,
+                rotation: 0,
+                width: 595,
+                height: 842,
+                selected: false,
+                thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="420"%3E%3Crect width="100%25" height="100%25" fill="white"/%3E%3C/svg%3E'
+            });
+            renderEditorPages();
+        }
+
+        async function exportEditedPdf() {
+            if (!editorPages.length || !editorFiles.length) return;
+            const status = document.getElementById('editor-status');
+            status.textContent = 'Gerando PDF editado...';
+            const formData = editorFormData(editorFiles);
+            formData.append('pages', JSON.stringify(editorPages.map(({thumbnail, selected, ...page}) => page)));
+            try {
+                const response = await fetch('/editor/export', {method: 'POST', body: formData});
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Não foi possível exportar o PDF.');
+                }
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'localpdf-editado.pdf';
+                link.click();
+                URL.revokeObjectURL(url);
+                status.textContent = 'PDF editado baixado com sucesso.';
+            } catch (error) {
+                status.textContent = error.message;
+            }
+        }
+
+        document.getElementById('editor-file-input').addEventListener('change', async event => {
+            try {
+                await openEditorFiles(Array.from(event.target.files));
+            } catch (error) {
+                document.getElementById('editor-status').textContent = error.message;
+            }
+        });
+
+        document.getElementById('editor-add-input').addEventListener('change', async event => {
+            try {
+                await openEditorFiles(Array.from(event.target.files), true);
+            } catch (error) {
+                document.getElementById('editor-status').textContent = error.message;
+            }
+        });
     </script>
 </body>
 </html>
@@ -398,6 +694,190 @@ HTML_TEMPLATE = """
 @app.route("/")
 def index():
     return render_template_string(HTML_TEMPLATE)
+
+
+def render_pdf_page(page, scale=0.2):
+    pixmap = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
+    return "data:image/png;base64," + base64.b64encode(pixmap.tobytes("png")).decode(
+        "ascii"
+    )
+
+
+def editor_page_descriptor(page, source_file, page_index, thumbnail):
+    return {
+        "id": f"file-{source_file}-page-{page_index}",
+        "kind": "pdf",
+        "source_file": source_file,
+        "page_index": page_index,
+        "rotation": page.rotation,
+        "width": page.rect.width,
+        "height": page.rect.height,
+        "thumbnail": thumbnail,
+    }
+
+
+def editor_preview_for_file(file, source_file, temp_dir):
+    filename = secure_filename(file.filename or "")
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    input_path = os.path.join(temp_dir, f"source_{source_file}_{filename}")
+    file.save(input_path)
+
+    if extension == "pdf":
+        with fitz.open(input_path) as document:
+            return [
+                editor_page_descriptor(
+                    page,
+                    source_file,
+                    page_index,
+                    render_pdf_page(page),
+                )
+                for page_index, page in enumerate(document)
+            ]
+
+    if extension in {"jpg", "jpeg", "png"}:
+        with Image.open(input_path) as image:
+            width, height = image.size
+        image_document = fitz.open()
+        page = image_document.new_page(width=width, height=height)
+        page.insert_image(page.rect, filename=input_path)
+        thumbnail = render_pdf_page(page)
+        image_document.close()
+        return [
+            {
+                "id": f"file-{source_file}-image-0",
+                "kind": "image",
+                "source_file": source_file,
+                "page_index": 0,
+                "rotation": 0,
+                "width": width,
+                "height": height,
+                "thumbnail": thumbnail,
+            }
+        ]
+
+    raise ValueError(f"Formato não suportado pelo editor: {filename}")
+
+
+@app.route("/editor/preview", methods=["POST"])
+def editor_preview():
+    files = request.files.getlist("files")
+    if not files or any(not file.filename for file in files):
+        return jsonify({"error": "Envie pelo menos um PDF ou uma imagem."}), 400
+
+    if any(
+        not allowed_file(file.filename)
+        or file.filename.rsplit(".", 1)[-1].lower() not in {"pdf", "jpg", "jpeg", "png"}
+        for file in files
+    ):
+        return jsonify({"error": "O editor aceita apenas PDF, JPG e PNG."}), 400
+
+    temp_dir = tempfile.mkdtemp()
+    try:
+        pages = []
+        for source_file, file in enumerate(files):
+            pages.extend(editor_preview_for_file(file, source_file, temp_dir))
+        if not pages:
+            return jsonify({"error": "O arquivo não possui páginas editáveis."}), 400
+        return jsonify({"pages": pages})
+    except Exception as error:
+        return jsonify({"error": f"Não foi possível abrir o documento: {error}"}), 400
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+def insert_editor_image(document, file_path, rotation=0):
+    with Image.open(file_path) as image:
+        width, height = image.size
+    page = document.new_page(width=width, height=height)
+    page.insert_image(page.rect, filename=file_path)
+    page.set_rotation(rotation % 360)
+
+
+def export_editor_pages(files, pages, temp_dir):
+    if not isinstance(pages, list) or not pages:
+        raise ValueError("O editor precisa receber pelo menos uma página.")
+
+    source_paths = []
+    for source_file, file in enumerate(files):
+        filename = secure_filename(file.filename or "")
+        extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        if extension not in {"pdf", "jpg", "jpeg", "png"}:
+            raise ValueError("O editor aceita apenas PDF, JPG e PNG.")
+        source_path = os.path.join(temp_dir, f"source_{source_file}_{filename}")
+        file.save(source_path)
+        source_paths.append((extension, source_path))
+
+    source_documents = {
+        index: fitz.open(path)
+        for index, (extension, path) in enumerate(source_paths)
+        if extension == "pdf"
+    }
+    output_document = fitz.open()
+    try:
+        for page_data in pages:
+            kind = page_data.get("kind")
+            source_file = int(page_data.get("source_file", -1))
+            page_index = int(page_data.get("page_index", -1))
+            rotation = int(page_data.get("rotation", 0)) % 360
+
+            if kind == "blank":
+                output_page = output_document.new_page()
+                output_page.set_rotation(rotation)
+                continue
+
+            if source_file < 0 or source_file >= len(source_paths):
+                raise ValueError("Página vinculada a arquivo inexistente.")
+
+            extension, source_path = source_paths[source_file]
+            if extension == "pdf":
+                source_document = source_documents[source_file]
+                if page_index < 0 or page_index >= len(source_document):
+                    raise ValueError("Índice de página inválido.")
+                output_document.insert_pdf(
+                    source_document,
+                    from_page=page_index,
+                    to_page=page_index,
+                )
+                output_document[-1].set_rotation(rotation)
+            elif extension in {"jpg", "jpeg", "png"}:
+                insert_editor_image(output_document, source_path, rotation)
+            else:
+                raise ValueError("Formato de página não suportado.")
+
+        output_path = os.path.join(temp_dir, "edited.pdf")
+        output_document.save(output_path)
+        return output_path
+    finally:
+        output_document.close()
+        for document in source_documents.values():
+            document.close()
+
+
+@app.route("/editor/export", methods=["POST"])
+def editor_export():
+    files = request.files.getlist("files")
+    if not files or not files[0].filename:
+        return jsonify({"error": "Envie o PDF que será editado."}), 400
+
+    try:
+        pages = json.loads(request.form.get("pages", "[]"))
+    except json.JSONDecodeError:
+        return jsonify({"error": "A composição de páginas é inválida."}), 400
+
+    temp_dir = tempfile.mkdtemp()
+    try:
+        output_path = export_editor_pages(files, pages, temp_dir)
+        with open(output_path, "rb") as output_file:
+            data = output_file.read()
+        return send_file(
+            io.BytesIO(data),
+            as_attachment=True,
+            download_name="localpdf-editado.pdf",
+        )
+    except Exception as error:
+        return jsonify({"error": f"Não foi possível exportar o PDF: {error}"}), 400
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def excel_to_pdf(file, temp_dir):

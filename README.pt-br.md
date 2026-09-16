@@ -22,6 +22,7 @@
 
 [Funcionalidades](#-funcionalidades) •
 [Como Usar](#-como-usar) •
+[Roadmap](ROADMAP.md) •
 [Contribuir](CONTRIBUTING.md) •
 [Licença](#-licença)
 
@@ -52,6 +53,11 @@ LocalPDF.io é uma aplicação web local para manipulação de arquivos PDF e do
 - **🔗 Mesclar PDFs** - Una vários PDFs em um único documento
 - **✂️ Dividir PDF** - Separe cada página em arquivo individual
 - **📦 Comprimir PDF** - Reduza o tamanho mantendo a qualidade
+
+### 🖥️ Editor de páginas PDF
+- **📝 Editar páginas do PDF** - Reordene, insira, duplique, gire e exclua páginas visualmente dentro do PDF
+
+O editor preserva o arquivo original e exporta um novo PDF localmente. O plano completo está em [ROADMAP.md](ROADMAP.md).
 
 ## 🚀 Como usar
 
