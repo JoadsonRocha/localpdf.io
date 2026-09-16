@@ -188,7 +188,6 @@ HTML_TEMPLATE = """
         .header { color: #24272b; margin: 0 auto; padding: 34px 0 20px; max-width: 700px; }
         .header h1 { font-size: clamp(1.4rem, 2.6vw, 1.85rem); line-height: 1.25; letter-spacing: -0.025em; margin-bottom: 8px; font-weight: 700; }
         .header p { color: #6c7178; font-size: 0.98rem; line-height: 1.5; }
-        .home-eyebrow { display: inline-block; color: #1d4ed8; background: #dbeafe; border-radius: 999px; padding: 5px 11px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; }
         .category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 28px; }
         .category-tab { background: #fff; border: 1px solid #e3e5e8; border-radius: 999px; color: #656a70; padding: 8px 16px; font-size: 0.86rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-family: inherit; outline: none; }
         .category-tab:hover { border-color: #93c5fd; color: #1d4ed8; background: #eff6ff; }
@@ -255,7 +254,6 @@ HTML_TEMPLATE = """
             .header { padding: 24px 0 16px; }
             .header h1 { font-size: 1.35rem; letter-spacing: -0.02em; }
             .header p { font-size: 0.92rem; line-height: 1.45; }
-            .home-eyebrow { font-size: 0.7rem; }
             .category-tabs { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; margin: 0 -16px 20px; padding: 0 16px 5px; scrollbar-width: none; }
             .category-tabs::-webkit-scrollbar { display: none; }
             .category-tab { flex: 0 0 auto; font-size: 0.78rem; padding: 6px 12px; }
@@ -291,7 +289,6 @@ HTML_TEMPLATE = """
             </div>
         </nav>
         <div class="header">
-            <span class="home-eyebrow">PDF simples, privado e local</span>
             <h1>Trabalhe com seus PDFs sem complicação</h1>
             <p>Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.</p>
         </div>
@@ -587,7 +584,6 @@ HTML_TEMPLATE = """
         }
 
         const languageTexts = {
-            'PDF simples, privado e local': 'Simple, private and local PDF',
             'Trabalhe com seus PDFs sem complicação': 'Work with your PDFs without the hassle',
             'Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.': 'Convert, organize and edit documents directly on your computer. No accounts, no cloud and no files sent elsewhere.',
             'Juntar PDF': 'Merge PDF',
