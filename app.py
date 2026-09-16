@@ -140,6 +140,11 @@ HTML_TEMPLATE = """
         .footer { color: #747980; border-top: 1px solid #e3e5e8; }
         .footer a { color: #e53232; }
         .footer .social-icons a { color: #747980; }
+        .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28px; max-width: 900px; margin: 0 auto 24px; text-align: left; }
+        .footer-block h4 { color: #24272b; margin-bottom: 8px; font-family: Georgia, "Times New Roman", serif; }
+        .footer-block p, .footer-block a { font-size: 0.88rem; line-height: 1.7; }
+        .footer-block a { display: block; }
+        .footer-credit { border-top: 1px solid #e3e5e8; padding-top: 18px; }
         body { font-family: "Avenir Next", "Segoe UI", sans-serif; }
         .header h1, .tool-card h3, .editor-page-number { font-family: Georgia, "Times New Roman", serif; }
         .editor-shell { background: #fff7f5; border: 1px solid #f3d8d3; }
@@ -158,6 +163,10 @@ HTML_TEMPLATE = """
         .editor-insert-actions button { border: 0; border-radius: 7px; padding: 9px 12px; cursor: pointer; font-weight: 700; }
         .editor-insert-actions .primary { background: #e53232; color: #fff; }
         .editor-insert-actions .secondary { background: #f1eded; color: #4c4544; }
+        #options { display: grid; gap: 7px; margin-top: 18px; text-align: left; }
+        #options label { color: #3b3534; font-weight: 700; }
+        #options input, #options select { width: 100%; border: 1px solid #d8dadd; border-radius: 7px; padding: 11px 12px; font: inherit; background: #fff; }
+        #options small { color: #747980; }
         @media (max-width: 700px) {
             .container { padding: 0 16px; }
             .site-nav { gap: 14px; padding: 15px 0; align-items: flex-start; }
@@ -185,6 +194,7 @@ HTML_TEMPLATE = """
             .upload-area { padding: 26px 14px; }
             .footer { margin-top: 28px; }
             .footer a { display: inline-block; margin: 4px 0; }
+            .footer-grid { grid-template-columns: 1fr; gap: 18px; text-align: center; }
         }
     </style>
 </head>
@@ -232,6 +242,18 @@ HTML_TEMPLATE = """
                     <h3>📦 Comprimir PDF</h3>
                     <p>Reduza o tamanho do seu arquivo PDF</p>
                 </div>
+                <div class="tool-card" onclick="showTool('protect-pdf')">
+                    <h3>🔐 Proteger PDF</h3>
+                    <p>Adicione uma senha local ao seu documento PDF</p>
+                </div>
+                <div class="tool-card" onclick="showTool('watermark-pdf')">
+                    <h3>💧 Marca d'água</h3>
+                    <p>Adicione uma marca d'água de texto ao PDF</p>
+                </div>
+                <div class="tool-card" onclick="showTool('page-numbers-pdf')">
+                    <h3>🔢 Números de página</h3>
+                    <p>Numere as páginas do documento localmente</p>
+                </div>
                 <div class="tool-card" onclick="showTool('pdf-to-pdfa')">
                     <h3>🔒 PDF para PDF/A</h3>
                     <p>Padronize seu PDF para arquivamento (PDF/A)</p>
@@ -251,6 +273,10 @@ HTML_TEMPLATE = """
                 <div class="tool-card" onclick="showTool('pdf-to-word')">
                     <h3>🔄 PDF para Word</h3>
                     <p>Converta documentos PDF para Word (.docx) editável</p>
+                </div>
+                <div class="tool-card" onclick="showTool('pdf-to-text')">
+                    <h3>📄 PDF para Texto</h3>
+                    <p>Extraia o texto do PDF para um arquivo TXT editável</p>
                 </div>
                 <div class="tool-card" onclick="showTool('ocr-pdf')">
                     <h3>🔍 OCR em PDF</h3>
@@ -334,15 +360,25 @@ HTML_TEMPLATE = """
         </div>
 
         <div id="privacy-note" class="footer">
-            <p>Desenvolvido por Virgilio Borges</p>
-            <div>
-                <a href="mailto:virgilio.junior94@gmail.com">✉️ virgilio.junior94@gmail.com</a> |
-                <a href="tel:+5595981121572">📱 (95) 98112-1572</a>
+            <div class="footer-grid">
+                <div class="footer-block">
+                    <h4>LocalPDF.io</h4>
+                    <p>Ferramentas PDF gratuitas, locais e privadas. Sem cadastro e sem upload externo no modo local.</p>
+                </div>
+                <div class="footer-block">
+                    <h4>Repositório</h4>
+                    <a href="https://github.com/virgiliojr94/localpdf.io" target="_blank">Código no GitHub</a>
+                    <a href="https://github.com/virgiliojr94/localpdf.io/blob/main/README.pt-br.md" target="_blank">Documentação</a>
+                    <a href="https://github.com/virgiliojr94/localpdf.io/blob/main/ROADMAP.md" target="_blank">Roadmap</a>
+                </div>
+                <div class="footer-block">
+                    <h4>Desenvolvimento</h4>
+                    <p>Desenvolvido por Virgilio Borges</p>
+                    <a href="mailto:virgilio.junior94@gmail.com">virgilio.junior94@gmail.com</a>
+                    <a href="https://www.linkedin.com/in/virgiliojunior94/" target="_blank">LinkedIn do Virgilio</a>
+                </div>
             </div>
-            <div class="social-icons">
-                <a href="https://github.com/virgiliojr94" target="_blank">🔗 GitHub</a>
-                <a href="https://www.linkedin.com/in/virgiliojunior94/" target="_blank">🔗 LinkedIn</a>
-            </div>
+            <p class="footer-credit">Licença MIT · Processamento local · <a href="https://github.com/virgiliojr94/localpdf.io" target="_blank">Contribua com o projeto</a></p>
         </div>
     </div>
 
@@ -381,6 +417,27 @@ HTML_TEMPLATE = """
                 accept: '.pdf',
                 multiple: false
             },
+            'protect-pdf': {
+                title: '🔐 Proteger PDF',
+                description: 'Crie uma cópia protegida do seu PDF com senha',
+                accept: '.pdf',
+                multiple: false,
+                options: 'password'
+            },
+            'watermark-pdf': {
+                title: '💧 Marca d\'água',
+                description: 'Adicione uma marca d\'água de texto em todas as páginas',
+                accept: '.pdf',
+                multiple: false,
+                options: 'watermark'
+            },
+            'page-numbers-pdf': {
+                title: '🔢 Números de página',
+                description: 'Adicione numeração ao seu documento PDF',
+                accept: '.pdf',
+                multiple: false,
+                options: 'page-numbers'
+            },
             'pdf-to-pdfa': {
                 title: '🔒 PDF para PDF/A',
                 description: 'Converta PDFs para o padrão de arquivamento PDF/A-1b',
@@ -411,6 +468,12 @@ HTML_TEMPLATE = """
                 accept: '.pdf',
                 multiple: false
             },
+            'pdf-to-text': {
+                title: '📄 PDF para Texto',
+                description: 'Extraia o texto selecionável de todas as páginas do PDF',
+                accept: '.pdf',
+                multiple: false
+            },
             'ocr-pdf': {
                 title: '🔍 OCR em PDF',
                 description: 'Extraia texto de PDFs e imagens escaneadas usando reconhecimento óptico de caracteres (Tesseract)',
@@ -429,10 +492,53 @@ HTML_TEMPLATE = """
             document.getElementById('tool-description').innerText = tool.description;
             document.getElementById('file-input').accept = tool.accept;
             document.getElementById('file-input').multiple = tool.multiple;
+            renderToolOptions(tool.options);
 
             uploadedFiles = [];
             updateFileList();
             hideResult();
+        }
+
+        function renderToolOptions(optionType) {
+            const options = document.getElementById('options');
+            if (optionType === 'password') {
+                options.innerHTML = `
+                    <label for="pdf-password">Senha do PDF</label>
+                    <input id="pdf-password" type="password" minlength="4" autocomplete="new-password" placeholder="Digite uma senha com pelo menos 4 caracteres">
+                    <small>A senha é usada somente durante o processamento local.</small>
+                `;
+                options.classList.remove('hidden');
+                return;
+            }
+            if (optionType === 'watermark') {
+                options.innerHTML = `
+                    <label for="watermark-text">Texto da marca d'água</label>
+                    <input id="watermark-text" type="text" maxlength="80" placeholder="Ex.: CONFIDENCIAL">
+                    <label for="watermark-position">Posição</label>
+                    <select id="watermark-position">
+                        <option value="center">Centro</option>
+                        <option value="top">Parte superior</option>
+                        <option value="bottom">Parte inferior</option>
+                    </select>
+                `;
+                options.classList.remove('hidden');
+                return;
+            }
+            if (optionType === 'page-numbers') {
+                options.innerHTML = `
+                    <label for="page-number-position">Posição da numeração</label>
+                    <select id="page-number-position">
+                        <option value="bottom-center">Rodapé central</option>
+                        <option value="bottom-right">Rodapé direito</option>
+                        <option value="top-center">Cabeçalho central</option>
+                        <option value="top-right">Cabeçalho direito</option>
+                    </select>
+                `;
+                options.classList.remove('hidden');
+                return;
+            }
+            options.innerHTML = '';
+            options.classList.add('hidden');
         }
 
         function showHome() {
@@ -515,6 +621,29 @@ HTML_TEMPLATE = """
                 formData.append('files', file);
             });
             formData.append('tool', currentTool);
+            const passwordInput = document.getElementById('pdf-password');
+            if (passwordInput) {
+                if (!passwordInput.value || passwordInput.value.length < 4) {
+                    document.getElementById('result').innerHTML = '<h4>⚠️ Senha inválida</h4><p>Informe uma senha com pelo menos 4 caracteres.</p>';
+                    document.getElementById('result').classList.remove('hidden');
+                    return;
+                }
+                formData.append('password', passwordInput.value);
+            }
+            const watermarkText = document.getElementById('watermark-text');
+            if (watermarkText) {
+                if (!watermarkText.value.trim()) {
+                    document.getElementById('result').innerHTML = '<h4>⚠️ Texto obrigatório</h4><p>Informe o texto da marca d\'água.</p>';
+                    document.getElementById('result').classList.remove('hidden');
+                    return;
+                }
+                formData.append('watermark_text', watermarkText.value.trim());
+                formData.append('watermark_position', document.getElementById('watermark-position').value);
+            }
+            const pageNumberPosition = document.getElementById('page-number-position');
+            if (pageNumberPosition) {
+                formData.append('page_number_position', pageNumberPosition.value);
+            }
 
             document.getElementById('progress').classList.remove('hidden');
             document.getElementById('convert-btn').disabled = true;
@@ -1165,6 +1294,19 @@ def convert():
             output_files = split_pdf(files[0], temp_dir)
         elif tool == "compress-pdf":
             output_files = compress_pdf(files[0], temp_dir)
+        elif tool == "protect-pdf":
+            output_files = protect_pdf(files[0], temp_dir, request.form.get("password", ""))
+        elif tool == "watermark-pdf":
+            output_files = watermark_pdf(
+                files[0],
+                temp_dir,
+                request.form.get("watermark_text", ""),
+                request.form.get("watermark_position", "center"),
+            )
+        elif tool == "page-numbers-pdf":
+            output_files = page_numbers_pdf(
+                files[0], temp_dir, request.form.get("page_number_position", "bottom-center")
+            )
         elif tool == "pdf-to-pdfa":
             output_files = pdf_to_pdfa(files, temp_dir)
         elif tool == "word-to-pdf":
@@ -1175,6 +1317,8 @@ def convert():
             output_files = txt_to_pdf(files[0], temp_dir)
         elif tool == "pdf-to-word":
             output_files = pdf_to_word(files[0], temp_dir)
+        elif tool == "pdf-to-text":
+            output_files = pdf_to_text(files[0], temp_dir)
         elif tool == "ocr-pdf":
             output_files = ocr_pdf(files[0], temp_dir)
         else:
@@ -1268,6 +1412,96 @@ def compress_pdf(file, temp_dir):
     output_path = os.path.join(temp_dir, "compressed.pdf")
     doc.save(output_path, garbage=4, deflate=True, clean=True)
     doc.close()
+
+    return [output_path]
+
+
+def protect_pdf(file, temp_dir, password):
+    """Cria uma cópia criptografada do PDF usando senha local."""
+    if len(password) < 4:
+        raise ValueError("A senha precisa ter pelo menos 4 caracteres.")
+
+    pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
+    file.save(pdf_path)
+    output_path = os.path.join(temp_dir, "protected.pdf")
+
+    with fitz.open(pdf_path) as document:
+        document.save(
+            output_path,
+            encryption=fitz.PDF_ENCRYPT_AES_256,
+            owner_pw=password,
+            user_pw=password,
+            permissions=fitz.PDF_PERM_ACCESSIBILITY | fitz.PDF_PERM_PRINT,
+        )
+
+    return [output_path]
+
+
+def watermark_pdf(file, temp_dir, text, position):
+    """Aplica uma marca d'água de texto em todas as páginas do PDF."""
+    text = text.strip()
+    if not text:
+        raise ValueError("Informe o texto da marca d'água.")
+    if position not in {"center", "top", "bottom"}:
+        raise ValueError("Posição de marca d'água inválida.")
+
+    pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
+    file.save(pdf_path)
+    output_path = os.path.join(temp_dir, "watermarked.pdf")
+
+    with fitz.open(pdf_path) as document:
+        for page in document:
+            rect = page.rect
+            fontsize = min(36, max(18, rect.width / max(len(text), 10)))
+            if position == "top":
+                point = (rect.width * 0.12, rect.height * 0.16)
+            elif position == "bottom":
+                point = (rect.width * 0.12, rect.height * 0.9)
+            else:
+                point = (rect.width * 0.22, rect.height * 0.55)
+            page.insert_text(
+                point,
+                text,
+                fontsize=fontsize,
+                fontname="helv",
+                color=(0.78, 0.18, 0.18),
+                overlay=True,
+            )
+        document.save(output_path)
+
+    return [output_path]
+
+
+def page_numbers_pdf(file, temp_dir, position):
+    """Adiciona numeração simples a todas as páginas do PDF."""
+    positions = {"bottom-center", "bottom-right", "top-center", "top-right"}
+    if position not in positions:
+        raise ValueError("Posição de numeração inválida.")
+
+    pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
+    file.save(pdf_path)
+    output_path = os.path.join(temp_dir, "numbered.pdf")
+
+    with fitz.open(pdf_path) as document:
+        total_pages = len(document)
+        for page_index, page in enumerate(document, start=1):
+            label = f"Página {page_index} de {total_pages}"
+            rect = page.rect
+            text_width = fitz.get_text_length(label, fontname="helv", fontsize=10)
+            if position.endswith("center"):
+                x_position = (rect.width - text_width) / 2
+            else:
+                x_position = rect.width - text_width - 36
+            y_position = 28 if position.startswith("top") else rect.height - 24
+            page.insert_text(
+                (x_position, y_position),
+                label,
+                fontsize=10,
+                fontname="helv",
+                color=(0.25, 0.27, 0.3),
+                overlay=True,
+            )
+        document.save(output_path)
 
     return [output_path]
 
@@ -1457,6 +1691,25 @@ def pdf_to_word(file, temp_dir):
             cv.close()
 
     return [docx_path]
+
+
+def pdf_to_text(file, temp_dir):
+    """Extrai texto selecionável de um PDF e retorna um arquivo TXT."""
+    filename = secure_filename(file.filename)
+    pdf_path = os.path.join(temp_dir, filename)
+    file.save(pdf_path)
+
+    base_name = os.path.splitext(filename)[0]
+    txt_path = os.path.join(temp_dir, f"{base_name}.txt")
+
+    with fitz.open(pdf_path) as document, open(txt_path, "w", encoding="utf-8") as output:
+        for page_index, page in enumerate(document):
+            if page_index:
+                output.write("\n\n")
+            output.write(f"--- Página {page_index + 1} ---\n")
+            output.write(page.get_text("text"))
+
+    return [txt_path]
 
 
 def ocr_pdf(file, temp_dir):

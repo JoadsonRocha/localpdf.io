@@ -8,6 +8,10 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Não lançado]
 
 ### Adicionado
+- 💧 Marca d'água de texto em PDF com posição configurável
+- 🔢 Numeração de páginas com posições de cabeçalho e rodapé
+- 🔐 Proteção local de PDF com senha e criptografia AES-256
+- 📄 Conversão de PDF para texto nativo em arquivo TXT
 - 🖥️ Editor visual de páginas PDF inspirado em ferramentas de escritório
 - 🔀 Reordenação de páginas por arrastar e soltar
 - ➕ Inserção de páginas de outro PDF, imagens ou páginas em branco

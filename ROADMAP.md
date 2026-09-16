@@ -6,6 +6,14 @@ Este documento descreve a evolução planejada do LocalPDF.io para uma experiên
 
 Criar uma interface web clara para descobrir ferramentas PDF e executar operações em um fluxo curto: selecionar arquivos, configurar a operação, processar localmente e baixar o resultado.
 
+## Princípios do produto
+
+- Processamento local como padrão para a versão MSI.
+- Nenhum cadastro, login ou perfil de usuário.
+- Nenhuma função de IA ou dependência de serviço externo.
+- Nenhum envio automático de documentos para a nuvem.
+- Configurações e histórico, quando existirem, devem permanecer no computador do usuário.
+
 ## Editor visual de páginas PDF
 
 ### Escopo do MVP
@@ -133,6 +141,22 @@ Possíveis evoluções, depois do editor estrutural:
 - Redação permanente de conteúdo sensível.
 
 Esses recursos devem ser avaliados separadamente, pois aumentam bastante a complexidade de renderização, fontes, compatibilidade e segurança.
+
+## Funções de prioridade média aprovadas
+
+As próximas funções devem funcionar sem IA, sem cadastro e sem integração externa:
+
+- Inserção e edição de texto novo no PDF.
+- Inclusão de imagens, formas e marcações.
+- Assinatura visual desenhada ou importada localmente.
+- Marca d'água de texto ou imagem.
+- Numeração de páginas.
+- Proteção de PDF com senha.
+- Remoção de senha quando o usuário fornecer a senha correta.
+- Comparação visual entre dois PDFs.
+- Processamento em lote local.
+
+Ficam fora do escopo atual recursos como resumo por IA, tradução por IA, login, sincronização em nuvem, workflows de conta e armazenamento remoto.
 
 ## Qualidade e segurança
 
