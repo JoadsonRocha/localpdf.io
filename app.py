@@ -3,6 +3,7 @@ import io
 import json
 import os
 import shutil
+import sys
 import tempfile
 import zipfile
 
@@ -672,15 +673,39 @@ HTML_TEMPLATE = """
             }
         };
 
+        function filterCategory(category, tabBtn) {
+            document.querySelectorAll('.category-tab').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            if (tabBtn) {
+                tabBtn.classList.add('active');
+                tabBtn.setAttribute('aria-selected', 'true');
+            }
+            const cards = document.querySelectorAll('.tools-grid .tool-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.classList.remove('card-hidden');
+                } else {
+                    card.classList.add('card-hidden');
+                }
+            });
+        }
+
         function showTool(toolName) {
             currentTool = toolName;
             const tool = tools[toolName];
+            if (!tool) return;
 
             document.getElementById('home-view').classList.add('hidden');
+            const editorView = document.getElementById('editor-view');
+            if (editorView) editorView.classList.add('hidden');
             document.getElementById('tool-views').classList.remove('hidden');
             const translatedTool = toolTranslations[toolName];
-            document.getElementById('tool-title').innerText = currentLanguage === 'en' ? translatedTool[0] : tool.title;
-            document.getElementById('tool-description').innerText = currentLanguage === 'en' ? translatedTool[1] : tool.description;
+            const rawTitle = currentLanguage === 'en' ? (translatedTool ? translatedTool[0] : tool.title) : tool.title;
+            const rawDesc = currentLanguage === 'en' ? (translatedTool ? translatedTool[1] : tool.description) : tool.description;
+            document.getElementById('tool-title').innerText = rawTitle;
+            document.getElementById('tool-description').innerText = rawDesc;
             document.getElementById('file-input').accept = tool.accept;
             document.getElementById('file-input').multiple = tool.multiple;
             renderToolOptions(tool.options);
@@ -688,6 +713,9 @@ HTML_TEMPLATE = """
             uploadedFiles = [];
             updateFileList();
             hideResult();
+
+            const cleanTitle = rawTitle.replace(/^[^\wÀ-ÿ]+/g, '').trim();
+            document.title = `${cleanTitle} - LocalPDF.io`;
         }
 
         function renderToolOptions(optionType) {
@@ -735,7 +763,13 @@ HTML_TEMPLATE = """
         function showHome() {
             document.getElementById('home-view').classList.remove('hidden');
             document.getElementById('tool-views').classList.add('hidden');
+            const editorView = document.getElementById('editor-view');
+            if (editorView) editorView.classList.add('hidden');
             uploadedFiles = [];
+            document.title = 'LocalPDF.io';
+            if (window.location.pathname !== '/') {
+                history.pushState(null, '', '/');
+            }
         }
 
         function updateFileList() {
@@ -883,12 +917,18 @@ HTML_TEMPLATE = """
             document.getElementById('tool-views').classList.add('hidden');
             document.getElementById('editor-view').classList.remove('hidden');
             resetEditor();
+            document.title = (currentLanguage === 'en' ? 'Edit PDF' : 'Editar PDF') + ' - LocalPDF.io';
         }
 
         function showHomeFromEditor() {
             document.getElementById('editor-view').classList.add('hidden');
+            document.getElementById('tool-views').classList.add('hidden');
             document.getElementById('home-view').classList.remove('hidden');
             resetEditor();
+            document.title = 'LocalPDF.io';
+            if (window.location.pathname !== '/') {
+                history.pushState(null, '', '/');
+            }
         }
 
         function resetEditor() {
