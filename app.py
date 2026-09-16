@@ -562,8 +562,8 @@ HTML_TEMPLATE = """
                 options: 'password'
             },
             'watermark-pdf': {
-                title: '💧 Marca d\'água',
-                description: 'Adicione uma marca d\'água de texto em todas as páginas',
+                title: "💧 Marca d'água",
+                description: "Adicione uma marca d'água de texto em todas as páginas",
                 accept: '.pdf',
                 multiple: false,
                 options: 'watermark'
@@ -771,7 +771,7 @@ HTML_TEMPLATE = """
             const watermarkText = document.getElementById('watermark-text');
             if (watermarkText) {
                 if (!watermarkText.value.trim()) {
-                    document.getElementById('result').innerHTML = '<h4>⚠️ Texto obrigatório</h4><p>Informe o texto da marca d\'água.</p>';
+                    document.getElementById('result').innerHTML = "<h4>⚠️ Texto obrigatório</h4><p>Informe o texto da marca d'água.</p>";
                     document.getElementById('result').classList.remove('hidden');
                     return;
                 }
@@ -1102,6 +1102,8 @@ HTML_TEMPLATE = """
                 document.getElementById('editor-status').textContent = error.message;
             }
         });
+
+        translatePage();
     </script>
 </body>
 </html>

@@ -14,6 +14,23 @@ Criar uma interface web clara para descobrir ferramentas PDF e executar operaç�
 - Nenhum envio automático de documentos para a nuvem.
 - Configurações e histórico, quando existirem, devem permanecer no computador do usuário.
 
+## Estado implementado
+
+Já disponível na aplicação Flask:
+
+- Conversões para PDF: imagens, DOCX, XLSX e TXT.
+- Conversões de PDF: imagens, DOCX e texto nativo.
+- OCR local com Tesseract.
+- Mesclar, dividir e comprimir PDFs.
+- PDF/A com Ghostscript instalado.
+- Proteção AES-256 por senha.
+- Marca d'água de texto e numeração de páginas.
+- Editor visual com miniaturas, reordenação, inserção de páginas, páginas em branco, duplicação, rotação, exclusão e histórico.
+- Interface responsiva, favicon, português e opção de inglês.
+- Testes automatizados de segurança.
+
+Limitações conhecidas: PDF → Excel, remoção de senha, edição livre do conteúdo existente e extração de páginas selecionadas ainda não estão disponíveis.
+
 ## Editor visual de páginas PDF
 
 ### Escopo do MVP
@@ -28,7 +45,6 @@ O editor permitirá abrir um PDF e modificar a estrutura das páginas diretament
 - Duplicar páginas.
 - Girar páginas em 90 graus.
 - Excluir páginas.
-- Extrair páginas selecionadas para um novo PDF.
 - Desfazer e refazer operações.
 - Exportar o documento final em PDF.
 
@@ -51,7 +67,7 @@ O MVP será um editor estrutural de páginas. Alterar livremente textos, fontes,
 - Barra lateral ou painel de inserção para PDF, imagem e página em branco.
 - Área central com miniaturas em grade ou lista.
 - Seleção múltipla de páginas.
-- Ações por página: girar, duplicar, extrair e excluir.
+- Ações por página: girar, duplicar e excluir.
 - Indicadores visuais para páginas selecionadas e alterações não salvas.
 - Confirmação antes de excluir páginas ou sair com alterações pendentes.
 - Layout responsivo: grade compacta no celular e painel completo no desktop.
@@ -124,11 +140,11 @@ Para arquivos pequenos, `preview` poderá retornar miniaturas geradas pelo PyMuP
 
 ### Fase 3: editor visual de páginas
 
-- Miniaturas e seleção de páginas.
-- Reordenação, inserção, duplicação, rotação e exclusão.
-- Histórico de desfazer/refazer.
-- Exportação do PDF reorganizado.
-- Testes de integração para diferentes combinações de operações.
+- [x] Miniaturas e seleção de páginas.
+- [x] Reordenação, inserção, duplicação, rotação e exclusão.
+- [x] Histórico de desfazer/refazer.
+- [x] Exportação do PDF reorganizado.
+- [ ] Testes de integração para diferentes combinações de operações.
 
 ### Fase 4: edição avançada
 
@@ -149,9 +165,9 @@ As próximas funções devem funcionar sem IA, sem cadastro e sem integração e
 - Inserção e edição de texto novo no PDF.
 - Inclusão de imagens, formas e marcações.
 - Assinatura visual desenhada ou importada localmente.
-- Marca d'água de texto ou imagem.
-- Numeração de páginas.
-- Proteção de PDF com senha.
+- [x] Marca d'água de texto.
+- [x] Numeração de páginas.
+- [x] Proteção de PDF com senha.
 - Remoção de senha quando o usuário fornecer a senha correta.
 - Comparação visual entre dois PDFs.
 - Processamento em lote local.
@@ -175,6 +191,6 @@ Antes de publicar o editor:
 
 O aplicativo aceita a variável de ambiente `PORT` exigida pelo Railway e pode ser construído a partir do `dockerfile` existente. O deploy público muda o modelo de privacidade: os arquivos deixam de ficar exclusivamente na máquina do usuário e passam pelo container hospedado. Para produção, adicionar autenticação, limites de uso, política de retenção e revisão de logs antes de expor o serviço.
 
-## Estado atual
+## MSI local
 
-O MVP do editor visual está implementado em `/editor/preview` e `/editor/export`. Ele oferece miniaturas, reordenação, inserção de PDF e imagens, páginas em branco, duplicação, rotação, exclusão, desfazer/refazer e exportação. A edição livre de texto e elementos internos da página continua planejada para uma fase posterior.
+O MSI ainda não foi gerado. A próxima etapa é separar o modo local do deploy Railway, usar `127.0.0.1`, empacotar PyMuPDF, Tesseract e Ghostscript, mover temporários para `%LOCALAPPDATA%` e distribuir um instalador assinado.

@@ -36,6 +36,8 @@ LocalPDF.io é uma aplicação web local para manipulação de arquivos PDF e do
 
 ## ✨ Funcionalidades
 
+Todas as operações funcionam sem cadastro e sem limites artificiais de plano quando executadas localmente. Os limites são definidos pelos recursos do computador e pelo limite configurado de upload de 100 MB.
+
 ### 📥 Converter para PDF
 - **🖼️ Imagens → PDF** - Combine múltiplas imagens (JPG, PNG) em um PDF
 - **📝 Word → PDF** - Converta um ou vários documentos DOCX em PDF único
@@ -45,19 +47,31 @@ LocalPDF.io é uma aplicação web local para manipulação de arquivos PDF e do
 ### 📤 Converter de PDF
 - **🖼️ PDF → Imagens** - Extraia cada página como imagem PNG
 - **📝 PDF → Word** - Converta PDF em documento DOCX editável
-- **📊 PDF → Excel** - Extraia tabelas para planilhas XLSX
 - **📄 PDF → Texto** - Extraia todo o texto em arquivo TXT
-- **🔒 PDF → PDF/A** - Converta para o padrão de arquivamento (PDF/A-1b)
+- **🔒 PDF → PDF/A** - Converta para PDF/A-1b quando o Ghostscript estiver instalado
+- **🔍 OCR em PDF** - Extraia texto de PDFs e imagens escaneadas com Tesseract local
 
 ### 🔄 Manipular PDF
 - **🔗 Mesclar PDFs** - Una vários PDFs em um único documento
 - **✂️ Dividir PDF** - Separe cada página em arquivo individual
 - **📦 Comprimir PDF** - Reduza o tamanho mantendo a qualidade
 
+### 🔐 Organizar e proteger PDF
+- **🔐 Proteger PDF** - Criptografe o PDF com senha AES-256
+- **💧 Marca d'água** - Adicione marca d'água de texto configurável
+- **🔢 Números de página** - Adicione numeração no cabeçalho ou rodapé
+
 ### 🖥️ Editor de páginas PDF
 - **📝 Editar páginas do PDF** - Reordene, selecione páginas de outro PDF para inserir, duplique, gire e exclua páginas visualmente
 
 O editor preserva o arquivo original e exporta um novo PDF localmente. O plano completo está em [ROADMAP.md](ROADMAP.md).
+
+### 🌐 Interface
+- Português por padrão com opção de interface em inglês.
+- Layout responsivo para desktop e celular.
+- Sem cadastro, login, analytics ou recursos de IA.
+
+`PDF → Excel`, edição livre do texto existente no PDF e remoção de senha ainda não estão implementados. O status está em [ROADMAP.md](ROADMAP.md).
 
 ## 🚀 Como usar
 
@@ -84,6 +98,10 @@ docker run -p 5000:5000 localpdf
 ```
 
 Acesse: **http://localhost:5000**
+
+### MSI local (planejado)
+
+O futuro MSI para Windows usará a mesma base de processamento local, sem Railway, cadastro ou upload externo. O MSI ainda não foi publicado; consulte o [ROADMAP.md](ROADMAP.md).
 
 ### Deploy no Railway
 
@@ -121,6 +139,7 @@ Acesse: **http://localhost:5000**
 - **ReportLab** - Geração de PDFs
 - **OpenPyXL** - Manipulação de planilhas Excel
 - **PDF2Docx** - Conversor de PDF para Docx
+- **Tesseract OCR** - Reconhecimento óptico de caracteres local
 
 ## 🔒 Privacidade
 

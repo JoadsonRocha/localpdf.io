@@ -38,30 +38,42 @@ No accounts. No cloud. No data leaving your computer.
 
 ## ✨ Features
 
-### 📤 Converter de PDF
-- **🖼️ PDF → Imagens** - Extraia cada página como imagem PNG
-- **📝 PDF → Word** - Converta PDF em documento DOCX editável
-- **📊 PDF → Excel** - Extraia tabelas para planilhas XLSX
-- **📄 PDF → Texto** - Extraia todo o texto em arquivo TXT
-- **🔒 PDF → PDF/A** - Converta para o padrão de arquivamento (PDF/A-1b)
-- **🔍 OCR em PDF** - Extraia texto de PDFs e imagens escaneadas com Tesseract OCR (português e inglês)
+All operations are available without accounts or artificial premium limits when running locally. Limits are determined by the computer's available resources and the configured 100 MB upload limit.
+
+### 📥 Convert to PDF
+- **🖼️ Images → PDF** - Combine JPG and PNG images into one PDF
+- **📝 Word → PDF** - Convert one or more DOCX files into PDF
+- **📊 Excel → PDF** - Convert XLSX spreadsheets into PDF
+- **📄 Text → PDF** - Convert TXT files into formatted PDF
 
 ### 📤 Convert from PDF
-- **🖼️ PDF → Images** — Extract each page as a PNG image
-- **📝 PDF → Word** — Convert PDF into an editable DOCX document
-- **📊 PDF → Excel** — Extract tables into an XLSX spreadsheet
-- **📄 PDF → Text** — Extract all text into a TXT file
-- **🔒 PDF → PDF/A** — Convert to archival standard (PDF/A-1b)
+- **🖼️ PDF → Images** - Export every page as a PNG image
+- **📝 PDF → Word** - Convert PDF into an editable DOCX document
+- **📄 PDF → Text** - Extract selectable text into a TXT file
+- **🔒 PDF → PDF/A** - Convert to PDF/A-1b when Ghostscript is installed
+- **🔍 OCR PDF** - Extract text from scanned PDFs and images with local Tesseract OCR
 
-### 🔄 Manipulate PDF
-- **🔗 Merge PDFs** — Combine multiple PDFs into one document
-- **✂️ Split PDF** — Separate each page into individual files
-- **📦 Compress PDF** — Reduce file size while preserving quality
+### 🔄 Organize and secure PDF
+- **🔗 Merge PDFs** - Combine multiple PDF files
+- **✂️ Split PDF** - Export individual pages
+- **📦 Compress PDF** - Reduce file size locally
+- **🔐 Protect PDF** - Encrypt a PDF with an AES-256 password
+- **💧 Watermark PDF** - Add configurable text watermarks
+- **🔢 Page numbers** - Add header or footer numbering
 
-### 🖥️ PDF page editor
-- **📝 Edit PDF pages** — Visually reorder, insert selected pages from another PDF, duplicate, rotate and delete pages directly in a PDF
+### 🖥️ Visual PDF page editor
+- Reorder pages by drag and drop.
+- Insert selected pages from another PDF or images.
+- Add blank pages, duplicate, rotate and delete pages.
+- Undo and redo changes before exporting.
+- Preserve the original file and download a new PDF.
 
-The editor preserves the original file and exports a new PDF locally. See the complete implementation plan in [ROADMAP.md](ROADMAP.md).
+### 🌐 Interface
+- Portuguese by default with an English interface option.
+- Responsive layout for desktop and mobile.
+- No account, login, analytics or AI features.
+
+`PDF → Excel`, free-text editing of existing PDF content and password removal are not implemented yet. Their status is tracked in [ROADMAP.md](ROADMAP.md).
 
 ## 🚀 Usage
 
@@ -83,6 +95,10 @@ docker run -p 5000:5000 localpdf
 ```
 
 Open: **http://localhost:5000**
+
+### Local MSI (planned)
+
+The future Windows MSI will package the same local processing base without Railway, accounts or external uploads. The MSI is not published yet; see [ROADMAP.md](ROADMAP.md) for the packaging plan.
 
 ### Deploy on Railway
 

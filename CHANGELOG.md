@@ -8,6 +8,9 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Não lançado]
 
 ### Adicionado
+- 🌐 Opção de interface em inglês com preferência salva localmente
+- 🎨 Identidade visual azul, favicon e layout responsivo para mobile
+- 🛡️ Testes automatizados de segurança para entradas inválidas e limites de upload
 - 💧 Marca d'água de texto em PDF com posição configurável
 - 🔢 Numeração de páginas com posições de cabeçalho e rodapé
 - 🔐 Proteção local de PDF com senha e criptografia AES-256
@@ -18,6 +21,10 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - 📋 Duplicação, rotação, extração e exclusão de páginas
 - 💾 Exportação do PDF reorganizado em um único arquivo
 - 📚 Plano técnico e critérios de aceite em [ROADMAP.md](ROADMAP.md)
+
+### Segurança
+- 🧹 Respostas de erro não expõem exceções internas ou caminhos do sistema
+- ✅ Validação de extensões, limite de upload e dados inválidos do editor
 
 ## [1.0.0] - 2025-11-17
 

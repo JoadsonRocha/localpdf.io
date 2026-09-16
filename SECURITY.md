@@ -55,9 +55,17 @@ Ao usar LocalPDF.io:
 
 ## Considerações de Privacidade
 
-- Todos os arquivos são processados localmente
-- Nenhum dado é enviado para servidores externos
+- No modo local, os arquivos são processados no computador do usuário
+- A aplicação não envia dados para serviços externos por conta própria
 - Arquivos temporários são automaticamente deletados após processamento
+
+### Deploy público
+
+O Railway e outros servidores públicos não fazem parte do modo local. Quando implantada em um servidor público, a aplicação processa os arquivos na infraestrutura desse servidor. Esse modo exige controle de acesso, retenção de dados, logs e política de privacidade próprios.
+
+### MSI planejado
+
+O futuro MSI deverá escutar somente em `127.0.0.1`, usar diretórios temporários no perfil local do usuário e não depender de Railway. O instalador ainda não está disponível.
 
 ## Testes de segurança
 
