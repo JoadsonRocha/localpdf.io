@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_all
 
-root = Path(SPECPATH).parents[2]
+root = Path(SPECPATH).parents[1]
 datas = [(str(root / "favicon.svg"), ".")]
 binaries = []
 hiddenimports = ["fitz", "pytesseract", "pdf2docx", "ghostscript"]
