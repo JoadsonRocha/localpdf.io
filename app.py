@@ -30,12 +30,8 @@ except (ImportError, RuntimeError):
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB max
-app.config["UPLOAD_FOLDER"] = "uploads"
-app.config["OUTPUT_FOLDER"] = "outputs"
-
-# Criar diretórios se não existirem
-os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-os.makedirs(app.config["OUTPUT_FOLDER"], exist_ok=True)
+app.config["UPLOAD_FOLDER"] = os.path.join(tempfile.gettempdir(), "localpdf_uploads")
+app.config["OUTPUT_FOLDER"] = os.path.join(tempfile.gettempdir(), "localpdf_outputs")
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt", "xlsx", "jpg", "jpeg", "png"}
 
@@ -127,19 +123,24 @@ HTML_TEMPLATE = """
         .language-toggle { border: 1px solid #bfdbfe; border-radius: 999px; background: #fff; color: #1d4ed8; padding: 7px 11px; font: inherit; font-size: 0.82rem; font-weight: 800; cursor: pointer; }
         .language-toggle:hover { background: #eff6ff; }
         .privacy-pill { color: #1d4ed8 !important; background: #dbeafe; border-radius: 999px; padding: 8px 13px; }
-        .header { color: #24272b; margin: 0 auto; padding: 38px 0 24px; max-width: 700px; }
-        .header h1 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.05; letter-spacing: -0.045em; margin-bottom: 10px; }
-        .header p { color: #6c7178; font-size: 1rem; line-height: 1.5; }
-        .home-eyebrow { display: inline-block; color: #1d4ed8; background: #dbeafe; border-radius: 999px; padding: 6px 11px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 11px; }
+        .header { color: #24272b; margin: 0 auto; padding: 34px 0 20px; max-width: 700px; }
+        .header h1 { font-size: clamp(1.4rem, 2.6vw, 1.85rem); line-height: 1.25; letter-spacing: -0.025em; margin-bottom: 8px; font-weight: 700; }
+        .header p { color: #6c7178; font-size: 0.98rem; line-height: 1.5; }
+        .home-eyebrow { display: inline-block; color: #1d4ed8; background: #dbeafe; border-radius: 999px; padding: 5px 11px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 10px; }
         .category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 28px; }
-        .category-tabs span { background: #fff; border: 1px solid #e3e5e8; border-radius: 999px; color: #656a70; padding: 8px 14px; font-size: 0.86rem; font-weight: 700; }
-        .category-tabs span:first-child { background: #24272b; color: #fff; border-color: #24272b; }
+        .category-tab { background: #fff; border: 1px solid #e3e5e8; border-radius: 999px; color: #656a70; padding: 8px 16px; font-size: 0.86rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-family: inherit; outline: none; }
+        .category-tab:hover { border-color: #93c5fd; color: #1d4ed8; background: #eff6ff; }
+        .category-tab.active { background: #2563eb; color: #fff; border-color: #2563eb; box-shadow: 0 4px 12px rgba(37,99,235,0.22); }
         .tools-grid { grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 14px; margin-bottom: 58px; }
-        .tool-card { border: 1px solid #e3e5e8; border-radius: 10px; padding: 22px; text-align: left; box-shadow: 0 5px 18px rgba(36,39,43,0.04); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+        .tool-card { border: 1px solid #e3e5e8; border-radius: 10px; padding: 22px; text-align: left; box-shadow: 0 5px 18px rgba(36,39,43,0.04); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: flex-start; }
         .tool-card { position: relative; overflow: hidden; min-height: 142px; background: rgba(255,255,255,0.96); }
         .tool-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: #dbeafe; transition: background 0.2s ease; }
         .tool-card:hover { transform: translateY(-3px); border-color: #93c5fd; box-shadow: 0 12px 28px rgba(37,99,235,0.12); }
         .tool-card:hover::before { background: #2563eb; }
+        .tool-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; flex-shrink: 0; }
+        .tool-card:hover .tool-icon { transform: scale(1.08); }
+        .tool-icon svg { width: 22px; height: 22px; display: block; }
+        .card-hidden { display: none !important; }
         .tool-card h3 { color: #24272b; font-size: 1.05rem; margin-bottom: 8px; }
         .tool-card p { color: #747980; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0; }
         .tools-grid .tool-card:last-child { border-color: #2563eb; box-shadow: 0 8px 24px rgba(37,99,235,0.14); }
@@ -189,13 +190,13 @@ HTML_TEMPLATE = """
             .site-nav-links::-webkit-scrollbar { display: none; }
             .site-nav-links a { flex: 0 0 auto; font-size: 0.78rem; white-space: nowrap; }
             .privacy-pill { padding: 7px 10px; }
-            .header { padding: 28px 0 20px; }
-            .header h1 { font-size: 2rem; letter-spacing: -0.035em; }
-            .header p { font-size: 0.94rem; line-height: 1.45; }
+            .header { padding: 24px 0 16px; }
+            .header h1 { font-size: 1.35rem; letter-spacing: -0.02em; }
+            .header p { font-size: 0.92rem; line-height: 1.45; }
             .home-eyebrow { font-size: 0.7rem; }
-            .category-tabs { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; margin: 0 -16px 22px; padding: 0 16px 5px; scrollbar-width: none; }
+            .category-tabs { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; margin: 0 -16px 20px; padding: 0 16px 5px; scrollbar-width: none; }
             .category-tabs::-webkit-scrollbar { display: none; }
-            .category-tabs span { flex: 0 0 auto; font-size: 0.78rem; }
+            .category-tab { flex: 0 0 auto; font-size: 0.78rem; padding: 6px 12px; }
             .tools-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 38px; }
             .tool-card { padding: 18px; }
             .editor-shell { padding: 12px; }
