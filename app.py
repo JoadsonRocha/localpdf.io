@@ -81,12 +81,44 @@ HTML_TEMPLATE = """
         .file-remove-btn { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; border-radius: 7px; padding: 6px 10px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; font-family: inherit; }
         .file-remove-btn:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
 
+        /* ── Progress bar ────────────────────────────────────────── */
         .progress-box { margin-top: 24px; padding: 18px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; text-align: left; }
         .progress-bar-wrapper { width: 100%; height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; position: relative; margin-bottom: 10px; }
-        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%); background-size: 200% 100%; animation: progressShimmer 2s infinite linear; border-radius: 999px; transition: width 0.3s ease; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%); background-size: 200% 100%; animation: progressShimmer 2s infinite linear; border-radius: 999px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
         @keyframes progressShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .progress-info { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; color: #475569; font-weight: 600; }
+        .progress-stage-badge { display: inline-block; background: #dbeafe; color: #1d4ed8; border-radius: 999px; padding: 2px 9px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.03em; margin-right: 6px; }
         .progress-timer { color: #2563eb; font-variant-numeric: tabular-nums; }
+
+        /* ── Toast notifications ─────────────────────────────────── */
+        #toast-container { position: fixed; bottom: 28px; right: 28px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { pointer-events: auto; min-width: 260px; max-width: 380px; padding: 14px 18px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 28px rgba(0,0,0,0.14); animation: toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .toast.toast-out { animation: toastOut 0.25s ease forwards; }
+        .toast.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .toast.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .toast.info { background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; }
+        .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .toast-msg { flex: 1; line-height: 1.4; }
+        .toast-close { background: none; border: none; cursor: pointer; opacity: 0.5; font-size: 1rem; padding: 0 2px; color: inherit; font-family: inherit; }
+        .toast-close:hover { opacity: 1; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(40px) scale(0.92); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); } to { opacity: 0; transform: translateX(40px) scale(0.92); } }
+
+        /* ── File item thumbnail ─────────────────────────────────── */
+        .file-thumb { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; border: 1px solid #e2e8f0; background: #f1f5f9; flex-shrink: 0; display: block; }
+        .file-thumb-placeholder { width: 38px; height: 38px; border-radius: 6px; background: linear-gradient(90deg, #f0f2f5 25%, #e8ecf0 50%, #f0f2f5 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.4s infinite linear; flex-shrink: 0; }
+
+        /* ── Skeleton loading ────────────────────────────────────── */
+        @keyframes skeleton-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .tool-card.skeleton-card { pointer-events: none; }
+        .tool-card.skeleton-card .tool-icon, .tool-card.skeleton-card h3, .tool-card.skeleton-card p {
+            background: linear-gradient(90deg, #f0f2f5 25%, #e8ecf0 50%, #f0f2f5 75%);
+            background-size: 200% 100%; animation: skeleton-shimmer 1.4s infinite linear;
+            border-radius: 6px; color: transparent !important;
+        }
+        .tool-card { opacity: 0; transform: translateY(8px); transition: opacity 0.35s ease, transform 0.35s ease; }
+        .tool-card.card-visible { opacity: 1; transform: translateY(0); }
+        .tool-card.card-hidden { opacity: 0 !important; display: none !important; }
 
         .result-card { margin-top: 24px; padding: 22px; border-radius: 12px; text-align: left; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -104,6 +136,9 @@ HTML_TEMPLATE = """
         .btn-try-again { background: #dc2626; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
         .btn-try-again:hover { background: #b91c1c; }
         .hidden { display: none; }
+
+        /* ── Lazy-loaded editor page placeholder ─────────────────── */
+        .editor-page img[data-lazy-src] { background: linear-gradient(90deg, #f0f2f5 25%, #e8ecf0 50%, #f0f2f5 75%); background-size: 200% 100%; animation: skeleton-shimmer 1.4s infinite linear; }
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
         .modal-content { background: white; margin: 5% auto; padding: 30px; width: 80%; max-width: 600px; border-radius: 15px; position: relative; }
         .close { position: absolute; right: 20px; top: 15px; font-size: 30px; cursor: pointer; color: #aaa; }
@@ -167,7 +202,7 @@ HTML_TEMPLATE = """
         .tool-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease; flex-shrink: 0; }
         .tool-card:hover .tool-icon { transform: scale(1.08); }
         .tool-icon svg { width: 22px; height: 22px; display: block; }
-        .card-hidden { display: none !important; }
+        .card-hidden-filter { display: none !important; }
         .tool-card h3 { color: #24272b; font-size: 1.05rem; margin-bottom: 8px; }
         .tool-card p { color: #747980; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0; }
         .tools-grid .tool-card:last-child { border-color: #2563eb; box-shadow: 0 8px 24px rgba(37,99,235,0.14); }
@@ -241,6 +276,7 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
+    <div id="toast-container"></div>
     <div class="container">
         <nav class="site-nav">
             <a class="site-brand" href="#" onclick="showHome(); return false;">local<span>pdf</span><small>.io</small></a>
@@ -496,6 +532,55 @@ HTML_TEMPLATE = """
         let progressSeconds = 0;
         let lastDownloadedBlob = null;
         let lastDownloadedFilename = '';
+        let fileThumbnails = {}; // filename -> dataURL cache
+
+        // ── Toast Notifications ──────────────────────────────────────
+        function showToast(msg, type = 'success', duration = 4500) {
+            const container = document.getElementById('toast-container');
+            const icons = { success: '✅', error: '⚠️', info: 'ℹ️' };
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || icons.info}</span>
+                <span class="toast-msg">${msg}</span>
+                <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
+            `;
+            container.appendChild(toast);
+            const timer = setTimeout(() => dismissToast(toast), duration);
+            toast._timer = timer;
+        }
+        function dismissToast(toast) {
+            if (!toast || !toast.parentElement) return;
+            clearTimeout(toast._timer);
+            toast.classList.add('toast-out');
+            toast.addEventListener('animationend', () => toast.remove(), { once: true });
+        }
+
+        // ── Thumbnail preview ────────────────────────────────────────
+        async function generateThumbnail(file) {
+            const key = `${file.name}-${file.size}`;
+            if (fileThumbnails[key]) return fileThumbnails[key];
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (['jpg','jpeg','png'].includes(ext)) {
+                return new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = e => { fileThumbnails[key] = e.target.result; resolve(e.target.result); };
+                    reader.readAsDataURL(file);
+                });
+            }
+            if (ext === 'pdf' && file.size <= 8 * 1024 * 1024) {
+                try {
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    const res = await fetch('/preview-page', { method: 'POST', body: fd });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.thumbnail) { fileThumbnails[key] = data.thumbnail; return data.thumbnail; }
+                    }
+                } catch(e) {}
+            }
+            return null;
+        }
 
         function t(pt, en) {
             return currentLanguage === 'en' ? en : pt;
@@ -739,9 +824,10 @@ HTML_TEMPLATE = """
             const cards = document.querySelectorAll('.tools-grid .tool-card');
             cards.forEach(card => {
                 if (category === 'all' || card.getAttribute('data-category') === category) {
-                    card.classList.remove('card-hidden');
+                    card.classList.remove('card-hidden-filter');
+                    card.classList.add('card-visible');
                 } else {
-                    card.classList.add('card-hidden');
+                    card.classList.add('card-hidden-filter');
                 }
             });
         }
@@ -825,7 +911,7 @@ HTML_TEMPLATE = """
             }
         }
 
-        function updateFileList() {
+        async function updateFileList() {
             const fileList = document.getElementById('file-list');
             const convertBtn = document.getElementById('convert-btn');
 
@@ -835,12 +921,19 @@ HTML_TEMPLATE = """
                 return;
             }
 
+            // Render items immediately with placeholder thumbs, then fill in async
             fileList.innerHTML = uploadedFiles.map((file, index) => {
                 const ext = getFileExtension(file.name);
                 const sizeStr = formatFileSize(file.size);
+                const key = `${file.name}-${file.size}`;
+                const cached = fileThumbnails[key];
+                const thumbHtml = cached
+                    ? `<img class="file-thumb" src="${cached}" alt="preview">`
+                    : `<div class="file-thumb-placeholder" data-thumb-idx="${index}" title="${file.name}"></div>`;
                 return `
-                    <div class="file-item">
+                    <div class="file-item" id="file-item-${index}">
                         <div class="file-info-group">
+                            ${thumbHtml}
                             <span class="file-ext-badge">${ext}</span>
                             <span class="file-name-text" title="${file.name}">${file.name}</span>
                             <span class="file-size-text">(${sizeStr})</span>
@@ -851,6 +944,22 @@ HTML_TEMPLATE = """
                     </div>
                 `;
             }).join('');
+
+            // Load thumbnails asynchronously for any placeholders
+            uploadedFiles.forEach(async (file, index) => {
+                const key = `${file.name}-${file.size}`;
+                if (fileThumbnails[key]) return;
+                const thumb = await generateThumbnail(file);
+                if (!thumb) return;
+                const placeholder = fileList.querySelector(`[data-thumb-idx="${index}"]`);
+                if (placeholder) {
+                    const img = document.createElement('img');
+                    img.className = 'file-thumb';
+                    img.src = thumb;
+                    img.alt = 'preview';
+                    placeholder.replaceWith(img);
+                }
+            });
 
             let btnText = t('Processar Documento', 'Process Document');
             if (currentTool === 'merge-pdf') btnText = t('Mesclar PDFs', 'Merge PDFs');
@@ -896,6 +1005,52 @@ HTML_TEMPLATE = """
             document.body.removeChild(a);
         }
 
+        // ── Named progress stages per tool ───────────────────────────
+        const PROGRESS_STAGES = {
+            default: [
+                { pct: 15, pt: 'Enviando arquivo...', en: 'Uploading file...' },
+                { pct: 35, pt: 'Analisando documento...', en: 'Analyzing document...' },
+                { pct: 60, pt: 'Processando conteúdo...', en: 'Processing content...' },
+                { pct: 80, pt: 'Otimizando resultado...', en: 'Optimizing result...' },
+                { pct: 93, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'ocr-pdf': [
+                { pct: 10, pt: 'Enviando arquivo...', en: 'Uploading file...' },
+                { pct: 25, pt: 'Renderizando páginas para OCR...', en: 'Rendering pages for OCR...' },
+                { pct: 55, pt: 'Reconhecendo texto (OCR)... pode demorar.', en: 'Recognizing text (OCR)... may take a moment.' },
+                { pct: 80, pt: 'Consolidando resultado...', en: 'Consolidating result...' },
+                { pct: 93, pt: 'Preparando arquivo de texto...', en: 'Preparing text file...' }
+            ],
+            'compress-pdf': [
+                { pct: 15, pt: 'Enviando arquivo...', en: 'Uploading file...' },
+                { pct: 40, pt: 'Otimizando imagens...', en: 'Optimizing images...' },
+                { pct: 70, pt: 'Reestruturando PDF...', en: 'Restructuring PDF...' },
+                { pct: 88, pt: 'Comprimindo streams...', en: 'Compressing streams...' },
+                { pct: 94, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'merge-pdf': [
+                { pct: 15, pt: 'Enviando arquivos...', en: 'Uploading files...' },
+                { pct: 40, pt: 'Lendo documentos...', en: 'Reading documents...' },
+                { pct: 65, pt: 'Mesclando páginas...', en: 'Merging pages...' },
+                { pct: 85, pt: 'Organizando estrutura...', en: 'Organizing structure...' },
+                { pct: 94, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'word-to-pdf': [
+                { pct: 15, pt: 'Enviando documento...', en: 'Uploading document...' },
+                { pct: 35, pt: 'Lendo estrutura do Word...', en: 'Reading Word structure...' },
+                { pct: 60, pt: 'Convertendo formatação...', en: 'Converting formatting...' },
+                { pct: 82, pt: 'Gerando PDF...', en: 'Generating PDF...' },
+                { pct: 94, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'pdf-to-word': [
+                { pct: 15, pt: 'Enviando PDF...', en: 'Uploading PDF...' },
+                { pct: 35, pt: 'Analisando layout...', en: 'Analyzing layout...' },
+                { pct: 62, pt: 'Extraindo texto e tabelas...', en: 'Extracting text and tables...' },
+                { pct: 83, pt: 'Gerando arquivo Word...', en: 'Generating Word file...' },
+                { pct: 94, pt: 'Preparando download...', en: 'Preparing download...' }
+            ]
+        };
+
         function startProgress(tool) {
             const progressEl = document.getElementById('progress');
             const progressBar = document.getElementById('progress-bar');
@@ -903,41 +1058,36 @@ HTML_TEMPLATE = """
             const progressTimer = document.getElementById('progress-timer');
 
             progressEl.classList.remove('hidden');
-            progressBar.style.width = '15%';
             progressSeconds = 0;
             progressTimer.textContent = '⏱️ 00:00';
 
-            const getStageMsg = (sec) => {
-                if (sec < 2) {
-                    return t('Enviando e analisando arquivo...', 'Uploading and analyzing file...');
-                }
-                if (tool === 'ocr-pdf') {
-                    return t('Executando OCR e reconhecendo texto... Isso pode levar alguns segundos.', 'Running OCR and recognizing text... This may take a few seconds.');
-                } else if (tool === 'compress-pdf') {
-                    return t('Otimizando imagens e reestruturando PDF...', 'Optimizing images and restructuring PDF...');
-                } else if (tool === 'word-to-pdf' || tool === 'pdf-to-word' || tool === 'excel-to-pdf') {
-                    return t('Convertendo estrutura, formatação e tabelas...', 'Converting structure, formatting and tables...');
-                } else if (tool === 'merge-pdf') {
-                    return t('Mesclando documentos e organizando páginas...', 'Merging documents and organizing pages...');
-                } else {
-                    return t('Processando documento localmente no seu computador...', 'Processing document locally on your computer...');
-                }
-            };
+            const stages = PROGRESS_STAGES[tool] || PROGRESS_STAGES.default;
+            let stageIdx = 0;
 
-            progressMsg.textContent = getStageMsg(0);
+            // Set initial stage
+            progressBar.style.width = stages[0].pct + '%';
+            progressMsg.innerHTML = `<span class="progress-stage-badge">${stageIdx + 1}/${stages.length}</span>${currentLanguage === 'en' ? stages[0].en : stages[0].pt}`;
 
-            let currentWidth = 15;
+            // Advance stages over time (distribute evenly, slower for longer tools)
+            const stageDuration = tool === 'ocr-pdf' ? 4000 : 2200;
             progressInterval = setInterval(() => {
                 progressSeconds++;
                 const mins = String(Math.floor(progressSeconds / 60)).padStart(2, '0');
                 const secs = String(progressSeconds % 60).padStart(2, '0');
                 progressTimer.textContent = `⏱️ ${mins}:${secs}`;
-                progressMsg.textContent = getStageMsg(progressSeconds);
 
-                if (currentWidth < 90) {
-                    currentWidth += (90 - currentWidth) * 0.15;
-                    progressBar.style.width = `${Math.round(currentWidth)}%`;
+                // Advance to next stage
+                const elapsed = progressSeconds * 1000;
+                const targetStage = Math.min(
+                    Math.floor(elapsed / stageDuration),
+                    stages.length - 1
+                );
+                if (targetStage > stageIdx) {
+                    stageIdx = targetStage;
                 }
+                const stage = stages[stageIdx];
+                progressBar.style.width = stage.pct + '%';
+                progressMsg.innerHTML = `<span class="progress-stage-badge">${stageIdx + 1}/${stages.length}</span>${currentLanguage === 'en' ? stage.en : stage.pt}`;
             }, 1000);
         }
 
@@ -947,15 +1097,19 @@ HTML_TEMPLATE = """
                 progressInterval = null;
             }
             const progressBar = document.getElementById('progress-bar');
+            const progressMsg = document.getElementById('progress-message');
             if (progressBar) {
                 progressBar.style.width = success ? '100%' : '0%';
+            }
+            if (progressMsg && success) {
+                progressMsg.innerHTML = `<span class="progress-stage-badge">✓</span>${t('Concluído!', 'Done!')}`;
             }
             setTimeout(() => {
                 const progressEl = document.getElementById('progress');
                 if (progressEl && success) {
                     progressEl.classList.add('hidden');
                 }
-            }, 450);
+            }, 600);
         }
 
         // Upload de arquivos
@@ -1076,6 +1230,8 @@ HTML_TEMPLATE = """
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
 
+                    showToast(t('Arquivo processado e download iniciado!', 'File processed and download started!'), 'success');
+
                     document.getElementById('result').innerHTML = `
                         <div class="result-card success">
                             <div class="result-header">
@@ -1102,6 +1258,7 @@ HTML_TEMPLATE = """
                 }
             } catch (error) {
                 stopProgress(false);
+                showToast(error.message || t('Falha no processamento.', 'Processing failed.'), 'error', 6000);
                 document.getElementById('result').innerHTML = `
                     <div class="result-card error">
                         <div class="result-header">
@@ -1286,23 +1443,50 @@ HTML_TEMPLATE = """
             document.getElementById('editor-status').textContent = `${editorPages.length} página(s) no documento.`;
         }
 
+        // ── Lazy loading for editor page thumbnails ──────────────────
+        let _editorThumbObserver = null;
+        function _setupLazyObserver() {
+            if (_editorThumbObserver) _editorThumbObserver.disconnect();
+            _editorThumbObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.lazySrc) {
+                            img.src = img.dataset.lazySrc;
+                            delete img.dataset.lazySrc;
+                            _editorThumbObserver.unobserve(img);
+                        }
+                    }
+                });
+            }, { rootMargin: '80px' });
+        }
+
         function renderEditorPages() {
             const container = document.getElementById('editor-pages');
             if (!editorPages.length) {
                 container.innerHTML = '<div class="editor-empty">As páginas do PDF aparecerão aqui.</div>';
                 return;
             }
-            container.innerHTML = editorPages.map((page, index) => `
+            _setupLazyObserver();
+            // Eagerly render first 6, lazy-load the rest
+            container.innerHTML = editorPages.map((page, index) => {
+                const eager = index < 6;
+                const imgAttr = eager
+                    ? `src="${page.thumbnail}"`
+                    : `src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='280'%3E%3Crect width='100%25' height='100%25' fill='%23f0f2f5'/%3E%3C/svg%3E" data-lazy-src="${page.thumbnail}"`;
+                return `
                 <div class="editor-page${page.selected ? ' selected' : ''}" draggable="true" data-editor-index="${index}">
-                    <img src="${page.thumbnail}" alt="Página ${index + 1}">
+                    <img ${imgAttr} alt="Página ${index + 1}">
                     <div class="editor-page-number">Página ${index + 1}</div>
                     <div class="editor-page-actions">
                         <button type="button" data-action="rotate" title="Girar página">↻</button>
                         <button type="button" data-action="duplicate" title="Duplicar página">⧉</button>
                         <button type="button" data-action="delete" title="Excluir página">✕</button>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
+            // Register lazy images with observer
+            container.querySelectorAll('img[data-lazy-src]').forEach(img => _editorThumbObserver.observe(img));
 
             container.querySelectorAll('.editor-page').forEach(card => {
                 const index = Number(card.dataset.editorIndex);
@@ -1427,6 +1611,18 @@ HTML_TEMPLATE = """
 
         translatePage();
 
+        // ── Skeleton → visible animation for tool cards ───────────────
+        (function animateToolCards() {
+            const cards = document.querySelectorAll('.tools-grid .tool-card');
+            cards.forEach((card, i) => {
+                card.classList.add('skeleton-card');
+                setTimeout(() => {
+                    card.classList.remove('skeleton-card');
+                    card.classList.add('card-visible');
+                }, 60 + i * 45);
+            });
+        })();
+
         const initialToolFromRoute = "{{ initial_tool or '' }}";
         if (initialToolFromRoute) {
             if (initialToolFromRoute === 'edit-pdf' || initialToolFromRoute === 'editor') {
@@ -1449,6 +1645,109 @@ def index(tool_name=None):
     if request.path.rstrip("/") == "/editor":
         tool_name = "edit-pdf"
     return render_template_string(HTML_TEMPLATE, initial_tool=tool_name or "")
+
+
+@app.route("/healthz")
+def healthz():
+    """Health-check endpoint used by the splash screen to detect when the server is ready."""
+    return jsonify({"status": "ok"})
+
+
+SPLASH_HTML = """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalPDF.io — Iniciando...</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", "Avenir Next", sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 50%, #1e40af 100%);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            color: white; user-select: none;
+        }
+        .brand { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 6px; }
+        .brand span { color: #93c5fd; }
+        .brand small { font-size: 0.85em; font-weight: 600; }
+        .tagline { font-size: 0.95rem; color: rgba(255,255,255,0.7); margin-bottom: 48px; }
+        .spinner-ring {
+            width: 52px; height: 52px;
+            border: 4px solid rgba(255,255,255,0.18);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status { font-size: 0.88rem; color: rgba(255,255,255,0.6); letter-spacing: 0.03em; }
+        .dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0%   { content: ''; }
+            25%  { content: '.'; }
+            50%  { content: '..'; }
+            75%  { content: '...'; }
+            100% { content: ''; }
+        }
+    </style>
+</head>
+<body>
+    <div class="brand">local<span>pdf</span><small>.io</small></div>
+    <p class="tagline">Privado. Local. Sem complicação.</p>
+    <div class="spinner-ring"></div>
+    <p class="status">Iniciando o servidor<span class="dots"></span></p>
+    <script>
+        (function poll() {
+            fetch('/healthz', { cache: 'no-store' })
+                .then(r => r.ok ? (window.location.replace('/')) : setTimeout(poll, 400))
+                .catch(() => setTimeout(poll, 400));
+        })();
+    </script>
+</body>
+</html>
+"""
+
+
+@app.route("/splash")
+def splash():
+    """Animated splash screen shown while the app starts; auto-redirects to / when ready."""
+    from flask import Response
+    return Response(SPLASH_HTML, mimetype="text/html")
+
+
+@app.route("/preview-page", methods=["POST"])
+def preview_page():
+    """Renders the first page of an uploaded PDF as a base64 JPEG thumbnail.
+    Used by the client to show a preview in the file list before conversion.
+    """
+    file = request.files.get("file")
+    if not file or not file.filename:
+        return jsonify({"error": "Nenhum arquivo enviado."}), 400
+    filename = secure_filename(file.filename)
+    if not filename.lower().endswith(".pdf"):
+        return jsonify({"error": "Apenas PDFs são suportados."}), 400
+    temp_dir = tempfile.mkdtemp()
+    try:
+        pdf_path = os.path.join(temp_dir, filename)
+        file.save(pdf_path)
+        with fitz.open(pdf_path) as doc:
+            if not doc.page_count:
+                return jsonify({"error": "PDF sem páginas."}), 400
+            page = doc.load_page(0)
+            pixmap = page.get_pixmap(matrix=fitz.Matrix(0.35, 0.35), alpha=False)
+            data = base64.b64encode(pixmap.tobytes("jpeg", jpg_quality=72)).decode("ascii")
+        return jsonify({"thumbnail": f"data:image/jpeg;base64,{data}"})
+    except Exception:
+        app.logger.exception("Falha ao gerar preview da página")
+        return jsonify({"error": "Não foi possível gerar o preview."}), 500
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @app.route("/favicon.svg")

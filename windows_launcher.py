@@ -74,8 +74,10 @@ def find_port(start=5000):
 
 
 def open_browser(port):
-    time.sleep(1)
-    webbrowser.open(f"http://127.0.0.1:{port}/")
+    # Open /splash immediately — it polls /healthz and auto-redirects to / when ready.
+    # This eliminates the blank/connection-refused page during cold startup.
+    time.sleep(0.3)
+    webbrowser.open(f"http://127.0.0.1:{port}/splash")
 
 
 if __name__ == "__main__":
