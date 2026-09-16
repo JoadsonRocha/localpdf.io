@@ -55,7 +55,7 @@ LocalPDF.io é uma aplicação web local para manipulação de arquivos PDF e do
 - **📦 Comprimir PDF** - Reduza o tamanho mantendo a qualidade
 
 ### 🖥️ Editor de páginas PDF
-- **📝 Editar páginas do PDF** - Reordene, insira, duplique, gire e exclua páginas visualmente dentro do PDF
+- **📝 Editar páginas do PDF** - Reordene, selecione páginas de outro PDF para inserir, duplique, gire e exclua páginas visualmente
 
 O editor preserva o arquivo original e exporta um novo PDF localmente. O plano completo está em [ROADMAP.md](ROADMAP.md).
 
@@ -84,6 +84,16 @@ docker run -p 5000:5000 localpdf
 ```
 
 Acesse: **http://localhost:5000**
+
+### Deploy no Railway
+
+A aplicação é compatível com o Railway e usa automaticamente a variável `PORT` fornecida pela plataforma.
+
+1. Crie um projeto no Railway a partir deste repositório.
+2. Configure o serviço para usar o `dockerfile` do repositório.
+3. Faça o deploy e gere um domínio público no Railway.
+
+Diferentemente do uso local ou de um Docker privado, os arquivos enviados para um Railway público são processados na infraestrutura do Railway. Não use esse ambiente para documentos sensíveis sem revisar acesso, retenção de dados e política de privacidade.
 
 ### Sem Docker
 

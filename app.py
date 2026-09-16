@@ -7,7 +7,6 @@ import tempfile
 import zipfile
 
 import fitz  # PyMuPDF
-import ghostscript
 import openpyxl
 from flask import (
     Flask,
@@ -23,6 +22,11 @@ from PIL import Image
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from werkzeug.utils import secure_filename
+
+try:
+    import ghostscript
+except (ImportError, RuntimeError):
+    ghostscript = None
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB max
@@ -110,16 +114,103 @@ HTML_TEMPLATE = """
         .editor-status { color: #6c757d; font-size: 0.95em; }
         .editor-file-input { display: none; }
         @media (max-width: 600px) { .editor-pages { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .editor-shell { padding: 14px; } }
+        body { background: #f6f7f9; color: #24272b; }
+        .container { max-width: 1180px; padding: 0 28px; }
+        .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; border-bottom: 1px solid #e4e6e9; }
+        .site-brand { color: #24272b; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; text-decoration: none; }
+        .site-brand span { color: #e53232; }
+        .site-brand small { font-size: 0.8em; }
+        .site-nav-links { display: flex; align-items: center; gap: 22px; }
+        .site-nav-links a { color: #5f6368; text-decoration: none; font-size: 0.92rem; font-weight: 600; }
+        .site-nav-links a:hover { color: #e53232; }
+        .privacy-pill { color: #247a52 !important; background: #e8f7ef; border-radius: 999px; padding: 8px 13px; }
+        .header { color: #24272b; margin: 0 auto; padding: 38px 0 24px; max-width: 700px; }
+        .header h1 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.05; letter-spacing: -0.045em; margin-bottom: 10px; }
+        .header p { color: #6c7178; font-size: 1rem; line-height: 1.5; }
+        .home-eyebrow { display: inline-block; color: #e53232; background: #fff0f0; border-radius: 999px; padding: 6px 11px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 11px; }
+        .category-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 28px; }
+        .category-tabs span { background: #fff; border: 1px solid #e3e5e8; border-radius: 999px; color: #656a70; padding: 8px 14px; font-size: 0.86rem; font-weight: 700; }
+        .category-tabs span:first-child { background: #24272b; color: #fff; border-color: #24272b; }
+        .tools-grid { grid-template-columns: repeat(auto-fit, minmax(245px, 1fr)); gap: 14px; margin-bottom: 58px; }
+        .tool-card { border: 1px solid #e3e5e8; border-radius: 10px; padding: 22px; text-align: left; box-shadow: 0 5px 18px rgba(36,39,43,0.04); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+        .tool-card:hover { transform: translateY(-3px); border-color: #f0a2a2; box-shadow: 0 12px 28px rgba(36,39,43,0.1); }
+        .tool-card h3 { color: #24272b; font-size: 1.05rem; margin-bottom: 8px; }
+        .tool-card p { color: #747980; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0; }
+        .tools-grid .tool-card:last-child { border-color: #e53232; box-shadow: 0 8px 24px rgba(229,50,50,0.12); }
+        .footer { color: #747980; border-top: 1px solid #e3e5e8; }
+        .footer a { color: #e53232; }
+        .footer .social-icons a { color: #747980; }
+        body { font-family: "Avenir Next", "Segoe UI", sans-serif; }
+        .header h1, .tool-card h3, .editor-page-number { font-family: Georgia, "Times New Roman", serif; }
+        .editor-shell { background: #fff7f5; border: 1px solid #f3d8d3; }
+        .editor-toolbar button, .editor-actions button { border: 1px solid #eadbd8; background: #fff; color: #3b3534; }
+        .editor-toolbar button:hover, .editor-actions button:hover { border-color: #e53232; color: #e53232; background: #fff; }
+        .editor-page.selected { border-color: #e53232; box-shadow: 0 0 0 3px #fde0dd; }
+        .editor-insert-panel { background: #fff; border: 1px solid #f0d6d2; border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+        .editor-insert-panel h4 { color: #24272b; margin-bottom: 5px; }
+        .editor-insert-panel p { color: #747980; font-size: 0.9rem; margin-bottom: 12px; }
+        .editor-pending-pages { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; max-height: 300px; overflow: auto; }
+        .editor-pending-page { position: relative; border: 2px solid #e8e9eb; border-radius: 8px; padding: 5px; background: #fafafa; cursor: pointer; }
+        .editor-pending-page.selected { border-color: #e53232; background: #fff0ef; }
+        .editor-pending-page img { display: block; width: 100%; aspect-ratio: 0.72; object-fit: contain; background: #eee; }
+        .editor-pending-page label { display: flex; gap: 6px; align-items: center; padding: 6px 2px 2px; font-size: 0.78rem; color: #4c5157; }
+        .editor-insert-actions { display: flex; gap: 8px; margin-top: 14px; }
+        .editor-insert-actions button { border: 0; border-radius: 7px; padding: 9px 12px; cursor: pointer; font-weight: 700; }
+        .editor-insert-actions .primary { background: #e53232; color: #fff; }
+        .editor-insert-actions .secondary { background: #f1eded; color: #4c4544; }
+        @media (max-width: 700px) {
+            .container { padding: 0 16px; }
+            .site-nav { gap: 14px; padding: 15px 0; align-items: flex-start; }
+            .site-brand { flex: 0 0 auto; font-size: 1.15rem; }
+            .site-nav-links { min-width: 0; max-width: 72vw; gap: 14px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+            .site-nav-links::-webkit-scrollbar { display: none; }
+            .site-nav-links a { flex: 0 0 auto; font-size: 0.78rem; white-space: nowrap; }
+            .privacy-pill { padding: 7px 10px; }
+            .header { padding: 28px 0 20px; }
+            .header h1 { font-size: 2rem; letter-spacing: -0.035em; }
+            .header p { font-size: 0.94rem; line-height: 1.45; }
+            .home-eyebrow { font-size: 0.7rem; }
+            .category-tabs { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; margin: 0 -16px 22px; padding: 0 16px 5px; scrollbar-width: none; }
+            .category-tabs::-webkit-scrollbar { display: none; }
+            .category-tabs span { flex: 0 0 auto; font-size: 0.78rem; }
+            .tools-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 38px; }
+            .tool-card { padding: 18px; }
+            .editor-shell { padding: 12px; }
+            .editor-toolbar { gap: 8px; }
+            .editor-toolbar button, .editor-actions button { flex: 1 1 100%; min-height: 42px; }
+            .editor-pages { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+            .editor-page { padding: 7px; }
+            .editor-page-actions button { min-width: 0; padding: 8px 3px; }
+            .editor-pending-pages { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .upload-area { padding: 26px 14px; }
+            .footer { margin-top: 28px; }
+            .footer a { display: inline-block; margin: 4px 0; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <nav class="site-nav">
+            <a class="site-brand" href="#" onclick="showHome(); return false;">local<span>pdf</span><small>.io</small></a>
+            <div class="site-nav-links">
+                <a href="#tools">Juntar PDF</a>
+                <a href="#tools">Dividir PDF</a>
+                <a href="#tools">Comprimir PDF</a>
+                <a href="#tools">Converter PDF</a>
+                <a href="#tools">Todas as ferramentas</a>
+                <a class="privacy-pill" href="#privacy-note">100% local</a>
+            </div>
+        </nav>
         <div class="header">
-            <h1>🌟 LocalPDF.io</h1>
-            <p>Todas as ferramentas PDF que você precisa em um só lugar</p>
+            <span class="home-eyebrow">PDF simples, privado e local</span>
+            <h1>Trabalhe com seus PDFs sem complicação</h1>
+            <p>Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.</p>
         </div>
 
         <div id="home-view">
+            <div id="tools" class="category-tabs" aria-label="Categorias de ferramentas">
+                <span>Todas</span><span>Organizar PDF</span><span>Converter PDF</span><span>Otimizar PDF</span><span>OCR</span>
+            </div>
             <div class="tools-grid">
                 <div class="tool-card" onclick="showTool('pdf-to-images')">
                     <h3>🖼️ PDF para Imagens</h3>
@@ -190,6 +281,15 @@ HTML_TEMPLATE = """
                         <button type="button" onclick="document.getElementById('editor-add-input').click()">＋ Inserir PDF ou imagem</button>
                         <input type="file" id="editor-add-input" class="editor-file-input" accept=".pdf,.jpg,.jpeg,.png" multiple>
                     </div>
+                    <div id="editor-insert-panel" class="editor-insert-panel hidden">
+                        <h4>Escolha as páginas para inserir</h4>
+                        <p>Selecione uma ou mais páginas do arquivo adicional antes de adicioná-las ao documento.</p>
+                        <div id="editor-pending-pages" class="editor-pending-pages"></div>
+                        <div class="editor-insert-actions">
+                            <button class="primary" type="button" onclick="confirmEditorInsert()">Inserir selecionadas</button>
+                            <button class="secondary" type="button" onclick="cancelEditorInsert()">Cancelar</button>
+                        </div>
+                    </div>
                     <div id="editor-pages" class="editor-pages">
                         <div class="editor-empty">As páginas do PDF aparecerão aqui.</div>
                     </div>
@@ -233,7 +333,7 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
-        <div class="footer">
+        <div id="privacy-note" class="footer">
             <p>Desenvolvido por Virgilio Borges</p>
             <div>
                 <a href="mailto:virgilio.junior94@gmail.com">✉️ virgilio.junior94@gmail.com</a> |
@@ -455,6 +555,8 @@ HTML_TEMPLATE = """
         let editorHistory = [];
         let editorFuture = [];
         let editorDraggedIndex = null;
+        let editorPendingPages = [];
+        let editorPendingFiles = [];
 
         function showEditor() {
             document.getElementById('home-view').classList.add('hidden');
@@ -474,9 +576,12 @@ HTML_TEMPLATE = """
             editorPages = [];
             editorHistory = [];
             editorFuture = [];
+            editorPendingPages = [];
+            editorPendingFiles = [];
             document.getElementById('editor-file-input').value = '';
             document.getElementById('editor-add-input').value = '';
             document.getElementById('editor-shell').classList.add('hidden');
+            document.getElementById('editor-insert-panel').classList.add('hidden');
             document.getElementById('editor-result').classList.add('hidden');
             renderEditorPages();
             updateEditorHistoryButtons();
@@ -538,13 +643,58 @@ HTML_TEMPLATE = """
                 editorPages = incomingPages;
                 editorFiles = [...files];
             } else {
-                editorPushHistory();
-                editorPages = editorPages.concat(incomingPages);
-                editorFiles = editorFiles.concat(files);
+                editorPendingPages = incomingPages;
+                editorPendingFiles = [...files];
+                renderPendingEditorPages();
+                document.getElementById('editor-insert-panel').classList.remove('hidden');
+                document.getElementById('editor-status').textContent = 'Escolha as páginas que deseja inserir.';
+                return;
             }
             document.getElementById('editor-shell').classList.remove('hidden');
             document.getElementById('editor-status').textContent = `${editorPages.length} página(s) no documento.`;
             renderEditorPages();
+        }
+
+        function renderPendingEditorPages() {
+            const container = document.getElementById('editor-pending-pages');
+            container.innerHTML = editorPendingPages.map((page, index) => `
+                <div class="editor-pending-page${page.selected ? ' selected' : ''}" data-pending-index="${index}">
+                    <img src="${page.thumbnail}" alt="Página disponível ${index + 1}">
+                    <label><input type="checkbox" ${page.selected ? 'checked' : ''}> Página ${index + 1}</label>
+                </div>
+            `).join('');
+            container.querySelectorAll('.editor-pending-page').forEach(card => {
+                const index = Number(card.dataset.pendingIndex);
+                card.addEventListener('click', event => {
+                    if (event.target.tagName !== 'INPUT') event.preventDefault();
+                    editorPendingPages[index].selected = !editorPendingPages[index].selected;
+                    renderPendingEditorPages();
+                });
+            });
+        }
+
+        function confirmEditorInsert() {
+            const selectedPages = editorPendingPages.filter(page => page.selected);
+            if (!selectedPages.length) {
+                document.getElementById('editor-status').textContent = 'Selecione pelo menos uma página para inserir.';
+                return;
+            }
+            editorPushHistory();
+            editorPages = editorPages.concat(selectedPages);
+            editorFiles = editorFiles.concat(editorPendingFiles);
+            editorPendingPages = [];
+            editorPendingFiles = [];
+            document.getElementById('editor-insert-panel').classList.add('hidden');
+            document.getElementById('editor-status').textContent = `${editorPages.length} página(s) no documento.`;
+            renderEditorPages();
+        }
+
+        function cancelEditorInsert() {
+            editorPendingPages = [];
+            editorPendingFiles = [];
+            document.getElementById('editor-insert-panel').classList.add('hidden');
+            document.getElementById('editor-add-input').value = '';
+            document.getElementById('editor-status').textContent = `${editorPages.length} página(s) no documento.`;
         }
 
         function renderEditorPages() {
@@ -1124,6 +1274,10 @@ def compress_pdf(file, temp_dir):
 
 def pdf_to_pdfa(files, temp_dir):
     """Converte um ou mais PDFs para PDF/A-1b usando Ghostscript."""
+    if ghostscript is None:
+        raise RuntimeError(
+            "Ghostscript não está instalado no sistema. Instale-o para usar PDF/A."
+        )
     if not isinstance(files, list):
         files = [files]
 
@@ -1366,4 +1520,5 @@ def build_response(output_files, temp_dir):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port)

@@ -59,7 +59,7 @@ No accounts. No cloud. No data leaving your computer.
 - **📦 Compress PDF** — Reduce file size while preserving quality
 
 ### 🖥️ PDF page editor
-- **📝 Edit PDF pages** — Visually reorder, insert, duplicate, rotate and delete pages directly in a PDF
+- **📝 Edit PDF pages** — Visually reorder, insert selected pages from another PDF, duplicate, rotate and delete pages directly in a PDF
 
 The editor preserves the original file and exports a new PDF locally. See the complete implementation plan in [ROADMAP.md](ROADMAP.md).
 
@@ -83,6 +83,16 @@ docker run -p 5000:5000 localpdf
 ```
 
 Open: **http://localhost:5000**
+
+### Deploy on Railway
+
+The application is compatible with Railway and reads the platform-provided `PORT` variable automatically.
+
+1. Create a new Railway project from this repository.
+2. Configure the service to build with the repository `dockerfile`.
+3. Deploy and generate a public domain in Railway.
+
+Unlike local or private Docker usage, files sent to a public Railway deployment are processed inside Railway infrastructure. Do not use it for sensitive documents unless the deployment, access control and data-retention policy have been reviewed.
 
 ### Without Docker
 

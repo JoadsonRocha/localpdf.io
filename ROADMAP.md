@@ -14,7 +14,7 @@ O editor permitirá abrir um PDF e modificar a estrutura das páginas diretament
 
 - Visualizar miniaturas de todas as páginas.
 - Reordenar páginas por arrastar e soltar.
-- Inserir páginas de outro PDF.
+- Selecionar e inserir páginas de outro PDF.
 - Inserir imagens JPG ou PNG como novas páginas.
 - Inserir páginas em branco.
 - Duplicar páginas.
@@ -146,6 +146,10 @@ Antes de publicar o editor:
 - Não retornar `str(exception)` diretamente ao usuário.
 - Atualizar `SECURITY.md` com os limites do editor.
 - Atualizar os READMEs quando uma ferramenta estiver realmente implementada.
+
+## Deploy no Railway
+
+O aplicativo aceita a variável de ambiente `PORT` exigida pelo Railway e pode ser construído a partir do `dockerfile` existente. O deploy público muda o modelo de privacidade: os arquivos deixam de ficar exclusivamente na máquina do usuário e passam pelo container hospedado. Para produção, adicionar autenticação, limites de uso, política de retenção e revisão de logs antes de expor o serviço.
 
 ## Estado atual
 
