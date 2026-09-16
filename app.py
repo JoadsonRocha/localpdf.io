@@ -714,7 +714,7 @@ HTML_TEMPLATE = """
             updateFileList();
             hideResult();
 
-            const cleanTitle = rawTitle.replace(/^[^\wÀ-ÿ]+/g, '').trim();
+            const cleanTitle = rawTitle.replace(/^[\\wÀ-ÿ]+/g, '').trim();
             document.title = `${cleanTitle} - LocalPDF.io`;
         }
 
@@ -1197,6 +1197,15 @@ HTML_TEMPLATE = """
         });
 
         translatePage();
+
+        const initialToolFromRoute = "{{ initial_tool or '' }}";
+        if (initialToolFromRoute) {
+            if (initialToolFromRoute === 'edit-pdf' || initialToolFromRoute === 'editor') {
+                showEditor();
+            } else if (tools[initialToolFromRoute]) {
+                showTool(initialToolFromRoute);
+            }
+        }
     </script>
 </body>
 </html>
@@ -1204,16 +1213,22 @@ HTML_TEMPLATE = """
 
 
 @app.route("/")
-def index():
-    return render_template_string(HTML_TEMPLATE)
+@app.route("/tool/<tool_name>")
+@app.route("/tools/<tool_name>")
+@app.route("/editor")
+def index(tool_name=None):
+    if request.path.rstrip("/") == "/editor":
+        tool_name = "edit-pdf"
+    return render_template_string(HTML_TEMPLATE, initial_tool=tool_name or "")
 
 
 @app.route("/favicon.svg")
 def favicon():
-    return send_file(
-        os.path.join(os.path.dirname(__file__), "favicon.svg"),
-        mimetype="image/svg+xml",
-    )
+    base_dir = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    favicon_path = os.path.join(base_dir, "favicon.svg")
+    if not os.path.exists(favicon_path):
+        favicon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "favicon.svg")
+    return send_file(favicon_path, mimetype="image/svg+xml")
 
 
 def render_pdf_page(page, scale=0.2):
@@ -1962,6 +1977,27 @@ def pdf_to_text(file, temp_dir):
     return [txt_path]
 
 
+def _ocr_image(img):
+    try:
+        return pytesseract.image_to_string(img, lang="por+eng")
+    except pytesseract.TesseractNotFoundError:
+        raise RuntimeError(
+            "Tesseract OCR não foi encontrado. Instale o Tesseract ou configure o caminho no ambiente."
+        )
+    except pytesseract.TesseractError as err:
+        err_msg = str(err)
+        if "traineddata" in err_msg:
+            for fallback_lang in ("por", "eng"):
+                try:
+                    return pytesseract.image_to_string(img, lang=fallback_lang)
+                except Exception:
+                    continue
+            raise RuntimeError(
+                "Dados de idioma do Tesseract (por.traineddata ou eng.traineddata) não encontrados no diretório tessdata."
+            )
+        raise RuntimeError(f"Erro durante processamento OCR: {err_msg}")
+
+
 def ocr_pdf(file, temp_dir):
     """
     Extrai texto de um PDF ou imagem usando Tesseract OCR.
@@ -1983,12 +2019,12 @@ def ocr_pdf(file, temp_dir):
                 pix.save(img_path)
 
                 with Image.open(img_path) as img:
-                    text = pytesseract.image_to_string(img, lang="por+eng")
+                    text = _ocr_image(img)
                 extracted_text.append(f"--- Página {page_num + 1} ---\n{text}")
     elif ext in ("jpg", "jpeg", "png"):
         # Aplicar OCR diretamente na imagem
         with Image.open(input_path) as img:
-            text = pytesseract.image_to_string(img, lang="por+eng")
+            text = _ocr_image(img)
         extracted_text.append(text)
     else:
         raise RuntimeError(f"Formato não suportado para OCR: {ext}")
