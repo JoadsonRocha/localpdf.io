@@ -31,12 +31,6 @@ if (-not $hasTess -or -not $hasGs) {
     Write-Warning "Vendor binaries (Tesseract/Ghostscript) in '$Portable\vendor' appear empty. Bundle them before creating a final release."
 }
 
-# Ensure WixToolset.Heat extension is available for harvesting
-$extensions = & wix extension list 2>&1
-if ($LASTEXITCODE -eq 0 -and ($extensions -notmatch "WixToolset.Heat")) {
-    Write-Host "Installing WixToolset.Heat extension for directory harvesting..."
-    & wix extension add WixToolset.Heat/4.0.6 --global
-}
 
 Push-Location $Root
 try {
@@ -51,13 +45,8 @@ try {
         }
     }
 
-    Write-Host "Harvesting portable files from $Portable..."
-    & wix extension add WixToolset.Heat --global 2>$null
-    & wix harvest dir $Portable -ext WixToolset.Heat -o $Generated -dr INSTALLFOLDER -cg AppFiles -srd -sreg
-    if ($LASTEXITCODE -ne 0) { throw "WiX harvest failed." }
-
     Write-Host "Building MSI installer: $Output..."
-    & wix build packaging\windows\installer.wxs $Generated -ext WixToolset.Heat -o $Output
+    & wix build packaging\windows\installer.wxs -o $Output
     if ($LASTEXITCODE -ne 0) { throw "WiX build failed." }
 
     Write-Host "MSI created successfully at $Output"
