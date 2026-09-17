@@ -12,16 +12,25 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
+[![Windows Release](https://img.shields.io/badge/Download-LocalPDF.msi-0078D4.svg?logo=windows&logoColor=white)](https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![All Contributors](https://img.shields.io/github/all-contributors/virgiliojr94/localpdf.io?color=ee8449&style=flat-square)](#-contribuidores)
 [![Website](https://img.shields.io/badge/Website-Online-success.svg)](https://virgiliojr94.github.io/localpdf.io/)
 
+<br>
+
+<a href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi">
+  <img src="https://img.shields.io/badge/Baixar_para_Windows-LocalPDF.msi-0078D4?style=for-the-badge&logo=windows&logoColor=white" height="48" alt="Baixar LocalPDF para Windows">
+</a>
+
+<br><br>
+
 > Todas as ferramentas PDF que você precisa, 100% local e privado
 
-**🌐 [Visite o Site Oficial](https://virgiliojr94.github.io/localpdf.io/)**
+**💻 [Baixar Instalador Windows (MSI)](https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi)** • **🌐 [Visite o Site Oficial](https://virgiliojr94.github.io/localpdf.io/)**
 
+[Instalação](#-como-usar) •
 [Funcionalidades](#-funcionalidades) •
-[Como Usar](#-como-usar) •
 [Roadmap](ROADMAP.md) •
 [Contribuir](CONTRIBUTING.md) •
 [Licença](#-licença)
@@ -99,11 +108,22 @@ docker run -p 5000:5000 localpdf
 
 Acesse: **http://localhost:5000**
 
-### MSI local (planejado)
+### 🪟 Instalador Oficial para Windows (MSI)
 
-O futuro MSI para Windows usará a mesma base de processamento local, sem Railway, cadastro ou upload externo. O MSI ainda não foi publicado; consulte o [ROADMAP.md](ROADMAP.md).
+Instale a versão nativa e pronta para uso no seu computador:
 
-Os arquivos iniciais de empacotamento estão em [packaging/windows](packaging/windows/README.md). Eles geram uma versão portable e um MSI com WiX. Para o Windows reconhecer o publicador sem alertas de editor desconhecido, o executável e o MSI precisam ser assinados com um certificado Authenticode real.
+<div align="center">
+  <br>
+  <a href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi">
+    <img src="https://img.shields.io/badge/Baixar_Instalador-LocalPDF.msi-0078D4?style=for-the-badge&logo=windows&logoColor=white" height="48" alt="Baixar Instalador LocalPDF">
+  </a>
+  <p><em>Compatível com Windows 10 e 11 (64-bit) • ~99 MB • Assinado digitalmente • Atalhos no Menu Iniciar e Desktop</em></p>
+  <br>
+</div>
+
+1. Baixe o instalador [`LocalPDF.msi`](https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi).
+2. Dê duplo clique para instalar (instalação limpa em `C:\Program Files\LocalPDF.io`).
+3. Abra pelo atalho **LocalPDF.io** no Menu Iniciar ou na Área de Trabalho. Ele abrirá direto no seu navegador padrão (`127.0.0.1`) sem precisar de internet ou configurações manuais.
 
 ### Deploy no Railway
 

