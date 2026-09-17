@@ -18,6 +18,7 @@
     <Feature Id="MainFeature" Title="LocalPDF.io" Level="1">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="DesktopShortcutComponent" />
     </Feature>
 
     <StandardDirectory Id="ProgramFiles64Folder">
@@ -27,6 +28,12 @@
     <StandardDirectory Id="ProgramMenuFolder">
       <Directory Id="ApplicationProgramsFolder" Name="LocalPDF.io" />
     </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="dist\LocalPDF\**" />
+    </ComponentGroup>
 
     <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder">
       <Shortcut Id="StartMenuShortcut"
@@ -38,6 +45,20 @@
       <RegistryValue Root="HKLM"
                      Key="Software\LocalPDF.io"
                      Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+
+    <Component Id="DesktopShortcutComponent" Directory="DesktopFolder">
+      <Shortcut Id="DesktopShortcut"
+                Name="LocalPDF.io"
+                Target="[INSTALLFOLDER]LocalPDF.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+      <RegistryValue Root="HKLM"
+                     Key="Software\LocalPDF.io"
+                     Name="desktopShortcut"
                      Type="integer"
                      Value="1"
                      KeyPath="yes" />
