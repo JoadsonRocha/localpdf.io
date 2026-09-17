@@ -1148,7 +1148,36 @@ HTML_TEMPLATE = """
             'Converter para PNG': 'Convert to PNG',
             'Extrair para Excel': 'Extract to Excel',
             'Senha obrigatória': 'Password required',
-            'Informe a senha do documento para desbloqueá-lo.': 'Enter document password to unlock it.'
+            'Informe a senha do documento para desbloqueá-lo.': 'Enter document password to unlock it.',
+            'Sobre': 'About',
+            'Sobre o LocalPDF.io': 'About LocalPDF.io',
+            '100% Privado & Local': '100% Private & Local',
+            'Posição & Estilo': 'Position & Style',
+            'Diagonal 45° centralizada (Recomendado)': 'Diagonal 45° centered (Recommended)',
+            'Centro horizontal': 'Horizontal center',
+            'Cabeçalho (parte superior)': 'Header (top)',
+            'Rodapé (parte inferior)': 'Footer (bottom)',
+            'Cor da marca': 'Watermark color',
+            'Cinza discreto (elegante)': 'Subtle gray (elegant)',
+            'Vermelho suave (confidencial)': 'Soft red (confidential)',
+            'Azul corporativo': 'Corporate blue',
+            'Opacidade / Transparência': 'Opacity / Transparency',
+            'Suave (22% - texto 100% legível)': 'Light (22% - fully readable text)',
+            'Médio (35% - equilibrado)': 'Medium (35% - balanced)',
+            'Destacado (55% - visível)': 'Strong (55% - prominent)',
+            'Zero Nuvem': 'Zero Cloud',
+            'Sem Upload Externo': 'No External Upload',
+            'Funciona Offline': 'Works Offline',
+            'Sem Limite de Páginas': 'No Page Limit',
+            'Instalador Windows (.msi)': 'Windows Installer (.msi)',
+            'Código Aberto MIT': 'Open Source MIT',
+            'Privacidade em Primeiro Lugar': 'Privacy First',
+            'Desempenho Ilimitado': 'Unlimited Performance',
+            'Totalmente Offline': 'Completely Offline',
+            'Conformidade LGPD & GDPR': 'LGPD & GDPR Compliance',
+            'Por que escolher o LocalPDF.io?': 'Why choose LocalPDF.io?',
+            'Recursos e Ferramentas Integradas': 'Integrated Features & Tools',
+            'Arquitetura & Tecnologias': 'Architecture & Technologies'
         };
 
         const toolTranslations = {
@@ -1354,6 +1383,8 @@ HTML_TEMPLATE = """
             document.getElementById('home-view').classList.add('hidden');
             const editorView = document.getElementById('editor-view');
             if (editorView) editorView.classList.add('hidden');
+            const aboutView = document.getElementById('about-view');
+            if (aboutView) aboutView.classList.add('hidden');
             document.getElementById('tool-views').classList.remove('hidden');
             const translatedTool = toolTranslations[toolName];
             const rawTitle = currentLanguage === 'en' ? (translatedTool ? translatedTool[0] : tool.title) : tool.title;
@@ -1390,11 +1421,24 @@ HTML_TEMPLATE = """
                 options.innerHTML = `
                     <label for="watermark-text">${t("Texto da marca d'água", 'Watermark text')}</label>
                     <input id="watermark-text" type="text" maxlength="80" placeholder="${t('Ex.: CONFIDENCIAL', 'e.g.: CONFIDENTIAL')}">
-                    <label for="watermark-position">${t('Posição', 'Position')}</label>
+                    <label for="watermark-position">${t('Posição & Estilo', 'Position & Style')}</label>
                     <select id="watermark-position">
-                        <option value="center">${t('Centro', 'Center')}</option>
-                        <option value="top">${t('Parte superior', 'Top')}</option>
-                        <option value="bottom">${t('Parte inferior', 'Bottom')}</option>
+                        <option value="diagonal">${t('Diagonal 45° centralizada (Recomendado)', 'Diagonal 45° centered (Recommended)')}</option>
+                        <option value="center">${t('Centro horizontal', 'Horizontal center')}</option>
+                        <option value="top">${t('Cabeçalho (parte superior)', 'Header (top)')}</option>
+                        <option value="bottom">${t('Rodapé (parte inferior)', 'Footer (bottom)')}</option>
+                    </select>
+                    <label for="watermark-color">${t('Cor da marca', 'Watermark color')}</label>
+                    <select id="watermark-color">
+                        <option value="gray">${t('Cinza discreto (elegante)', 'Subtle gray (elegant)')}</option>
+                        <option value="red">${t('Vermelho suave (confidencial)', 'Soft red (confidential)')}</option>
+                        <option value="blue">${t('Azul corporativo', 'Corporate blue')}</option>
+                    </select>
+                    <label for="watermark-opacity">${t('Opacidade / Transparência', 'Opacity / Transparency')}</label>
+                    <select id="watermark-opacity">
+                        <option value="0.22">${t('Suave (22% - texto 100% legível)', 'Light (22% - fully readable text)')}</option>
+                        <option value="0.35">${t('Médio (35% - equilibrado)', 'Medium (35% - balanced)')}</option>
+                        <option value="0.55">${t('Destacado (55% - visível)', 'Strong (55% - prominent)')}</option>
                     </select>
                 `;
                 options.classList.remove('hidden');
@@ -1441,10 +1485,28 @@ HTML_TEMPLATE = """
             document.getElementById('tool-views').classList.add('hidden');
             const editorView = document.getElementById('editor-view');
             if (editorView) editorView.classList.add('hidden');
+            const aboutView = document.getElementById('about-view');
+            if (aboutView) aboutView.classList.add('hidden');
             uploadedFiles = [];
             document.title = 'LocalPDF.io';
             if (window.location.pathname !== '/') {
                 history.pushState(null, '', '/');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showAbout() {
+            currentTool = null;
+            document.getElementById('home-view').classList.add('hidden');
+            document.getElementById('tool-views').classList.add('hidden');
+            const editorView = document.getElementById('editor-view');
+            if (editorView) editorView.classList.add('hidden');
+            const aboutView = document.getElementById('about-view');
+            if (aboutView) aboutView.classList.remove('hidden');
+            uploadedFiles = [];
+            document.title = `${t('Sobre o LocalPDF.io', 'About LocalPDF.io')} - LocalPDF.io`;
+            if (window.location.pathname !== '/about') {
+                history.pushState(null, '', '/about');
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1756,6 +1818,10 @@ HTML_TEMPLATE = """
                 }
                 formData.append('watermark_text', watermarkText.value.trim());
                 formData.append('watermark_position', document.getElementById('watermark-position').value);
+                const wmColor = document.getElementById('watermark-color');
+                if (wmColor) formData.append('watermark_color', wmColor.value);
+                const wmOpacity = document.getElementById('watermark-opacity');
+                if (wmOpacity) formData.append('watermark_opacity', wmOpacity.value);
             }
             const pageNumberPosition = document.getElementById('page-number-position');
             if (pageNumberPosition) {
