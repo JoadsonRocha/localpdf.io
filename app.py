@@ -25,6 +25,11 @@ from reportlab.pdfgen import canvas
 from werkzeug.utils import secure_filename
 
 try:
+    import pdfplumber
+except ImportError:
+    pdfplumber = None
+
+try:
     import ghostscript
 except (ImportError, RuntimeError):
     ghostscript = None
@@ -2277,8 +2282,20 @@ def convert():
         first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files and files[0].filename else "localpdf"
 
         if tool == "pdf-to-images":
-            output_files = pdf_to_images(files[0], temp_dir)
+            output_files = pdf_to_images(files[0], temp_dir, img_format="png")
             zip_name = f"{first_base}_imagens.zip"
+        elif tool == "pdf-to-png":
+            output_files = pdf_to_images(files[0], temp_dir, img_format="png")
+            zip_name = f"{first_base}_png.zip"
+        elif tool == "pdf-to-jpg":
+            output_files = pdf_to_images(files[0], temp_dir, img_format="jpg")
+            zip_name = f"{first_base}_jpg.zip"
+        elif tool == "unlock-pdf":
+            output_files = unlock_pdf(files[0], temp_dir, request.form.get("password", ""))
+            zip_name = f"{first_base}_desbloqueado.pdf"
+        elif tool == "pdf-to-excel":
+            output_files = pdf_to_excel(files[0], temp_dir)
+            zip_name = f"{first_base}.xlsx"
         elif tool == "images-to-pdf":
             output_files = images_to_pdf(files, temp_dir)
             zip_name = f"{first_base}_convertido.pdf"
@@ -2286,7 +2303,7 @@ def convert():
             output_files = merge_pdfs(files, temp_dir)
             zip_name = f"{first_base}_mesclado.pdf"
         elif tool == "split-pdf":
-            output_files = split_pdf(files[0], temp_dir)
+            output_files = split_pdf(files[0], temp_dir, page_range=request.form.get("page_range", ""))
             zip_name = f"{first_base}_paginas.zip"
         elif tool == "compress-pdf":
             output_files = compress_pdf(files[0], temp_dir)
@@ -2346,78 +2363,158 @@ def convert():
             shutil.rmtree(temp_dir)
 
 
-def pdf_to_images(file, temp_dir):
+def pdf_to_images(file, temp_dir, img_format="png"):
     base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
 
     doc = fitz.open(pdf_path)
     output_files = []
+    fmt = "jpg" if img_format.lower() in ("jpg", "jpeg") else "png"
 
     for page_num in range(len(doc)):
         page = doc.load_page(page_num)
         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x resolution
-        img_path = os.path.join(temp_dir, f"{base_name}_pagina_{page_num + 1}.png")
-        pix.save(img_path)
+        img_path = os.path.join(temp_dir, f"{base_name}_pagina_{page_num + 1}.{fmt}")
+        if fmt == "jpg":
+            pix.pil_save(img_path, format="JPEG", quality=90)
+        else:
+            pix.save(img_path)
         output_files.append(img_path)
 
     doc.close()
     return output_files
 
 
-def images_to_pdf(files, temp_dir):
-    images = []
-    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files and files[0].filename else "imagens"
-    for file in files:
-        img_path = os.path.join(temp_dir, secure_filename(file.filename))
-        file.save(img_path)
-        img = Image.open(img_path)
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        images.append(img)
-
-    pdf_path = os.path.join(temp_dir, f"{first_base}_convertido.pdf")
-    images[0].save(pdf_path, save_all=True, append_images=images[1:])
-
-    return [pdf_path]
-
-
-def merge_pdfs(files, temp_dir):
-    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files and files[0].filename else "localpdf"
-    merged_doc = fitz.open()
-
-    for file in files:
-        pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
-        file.save(pdf_path)
-        doc = fitz.open(pdf_path)
-        merged_doc.insert_pdf(doc)
-        doc.close()
-
-    output_path = os.path.join(temp_dir, f"{first_base}_mesclado.pdf")
-    merged_doc.save(output_path)
-    merged_doc.close()
-
-    return [output_path]
+def parse_page_range(range_str, total_pages):
+    """
+    Analisa strings como '1-3, 5, 8-10' e retorna uma lista ordenada de índices 0-based válidos.
+    """
+    pages = set()
+    parts = range_str.split(",")
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        if "-" in part:
+            sub = part.split("-")
+            if len(sub) == 2 and sub[0].strip().isdigit() and sub[1].strip().isdigit():
+                start = int(sub[0].strip())
+                end = int(sub[1].strip())
+                for p in range(min(start, end), max(start, end) + 1):
+                    if 1 <= p <= total_pages:
+                        pages.add(p - 1)
+        elif part.isdigit():
+            p = int(part)
+            if 1 <= p <= total_pages:
+                pages.add(p - 1)
+    return sorted(list(pages))
 
 
-def split_pdf(file, temp_dir):
+def split_pdf(file, temp_dir, page_range=""):
     base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
 
     doc = fitz.open(pdf_path)
+    total_pages = len(doc)
     output_files = []
 
-    for page_num in range(len(doc)):
+    if page_range and page_range.strip():
+        selected_pages = parse_page_range(page_range.strip(), total_pages)
+        if not selected_pages:
+            doc.close()
+            raise ValueError(
+                f"Nenhuma página válida encontrada no intervalo '{page_range}'. O documento possui {total_pages} página(s)."
+            )
         new_doc = fitz.open()
-        new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
-        output_path = os.path.join(temp_dir, f"{base_name}_pagina_{page_num + 1}.pdf")
+        for page_idx in selected_pages:
+            new_doc.insert_pdf(doc, from_page=page_idx, to_page=page_idx)
+        output_path = os.path.join(temp_dir, f"{base_name}_extraido.pdf")
         new_doc.save(output_path)
         new_doc.close()
         output_files.append(output_path)
+    else:
+        for page_num in range(total_pages):
+            new_doc = fitz.open()
+            new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
+            output_path = os.path.join(temp_dir, f"{base_name}_pagina_{page_num + 1}.pdf")
+            new_doc.save(output_path)
+            new_doc.close()
+            output_files.append(output_path)
 
     doc.close()
     return output_files
+
+
+def unlock_pdf(file, temp_dir, password=""):
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
+    pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
+    file.save(pdf_path)
+
+    doc = fitz.open(pdf_path)
+    if doc.is_encrypted:
+        if not password:
+            doc.close()
+            raise ValueError("O documento está protegido por senha. Por favor, digite a senha para desbloqueá-lo.")
+        auth = doc.authenticate(password)
+        if not auth:
+            doc.close()
+            raise ValueError("Senha incorreta. Não foi possível desbloquear o PDF.")
+
+    output_path = os.path.join(temp_dir, f"{base_name}_desbloqueado.pdf")
+    clean_doc = fitz.open()
+    clean_doc.insert_pdf(doc)
+    clean_doc.save(output_path)
+    clean_doc.close()
+    doc.close()
+    return [output_path]
+
+
+def pdf_to_excel(file, temp_dir):
+    """Extrai tabelas de um documento PDF para uma planilha Excel (.xlsx)."""
+    if pdfplumber is None:
+        raise RuntimeError("A biblioteca pdfplumber não está instalada no sistema.")
+
+    import re
+    base_name = os.path.splitext(secure_filename(file.filename))[0] or "planilha"
+    pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
+    file.save(pdf_path)
+
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)  # Remove sheet inicial vazia
+
+    has_data = False
+    with pdfplumber.open(pdf_path) as pdf:
+        for page_idx, page in enumerate(pdf.pages, start=1):
+            tables = page.extract_tables()
+            if tables:
+                for t_idx, table in enumerate(tables, start=1):
+                    sheet_name = f"Pág {page_idx} Tab {t_idx}" if len(tables) > 1 else f"Página {page_idx}"
+                    ws = wb.create_sheet(title=sheet_name[:31])
+                    has_data = True
+                    for row in table:
+                        clean_row = [
+                            cell.replace("\n", " ").strip() if isinstance(cell, str) else cell
+                            for cell in row
+                        ]
+                        ws.append(clean_row)
+            else:
+                text = page.extract_text()
+                if text and text.strip():
+                    ws = wb.create_sheet(title=f"Página {page_idx}"[:31])
+                    has_data = True
+                    for line in text.split("\n"):
+                        cells = re.split(r"\s{2,}|\t", line.strip())
+                        ws.append(cells)
+
+    if not has_data:
+        ws = wb.create_sheet(title="Dados")
+        ws.append(["Nenhuma tabela ou texto detectado no documento PDF."])
+
+    output_path = os.path.join(temp_dir, f"{base_name}.xlsx")
+    wb.save(output_path)
+    return [output_path]
 
 
 def compress_pdf(file, temp_dir):
