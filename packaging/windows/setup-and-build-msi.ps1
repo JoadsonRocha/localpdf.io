@@ -128,13 +128,6 @@ if ($wixExe) {
     }
 }
 
-# Extensão Heat
-$extensions = & $wixExe extension list 2>&1
-if ($extensions -notmatch "WixToolset.Heat") {
-    Write-Host "Instalando WixToolset.Heat..." -ForegroundColor Yellow
-    & $wixExe extension add WixToolset.Heat/4.0.6 --global
-}
-Write-OK "WixToolset.Heat pronto."
 
 # ──────────────────────────────────────────────────────────────
 # PASSO 3: Certificado confiável
