@@ -826,6 +826,10 @@ HTML_TEMPLATE = """
             'Cancelar': 'Cancel',
             'A senha é usada somente durante o processamento local.': 'The password is used only during local processing.',
             'PDF para Imagens': 'PDF to Images',
+            'PDF para JPG': 'PDF to JPG',
+            'PDF para PNG': 'PDF to PNG',
+            'Desbloquear PDF': 'Unlock PDF',
+            'PDF para Excel': 'PDF to Excel',
             'Imagens para PDF': 'Images to PDF',
             'Mesclar PDFs': 'Merge PDFs',
             'Dividir PDF': 'Split PDF',
@@ -841,6 +845,11 @@ HTML_TEMPLATE = """
             'PDF para Texto': 'PDF to Text',
             'OCR em PDF': 'OCR PDF',
             'Editar PDF': 'Edit PDF',
+            'Converta páginas PDF em imagens JPG compactadas': 'Convert PDF pages into compressed JPG images',
+            'Converta páginas PDF em imagens PNG em alta definição': 'Convert PDF pages into high definition PNG images',
+            'Remova permanentemente a senha do seu PDF': 'Permanently remove password from your PDF',
+            'Extraia tabelas do PDF para planilhas Excel (.xlsx) editáveis': 'Extract tables from PDF into editable Excel (.xlsx) spreadsheets',
+            'Extraia todas ou páginas específicas por intervalo': 'Extract all or specific pages by range',
             'Converta páginas PDF em imagens JPG ou PNG': 'Convert PDF pages into JPG or PNG images',
             'Combine várias imagens em um único PDF': 'Combine multiple images into one PDF',
             'Combine vários arquivos PDF em um documento único': 'Combine multiple PDF files into one document',
@@ -856,14 +865,29 @@ HTML_TEMPLATE = """
             'Converta documentos PDF para Word (.docx) editável': 'Convert PDF documents to editable Word (.docx) files',
             'Extraia o texto do PDF para um arquivo TXT editável': 'Extract PDF text into an editable TXT file',
             'Extraia texto de PDFs e imagens escaneadas com OCR': 'Extract text from scanned PDFs and images with OCR',
-            'Reordene, insira, gire, duplique e exclua páginas diretamente no PDF': 'Reorder, insert, rotate, duplicate and delete pages directly in the PDF'
+            'Reordene, insira, gire, duplique e exclua páginas diretamente no PDF': 'Reorder, insert, rotate, duplicate and delete pages directly in the PDF',
+            'Senha do PDF para desbloquear': 'PDF Password to unlock',
+            'Digite a senha atual do documento': 'Enter current document password',
+            'A senha é usada apenas localmente na sua máquina para remover a proteção.': 'The password is used only locally on your computer to remove protection.',
+            'Intervalo de páginas (opcional)': 'Page range (optional)',
+            'Ex.: 1-3, 5, 8-10 (deixe em branco para extrair todas)': 'e.g.: 1-3, 5, 8-10 (leave blank to extract all)',
+            'Todas as páginas serão extraídas em arquivos individuais se este campo ficar em branco.': 'All pages will be extracted to individual files if left blank.',
+            'Converter para JPG': 'Convert to JPG',
+            'Converter para PNG': 'Convert to PNG',
+            'Extrair para Excel': 'Extract to Excel',
+            'Senha obrigatória': 'Password required',
+            'Informe a senha do documento para desbloqueá-lo.': 'Enter document password to unlock it.'
         };
 
         const toolTranslations = {
             'pdf-to-images': ['PDF to Images', 'Convert each PDF page into separate JPG or PNG images'],
+            'pdf-to-jpg': ['PDF to JPG', 'Convert PDF pages into compressed JPG images'],
+            'pdf-to-png': ['PDF to PNG', 'Convert PDF pages into high definition PNG images'],
+            'unlock-pdf': ['Unlock PDF', 'Permanently remove password from your PDF document'],
+            'pdf-to-excel': ['PDF to Excel', 'Extract tables from PDF into editable Excel (.xlsx) spreadsheets'],
             'images-to-pdf': ['Images to PDF', 'Combine multiple images into one PDF'],
             'merge-pdf': ['Merge PDFs', 'Combine multiple PDF files into one document'],
-            'split-pdf': ['Split PDF', 'Extract specific pages from your PDF'],
+            'split-pdf': ['Split PDF', 'Extract all or specific pages by range'],
             'compress-pdf': ['Compress PDF', 'Reduce PDF file size while preserving quality'],
             'protect-pdf': ['Protect PDF', 'Create a password-protected copy of your PDF'],
             'watermark-pdf': ["Watermark", 'Add a text watermark to every page'],
@@ -903,6 +927,18 @@ HTML_TEMPLATE = """
                 accept: '.pdf',
                 multiple: false
             },
+            'pdf-to-jpg': {
+                title: 'PDF para JPG',
+                description: 'Converta páginas do seu PDF em imagens JPG compactadas',
+                accept: '.pdf',
+                multiple: false
+            },
+            'pdf-to-png': {
+                title: 'PDF para PNG',
+                description: 'Converta páginas do seu PDF em imagens PNG em alta resolução',
+                accept: '.pdf',
+                multiple: false
+            },
             'images-to-pdf': {
                 title: 'Imagens para PDF',
                 description: 'Combine múltiplas imagens em um único arquivo PDF',
@@ -917,9 +953,10 @@ HTML_TEMPLATE = """
             },
             'split-pdf': {
                 title: 'Dividir PDF',
-                description: 'Extraia páginas específicas do seu PDF',
+                description: 'Extraia páginas específicas ou todas as páginas do seu PDF',
                 accept: '.pdf',
-                multiple: false
+                multiple: false,
+                options: 'split-options'
             },
             'compress-pdf': {
                 title: 'Comprimir PDF',
@@ -933,6 +970,13 @@ HTML_TEMPLATE = """
                 accept: '.pdf',
                 multiple: false,
                 options: 'password'
+            },
+            'unlock-pdf': {
+                title: 'Desbloquear PDF',
+                description: 'Remova a senha e proteção do seu documento PDF',
+                accept: '.pdf',
+                multiple: false,
+                options: 'unlock-password'
             },
             'watermark-pdf': {
                 title: "Marca d'água",
@@ -964,6 +1008,12 @@ HTML_TEMPLATE = """
                 title: 'Excel para PDF',
                 description: 'Converta planilhas Excel (.xlsx) para PDF',
                 accept: '.xlsx',
+                multiple: false
+            },
+            'pdf-to-excel': {
+                title: 'PDF para Excel',
+                description: 'Extraia tabelas do PDF diretamente para planilhas Excel (.xlsx)',
+                accept: '.pdf',
                 multiple: false
             },
             'txt-to-pdf': {
@@ -1091,6 +1141,24 @@ HTML_TEMPLATE = """
                 options.classList.remove('hidden');
                 return;
             }
+            if (optionType === 'unlock-password') {
+                options.innerHTML = `
+                    <label for="pdf-unlock-password">${t('Senha do PDF para desbloquear', 'PDF Password to unlock')}</label>
+                    <input id="pdf-unlock-password" type="password" autocomplete="current-password" placeholder="${t('Digite a senha atual do documento', 'Enter current document password')}">
+                    <small>${t('A senha é usada apenas localmente na sua máquina para remover a proteção.', 'The password is used only locally on your computer to remove protection.')}</small>
+                `;
+                options.classList.remove('hidden');
+                return;
+            }
+            if (optionType === 'split-options') {
+                options.innerHTML = `
+                    <label for="split-page-range">${t('Intervalo de páginas (opcional)', 'Page range (optional)')}</label>
+                    <input id="split-page-range" type="text" placeholder="${t('Ex.: 1-3, 5, 8-10 (deixe em branco para extrair todas)', 'e.g.: 1-3, 5, 8-10 (leave blank to extract all)')}">
+                    <small>${t('Todas as páginas serão extraídas em arquivos individuais se este campo ficar em branco.', 'All pages will be extracted to individual files if left blank.')}</small>
+                `;
+                options.classList.remove('hidden');
+                return;
+            }
             options.innerHTML = '';
             options.classList.add('hidden');
         }
@@ -1164,6 +1232,10 @@ HTML_TEMPLATE = """
             else if (currentTool === 'compress-pdf') btnText = t('Comprimir PDF', 'Compress PDF');
             else if (currentTool === 'split-pdf') btnText = t('Dividir PDF', 'Split PDF');
             else if (currentTool === 'protect-pdf') btnText = t('Proteger PDF', 'Protect PDF');
+            else if (currentTool === 'unlock-pdf') btnText = t('Desbloquear PDF', 'Unlock PDF');
+            else if (currentTool === 'pdf-to-excel') btnText = t('Extrair para Excel', 'Extract to Excel');
+            else if (currentTool === 'pdf-to-jpg') btnText = t('Converter para JPG', 'Convert to JPG');
+            else if (currentTool === 'pdf-to-png') btnText = t('Converter para PNG', 'Convert to PNG');
             else if (currentTool === 'watermark-pdf') btnText = t("Aplicar Marca d'Água", 'Apply Watermark');
             else if (currentTool === 'ocr-pdf') btnText = t('Executar OCR', 'Run OCR');
             else if (currentTool) btnText = t('Converter', 'Convert');
@@ -1246,6 +1318,36 @@ HTML_TEMPLATE = """
                 { pct: 62, pt: 'Extraindo texto e tabelas...', en: 'Extracting text and tables...' },
                 { pct: 83, pt: 'Gerando arquivo Word...', en: 'Generating Word file...' },
                 { pct: 94, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'unlock-pdf': [
+                { pct: 20, pt: 'Lendo documento protegido...', en: 'Reading protected document...' },
+                { pct: 50, pt: 'Verificando senha e descriptografando...', en: 'Checking password and decrypting...' },
+                { pct: 80, pt: 'Gerando PDF desbloqueado...', en: 'Generating unlocked PDF...' },
+                { pct: 95, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'pdf-to-excel': [
+                { pct: 15, pt: 'Lendo páginas do PDF...', en: 'Reading PDF pages...' },
+                { pct: 45, pt: 'Detectando e extraindo tabelas...', en: 'Detecting and extracting tables...' },
+                { pct: 75, pt: 'Formatando planilha Excel (.xlsx)...', en: 'Formatting Excel (.xlsx) spreadsheet...' },
+                { pct: 95, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'pdf-to-jpg': [
+                { pct: 20, pt: 'Renderizando páginas...', en: 'Rendering pages...' },
+                { pct: 60, pt: 'Compactando imagens JPG...', en: 'Compressing JPG images...' },
+                { pct: 85, pt: 'Criando arquivo compactado...', en: 'Creating archive...' },
+                { pct: 95, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'pdf-to-png': [
+                { pct: 20, pt: 'Renderizando páginas em alta definição...', en: 'Rendering pages in high definition...' },
+                { pct: 60, pt: 'Exportando imagens PNG...', en: 'Exporting PNG images...' },
+                { pct: 85, pt: 'Criando arquivo compactado...', en: 'Creating archive...' },
+                { pct: 95, pt: 'Preparando download...', en: 'Preparing download...' }
+            ],
+            'split-pdf': [
+                { pct: 20, pt: 'Analisando páginas do PDF...', en: 'Analyzing PDF pages...' },
+                { pct: 60, pt: 'Separando e extraindo páginas...', en: 'Splitting and extracting pages...' },
+                { pct: 85, pt: 'Gerando arquivos...', en: 'Generating files...' },
+                { pct: 95, pt: 'Preparando download...', en: 'Preparing download...' }
             ]
         };
 
@@ -1386,6 +1488,24 @@ HTML_TEMPLATE = """
             const pageNumberPosition = document.getElementById('page-number-position');
             if (pageNumberPosition) {
                 formData.append('page_number_position', pageNumberPosition.value);
+            }
+            const unlockPasswordInput = document.getElementById('pdf-unlock-password');
+            if (unlockPasswordInput) {
+                if (!unlockPasswordInput.value) {
+                    document.getElementById('result').innerHTML = `
+                        <div class="result-card error">
+                            <div class="result-header"><h4>⚠️ ${t('Senha obrigatória', 'Password required')}</h4></div>
+                            <div class="result-body"><p>${t('Informe a senha do documento para desbloqueá-lo.', 'Enter document password to unlock it.')}</p></div>
+                        </div>
+                    `;
+                    document.getElementById('result').classList.remove('hidden');
+                    return;
+                }
+                formData.append('password', unlockPasswordInput.value);
+            }
+            const splitPageRange = document.getElementById('split-page-range');
+            if (splitPageRange && splitPageRange.value.trim()) {
+                formData.append('page_range', splitPageRange.value.trim());
             }
 
             document.getElementById('convert-btn').disabled = true;
