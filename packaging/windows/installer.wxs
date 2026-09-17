@@ -32,7 +32,7 @@
     <StandardDirectory Id="DesktopFolder" />
 
     <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
-      <Files Include="dist\LocalPDF\**" />
+      <Files Include="..\..\dist\LocalPDF\**" />
     </ComponentGroup>
 
     <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder">
