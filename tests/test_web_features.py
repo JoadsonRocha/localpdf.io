@@ -144,6 +144,110 @@ class WebFeaturesTests(unittest.TestCase):
         self.assertIsNotNone(data)
         self.assertIn("error", data)
 
+    def test_about_routes(self):
+        for route in ("/about", "/sobre"):
+            resp = self.client.get(route)
+            self.assertEqual(resp.status_code, 200)
+            html = resp.get_data(as_text=True)
+            self.assertIn("Sobre o LocalPDF.io", html)
+            self.assertIn("id=\"about-view\"", html)
+            self.assertIn("initialToolFromRoute = \"about\"", html)
+
+    def test_new_tools_conversion(self):
+        import io
+        import fitz
+
+        # Criar PDF de teste com 3 páginas
+        doc = fitz.open()
+        for i in range(3):
+            p = doc.new_page()
+            p.insert_text((50, 50), f"Pagina {i + 1}")
+            p.insert_text((50, 100), "Col1   Col2   Col3")
+            p.insert_text((50, 120), "Val1   Val2   Val3")
+        pdf_bytes = doc.tobytes()
+        doc.close()
+
+        # 1. PDF para JPG
+        resp_jpg = self.client.post(
+            "/convert",
+            data={"tool": "pdf-to-jpg", "files": [(io.BytesIO(pdf_bytes), "relatorio.pdf")]},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_jpg.status_code, 200)
+        self.assertIn("relatorio_jpg.zip", resp_jpg.headers.get("Content-Disposition", ""))
+
+        # 2. PDF para PNG
+        resp_png = self.client.post(
+            "/convert",
+            data={"tool": "pdf-to-png", "files": [(io.BytesIO(pdf_bytes), "documento.pdf")]},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_png.status_code, 200)
+        self.assertIn("documento_png.zip", resp_png.headers.get("Content-Disposition", ""))
+
+        # 3. PDF para Excel
+        resp_excel = self.client.post(
+            "/convert",
+            data={"tool": "pdf-to-excel", "files": [(io.BytesIO(pdf_bytes), "financeiro.pdf")]},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_excel.status_code, 200)
+        self.assertIn("financeiro.xlsx", resp_excel.headers.get("Content-Disposition", ""))
+
+        # 4. Dividir por intervalo de páginas (apenas página 2)
+        resp_split = self.client.post(
+            "/convert",
+            data={
+                "tool": "split-pdf",
+                "page_range": "2",
+                "files": [(io.BytesIO(pdf_bytes), "livro.pdf")],
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_split.status_code, 200)
+        self.assertIn("livro_extraido.pdf", resp_split.headers.get("Content-Disposition", ""))
+
+        # 5. Proteger e Desbloquear PDF
+        resp_prot = self.client.post(
+            "/convert",
+            data={
+                "tool": "protect-pdf",
+                "password": "senhaSegura123",
+                "files": [(io.BytesIO(pdf_bytes), "contrato.pdf")],
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_prot.status_code, 200)
+        protected_bytes = resp_prot.data
+
+        resp_unlock = self.client.post(
+            "/convert",
+            data={
+                "tool": "unlock-pdf",
+                "password": "senhaSegura123",
+                "files": [(io.BytesIO(protected_bytes), "contrato_protegido.pdf")],
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_unlock.status_code, 200)
+        self.assertIn("contrato_protegido_desbloqueado.pdf", resp_unlock.headers.get("Content-Disposition", ""))
+
+        # 6. Marca d'água profissional com rotação e opacidade
+        resp_wm = self.client.post(
+            "/convert",
+            data={
+                "tool": "watermark-pdf",
+                "watermark_text": "CONFIDENCIAL",
+                "watermark_position": "diagonal",
+                "watermark_color": "gray",
+                "watermark_opacity": "0.22",
+                "files": [(io.BytesIO(pdf_bytes), "minuta.pdf")],
+            },
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp_wm.status_code, 200)
+        self.assertIn("minuta_marca_dagua.pdf", resp_wm.headers.get("Content-Disposition", ""))
+
 
 if __name__ == "__main__":
     unittest.main()

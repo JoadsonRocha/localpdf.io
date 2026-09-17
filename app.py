@@ -2290,6 +2290,8 @@ HTML_TEMPLATE = """
         if (initialToolFromRoute) {
             if (initialToolFromRoute === 'edit-pdf' || initialToolFromRoute === 'editor') {
                 showEditor();
+            } else if (initialToolFromRoute === 'about' || initialToolFromRoute === 'sobre') {
+                showAbout();
             } else if (tools[initialToolFromRoute]) {
                 showTool(initialToolFromRoute);
             }
@@ -2301,6 +2303,8 @@ HTML_TEMPLATE = """
                 showHome();
             } else if (path === 'editor' || path === 'tool/edit-pdf') {
                 showEditor();
+            } else if (path === 'about' || path === 'sobre') {
+                showAbout();
             } else if (path.startsWith('tool/')) {
                 const name = path.replace('tool/', '');
                 if (tools[name]) showTool(name);
@@ -2316,9 +2320,13 @@ HTML_TEMPLATE = """
 @app.route("/tool/<tool_name>")
 @app.route("/tools/<tool_name>")
 @app.route("/editor")
+@app.route("/about")
+@app.route("/sobre")
 def index(tool_name=None):
     if request.path.rstrip("/") == "/editor":
         tool_name = "edit-pdf"
+    elif request.path.rstrip("/") in ("/about", "/sobre"):
+        tool_name = "about"
     return render_template_string(HTML_TEMPLATE, initial_tool=tool_name or "")
 
 
@@ -2795,7 +2803,9 @@ def convert():
                 files[0],
                 temp_dir,
                 request.form.get("watermark_text", ""),
-                request.form.get("watermark_position", "center"),
+                position=request.form.get("watermark_position", "diagonal"),
+                color_style=request.form.get("watermark_color", "gray"),
+                opacity=request.form.get("watermark_opacity", "0.22"),
             )
             zip_name = f"{first_base}_marca_dagua.pdf"
         elif tool == "page-numbers-pdf":
@@ -2840,6 +2850,55 @@ def convert():
         # Diretório temporário limpo após preparar resposta (BytesIO) evitando remoção antecipada
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
+
+
+def images_to_pdf(files, temp_dir):
+    """
+    Combina uma ou múltiplas imagens (JPG, PNG) em um único arquivo PDF.
+    """
+    if not isinstance(files, list):
+        files = [files]
+    if not files:
+        raise ValueError("Nenhuma imagem enviada para conversão.")
+
+    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files[0].filename else "imagens"
+    images = []
+    for file in files:
+        img_path = os.path.join(temp_dir, secure_filename(file.filename))
+        file.save(img_path)
+        img = Image.open(img_path)
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        images.append(img)
+
+    pdf_path = os.path.join(temp_dir, f"{first_base}_convertido.pdf")
+    images[0].save(pdf_path, save_all=True, append_images=images[1:])
+    return [pdf_path]
+
+
+def merge_pdfs(files, temp_dir):
+    """
+    Combina múltiplos arquivos PDF em um único documento PDF contínuo.
+    """
+    if not isinstance(files, list):
+        files = [files]
+    if len(files) < 1:
+        raise ValueError("Envie pelo menos um arquivo PDF para mesclagem.")
+
+    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files[0].filename else "documento"
+    merged_doc = fitz.open()
+
+    for file in files:
+        pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
+        file.save(pdf_path)
+        doc = fitz.open(pdf_path)
+        merged_doc.insert_pdf(doc)
+        doc.close()
+
+    output_path = os.path.join(temp_dir, f"{first_base}_mesclado.pdf")
+    merged_doc.save(output_path)
+    merged_doc.close()
+    return [output_path]
 
 
 def pdf_to_images(file, temp_dir, img_format="png"):
@@ -3031,37 +3090,68 @@ def protect_pdf(file, temp_dir, password):
     return [output_path]
 
 
-def watermark_pdf(file, temp_dir, text, position):
-    """Aplica uma marca d'água de texto em todas as páginas do PDF."""
-    text = text.strip()
+def watermark_pdf(file, temp_dir, text, position="diagonal", color_style="gray", opacity="0.22"):
+    """
+    Aplica marca d'água profissional com rotação diagonal e transparência suave,
+    garantindo que o conteúdo original do PDF continue perfeitamente legível.
+    """
+    text = (text or "").strip()
     if not text:
         raise ValueError("Informe o texto da marca d'água.")
-    if position not in {"center", "top", "bottom"}:
-        raise ValueError("Posição de marca d'água inválida.")
+
+    try:
+        opac_val = float(opacity)
+        opac_val = max(0.05, min(0.9, opac_val))
+    except (ValueError, TypeError):
+        opac_val = 0.22
 
     base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
     output_path = os.path.join(temp_dir, f"{base_name}_marca_dagua.pdf")
 
+    colors = {
+        "gray": (0.45, 0.45, 0.48),
+        "red": (0.80, 0.20, 0.20),
+        "blue": (0.15, 0.35, 0.75),
+    }
+    col = colors.get(color_style, (0.45, 0.45, 0.48))
+
     with fitz.open(pdf_path) as document:
         for page in document:
             rect = page.rect
-            fontsize = min(36, max(18, rect.width / max(len(text), 10)))
-            if position == "top":
-                point = (rect.width * 0.12, rect.height * 0.16)
+            width, height = rect.width, rect.height
+            center = fitz.Point(width / 2, height / 2)
+
+            if position in ("diagonal", "center-diagonal", "center"):
+                if position == "center":
+                    fontsize = min(48.0, max(20.0, width / (max(len(text), 6) * 0.55)))
+                    text_len = fitz.get_text_length(text, fontname="helv", fontsize=fontsize)
+                    start_point = fitz.Point(center.x - text_len / 2, center.y + fontsize / 3)
+                    page.insert_text(start_point, text, fontname="helv", fontsize=fontsize, color=col, fill_opacity=opac_val, overlay=True)
+                else:
+                    fontsize = min(54.0, max(22.0, width / (max(len(text), 6) * 0.45)))
+                    text_len = fitz.get_text_length(text, fontname="helv", fontsize=fontsize)
+                    start_point = fitz.Point(center.x - text_len / 2, center.y + fontsize / 3)
+                    matrix = fitz.Matrix(-45)
+                    page.insert_text(start_point, text, fontname="helv", fontsize=fontsize, color=col, morph=(center, matrix), fill_opacity=opac_val, overlay=True)
+            elif position == "top":
+                fontsize = 16.0
+                text_len = fitz.get_text_length(text, fontname="helv", fontsize=fontsize)
+                start_point = fitz.Point(center.x - text_len / 2, 45)
+                page.insert_text(start_point, text, fontname="helv", fontsize=fontsize, color=col, fill_opacity=min(0.7, opac_val * 1.5), overlay=True)
             elif position == "bottom":
-                point = (rect.width * 0.12, rect.height * 0.9)
+                fontsize = 16.0
+                text_len = fitz.get_text_length(text, fontname="helv", fontsize=fontsize)
+                start_point = fitz.Point(center.x - text_len / 2, height - 35)
+                page.insert_text(start_point, text, fontname="helv", fontsize=fontsize, color=col, fill_opacity=min(0.7, opac_val * 1.5), overlay=True)
             else:
-                point = (rect.width * 0.22, rect.height * 0.55)
-            page.insert_text(
-                point,
-                text,
-                fontsize=fontsize,
-                fontname="helv",
-                color=(0.78, 0.18, 0.18),
-                overlay=True,
-            )
+                fontsize = min(50.0, max(22.0, width / (max(len(text), 6) * 0.45)))
+                text_len = fitz.get_text_length(text, fontname="helv", fontsize=fontsize)
+                start_point = fitz.Point(center.x - text_len / 2, center.y + fontsize / 3)
+                matrix = fitz.Matrix(-45)
+                page.insert_text(start_point, text, fontname="helv", fontsize=fontsize, color=col, morph=(center, matrix), fill_opacity=opac_val, overlay=True)
+
         document.save(output_path)
 
     return [output_path]
