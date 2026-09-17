@@ -963,6 +963,7 @@ HTML_TEMPLATE = """
                 </div>
 
                 <div id="result" class="hidden"></div>
+                <div id="tool-privacy-badge" class="tool-privacy-notice"></div>
             </div>
         </div>
 
@@ -1006,13 +1007,50 @@ HTML_TEMPLATE = """
                     </div>
                 </div>
 
+                <h3 class="about-section-title">🌐 Versão Web (Railway) vs. 💻 Aplicativo Desktop Local</h3>
+                <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                    O LocalPDF está disponível em duas modalidades para atender perfeitamente a diferentes necessidades de uso e níveis de confidencialidade:
+                </p>
+                <div class="about-grid-pillars" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                    <div class="about-card" style="border-top: 4px solid #0078D4; background: #f0f7ff;">
+                        <div class="about-card-icon">💻</div>
+                        <h3 style="color: #0078D4;">Aplicativo Desktop (Windows .msi)</h3>
+                        <span class="tag-badge" style="background: #dbeafe; color: #1e40af; margin-bottom: 12px; display: inline-block;">Recomendado para Máxima Privacidade</span>
+                        <ul style="margin-left: 18px; color: #475569; font-size: 0.88rem; line-height: 1.7;">
+                            <li><strong>100% Offline:</strong> Funciona sem precisar de conexão à internet.</li>
+                            <li><strong>Zero Envio de Dados:</strong> Seus arquivos nunca saem do seu computador ou rede local.</li>
+                            <li><strong>Sem Limites de Servidor:</strong> Processa arquivos grandes aproveitando a CPU e RAM do seu PC.</li>
+                            <li><strong>Instalador Nativo:</strong> Pacote MSI limpo, assinado digitalmente, com atalhos no Menu Iniciar.</li>
+                        </ul>
+                        <div style="margin-top: 16px;">
+                            <a class="web-mode-cta-btn" style="display: inline-flex;" href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi" target="_blank" rel="noopener">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>
+                                <span>Baixar Instalador Windows (.msi)</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="about-card" style="border-top: 4px solid #10b981; background: #f0fdf4;">
+                        <div class="about-card-icon">🌐</div>
+                        <h3 style="color: #059669;">Versão Web (Nuvem Railway)</h3>
+                        <span class="tag-badge" style="background: #dcfce7; color: #166534; margin-bottom: 12px; display: inline-block;">Praticidade Imediata no Navegador</span>
+                        <ul style="margin-left: 18px; color: #475569; font-size: 0.88rem; line-height: 1.7;">
+                            <li><strong>Sem Instalação:</strong> Acesse de qualquer dispositivo direto pelo navegador.</li>
+                            <li><strong>Processamento Efêmero:</strong> O arquivo é enviado via HTTPS criptografado, processado em memória volátil e <em>excluído imediatamente</em> após o download.</li>
+                            <li><strong>Zero Persistência:</strong> Não usamos banco de dados, não guardamos histórico e nenhum arquivo é mantido em disco.</li>
+                            <li><strong>Totalmente Gratuito:</strong> Todas as 18 ferramentas disponíveis sem necessidade de cadastro.</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <h3 class="about-section-title">📊 Por que escolher o LocalPDF.io?</h3>
                 <div class="about-table-wrapper">
                     <table class="compare-table">
                         <thead>
                             <tr>
                                 <th>Recurso / Critério</th>
-                                <th style="background: #dbeafe; color: #1e40af;">LocalPDF.io</th>
+                                <th style="background: #dbeafe; color: #1e40af;">LocalPDF Desktop (Local)</th>
+                                <th style="background: #ecfdf5; color: #065f46;">LocalPDF Web (Railway)</th>
                                 <th>Ferramentas na Nuvem (iLovePDF, Smallpdf, etc.)</th>
                             </tr>
                         </thead>
@@ -1020,26 +1058,37 @@ HTML_TEMPLATE = """
                             <tr>
                                 <td><strong>Seus arquivos saem do seu computador?</strong></td>
                                 <td class="brand-col">❌ Nunca (100% processamento local)</td>
+                                <td style="background: #f0fdf4; color: #047857;">☁️ Trânsito temporário com exclusão imediata</td>
                                 <td>⚠️ Sim (enviados para servidores de terceiros)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Persistência ou retenção em disco</strong></td>
+                                <td class="brand-col">🔒 Zero (apenas no seu PC)</td>
+                                <td style="background: #f0fdf4; color: #047857;">❌ Zero (excluído imediatamente pós-download)</td>
+                                <td>⚠️ Retidos por horas ou dias nos servidores</td>
                             </tr>
                             <tr>
                                 <td><strong>Limite de tamanho de arquivo</strong></td>
                                 <td class="brand-col">✅ Sem limite artificial (usa sua RAM)</td>
+                                <td style="background: #f0fdf4; color: #047857;">✅ Até 100 MB por operação</td>
                                 <td>❌ 15 MB a 50 MB (exigem plano pago)</td>
                             </tr>
                             <tr>
                                 <td><strong>Funciona sem conexão à Internet?</strong></td>
                                 <td class="brand-col">✅ Sim, totalmente offline</td>
+                                <td style="background: #f0fdf4; color: #047857;">❌ Não (requer conexão web)</td>
                                 <td>❌ Não funciona sem conexão</td>
                             </tr>
                             <tr>
                                 <td><strong>Exige cadastro ou assinatura?</strong></td>
                                 <td class="brand-col">✅ Totalmente livre e sem cadastro</td>
+                                <td style="background: #f0fdf4; color: #047857;">✅ Livre e gratuito em todas as 18 ferramentas</td>
                                 <td>❌ Planos mensais ou anúncios invasivos</td>
                             </tr>
                             <tr>
                                 <td><strong>Segurança para dados sensíveis e contratos</strong></td>
                                 <td class="brand-col">✅ Máxima segurança física no seu PC</td>
+                                <td style="background: #f0fdf4; color: #047857;">🔒 Conexão HTTPS segura + exclusão automática</td>
                                 <td>⚠️ Risco de vazamento em servidores na nuvem</td>
                             </tr>
                         </tbody>
