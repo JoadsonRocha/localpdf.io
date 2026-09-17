@@ -594,9 +594,35 @@ HTML_TEMPLATE = """
             display: inline-flex;
             align-items: center;
             gap: 6px;
-        }
         .tech-pill strong {
             color: #0f172a;
+        }
+        .tool-privacy-notice {
+            margin-top: 18px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.84rem;
+            line-height: 1.5;
+            text-align: left;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .tool-privacy-notice.web-mode {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+        }
+        .tool-privacy-notice.local-mode {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+        .tool-privacy-notice a {
+            color: #1d4ed8;
+            font-weight: 700;
+            text-decoration: underline;
+        }
         .web-mode-banner {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
@@ -711,7 +737,7 @@ HTML_TEMPLATE = """
 
             <div class="header">
                 <h1>Trabalhe com seus PDFs sem complicação</h1>
-                <p>Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.</p>
+                <p id="main-subtitle">Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.</p>
             </div>
             <div id="tools" class="category-tabs" role="tablist" aria-label="Categorias de ferramentas">
                 <button type="button" class="category-tab active" data-category="all" onclick="filterCategory('all', this)" role="tab" aria-selected="true">Todas</button>
