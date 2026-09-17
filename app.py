@@ -478,12 +478,19 @@ HTML_TEMPLATE = """
                 <button type="button" class="category-tab" data-category="ocr" onclick="filterCategory('ocr', this)" role="tab" aria-selected="false">OCR</button>
             </div>
             <div class="tools-grid">
-                <a class="tool-card" href="/tool/pdf-to-images" onclick="showTool('pdf-to-images'); return false;" data-category="converter">
+                <a class="tool-card" href="/tool/pdf-to-jpg" onclick="showTool('pdf-to-jpg'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #eff6ff; color: #2563eb;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="1.5"/><path d="m8 18 3-3 2 2 3-4 2 2"/></svg>
                     </div>
-                    <h3>PDF para Imagens</h3>
-                    <p>Converta páginas PDF em imagens JPG ou PNG</p>
+                    <h3>PDF para JPG</h3>
+                    <p>Converta páginas PDF em imagens JPG compactadas</p>
+                </a>
+                <a class="tool-card" href="/tool/pdf-to-png" onclick="showTool('pdf-to-png'); return false;" data-category="converter">
+                    <div class="tool-icon" style="background: #f0fdf4; color: #16a34a;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+                    </div>
+                    <h3>PDF para PNG</h3>
+                    <p>Converta páginas PDF em imagens PNG em alta definição</p>
                 </a>
                 <a class="tool-card" href="/tool/images-to-pdf" onclick="showTool('images-to-pdf'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #f0fdf4; color: #16a34a;">
@@ -504,7 +511,7 @@ HTML_TEMPLATE = """
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
                     </div>
                     <h3>Dividir PDF</h3>
-                    <p>Extraia páginas específicas do seu PDF</p>
+                    <p>Extraia todas ou páginas específicas por intervalo</p>
                 </a>
                 <a class="tool-card" href="/tool/compress-pdf" onclick="showTool('compress-pdf'); return false;" data-category="otimizar">
                     <div class="tool-icon" style="background: #ecfdf5; color: #059669;">
@@ -519,6 +526,13 @@ HTML_TEMPLATE = """
                     </div>
                     <h3>Proteger PDF</h3>
                     <p>Adicione uma senha local ao seu documento PDF</p>
+                </a>
+                <a class="tool-card" href="/tool/unlock-pdf" onclick="showTool('unlock-pdf'); return false;" data-category="organizar">
+                    <div class="tool-icon" style="background: #fef2f2; color: #ef4444;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/><circle cx="12" cy="16" r="1.5"/></svg>
+                    </div>
+                    <h3>Desbloquear PDF</h3>
+                    <p>Remova permanentemente a senha do seu PDF</p>
                 </a>
                 <a class="tool-card" href="/tool/watermark-pdf" onclick="showTool('watermark-pdf'); return false;" data-category="organizar">
                     <div class="tool-icon" style="background: #f0f9ff; color: #0284c7;">
@@ -554,6 +568,13 @@ HTML_TEMPLATE = """
                     </div>
                     <h3>Excel para PDF</h3>
                     <p>Converta planilhas XLSX para PDF</p>
+                </a>
+                <a class="tool-card" href="/tool/pdf-to-excel" onclick="showTool('pdf-to-excel'); return false;" data-category="converter">
+                    <div class="tool-icon" style="background: #ecfdf5; color: #059669;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <h3>PDF para Excel</h3>
+                    <p>Extraia tabelas do PDF para planilhas Excel (.xlsx) editáveis</p>
                 </a>
                 <a class="tool-card" href="/tool/txt-to-pdf" onclick="showTool('txt-to-pdf'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #f1f5f9; color: #475569;">
