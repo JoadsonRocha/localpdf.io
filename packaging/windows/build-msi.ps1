@@ -34,6 +34,7 @@ if ($LASTEXITCODE -eq 0 -and ($extensions -notmatch "WixToolset.Heat")) {
 }
 
 Push-Location $Root
+try {
     # Assinar binários portáteis antes de empacotar
     $signScript = Join-Path $PSScriptRoot "sign-release.ps1"
     if (Test-Path $signScript) {
