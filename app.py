@@ -448,6 +448,161 @@ HTML_TEMPLATE = """
             .footer-block p, .footer-block a { font-size: 0.82rem; line-height: 1.65; }
             .footer-credit { margin-top: 8px; padding: 14px 16px; font-size: 0.78rem; text-align: center; }
         }
+
+        /* About View Styles */
+        .about-shell {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            margin-bottom: 40px;
+            text-align: left;
+        }
+        .about-hero {
+            text-align: center;
+            max-width: 760px;
+            margin: 0 auto 36px;
+        }
+        .about-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            padding: 5px 14px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .about-hero h2 {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 2.1rem;
+            color: #1e293b;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+        .about-hero p {
+            color: #64748b;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+        .about-badges-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 18px;
+        }
+        .tag-badge {
+            background: #f1f5f9;
+            color: #334155;
+            padding: 4px 11px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .about-grid-pillars {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 18px;
+            margin-bottom: 40px;
+        }
+        .about-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 22px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .about-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border-color: #cbd5e1;
+        }
+        .about-card-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .about-card h3 {
+            font-size: 1.05rem;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-family: inherit;
+            font-weight: 700;
+        }
+        .about-card p {
+            font-size: 0.88rem;
+            color: #64748b;
+            line-height: 1.55;
+            margin: 0;
+        }
+        .about-section-title {
+            font-size: 1.3rem;
+            color: #1e293b;
+            margin: 36px 0 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+        .about-table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 36px;
+        }
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+        .compare-table th, .compare-table td {
+            padding: 13px 18px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .compare-table th {
+            background: #f1f5f9;
+            color: #334155;
+            font-weight: 700;
+        }
+        .compare-table tr:last-child td {
+            border-bottom: none;
+        }
+        .compare-table td.brand-col {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+        .about-tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .tech-pill {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 7px 13px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tech-pill strong {
+            color: #0f172a;
+        }
+        @media (max-width: 700px) {
+            .about-shell { padding: 22px 16px; }
+            .about-hero h2 { font-size: 1.5rem; }
+            .about-grid-pillars { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -460,6 +615,7 @@ HTML_TEMPLATE = """
                 <a href="/tool/split-pdf" onclick="showTool('split-pdf'); return false;">Dividir PDF</a>
                 <a href="/tool/compress-pdf" onclick="showTool('compress-pdf'); return false;">Comprimir PDF</a>
                 <a href="/tool/pdf-to-word" onclick="showTool('pdf-to-word'); return false;">Converter PDF</a>
+                <a href="/about" onclick="showAbout(); return false;">Sobre</a>
                 <a href="/" onclick="showHome(); return false;">Todas as ferramentas</a>
                 <button id="language-toggle" class="language-toggle" type="button" onclick="toggleLanguage()">EN</button>
             </div>
