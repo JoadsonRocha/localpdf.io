@@ -54,20 +54,24 @@ Todas as operações funcionam sem cadastro e sem limites artificiais de plano q
 - **📄 Texto → PDF** - Converta arquivos TXT em PDF formatado
 
 ### 📤 Converter de PDF
-- **🖼️ PDF → Imagens** - Extraia cada página como imagem PNG
-- **📝 PDF → Word** - Converta PDF em documento DOCX editável
+- **🖼️ PDF → JPG** - Converta páginas PDF em imagens JPG compactadas
+- **🖼️ PDF → PNG** - Converta páginas PDF em imagens PNG em alta definição
+- **🖼️ PDF → Imagens** - Extraia cada página como imagem individual
+- **📊 PDF → Excel** - Extraia tabelas do PDF para planilhas Excel (.xlsx) editáveis (via `pdfplumber`)
+- **📝 PDF → Word** - Converta PDF em documento DOCX editável (via `pdf2docx`)
 - **📄 PDF → Texto** - Extraia todo o texto em arquivo TXT
 - **🔒 PDF → PDF/A** - Converta para PDF/A-1b quando o Ghostscript estiver instalado
 - **🔍 OCR em PDF** - Extraia texto de PDFs e imagens escaneadas com Tesseract local
 
 ### 🔄 Manipular PDF
 - **🔗 Mesclar PDFs** - Una vários PDFs em um único documento
-- **✂️ Dividir PDF** - Separe cada página em arquivo individual
+- **✂️ Dividir PDF** - Separe todas as páginas ou intervalos personalizados (ex: `1-3, 5, 8-10`)
 - **📦 Comprimir PDF** - Reduza o tamanho mantendo a qualidade
 
 ### 🔐 Organizar e proteger PDF
 - **🔐 Proteger PDF** - Criptografe o PDF com senha AES-256
-- **💧 Marca d'água** - Adicione marca d'água de texto configurável
+- **🔓 Desbloquear PDF** - Remova permanentemente a senha e restrições de PDFs protegidos
+- **💧 Marca d'água Profissional** - Aplique marcas d'água diagonais a 45° ou cabeçalho/rodapé com controle de opacidade suave e cor
 - **🔢 Números de página** - Adicione numeração no cabeçalho ou rodapé
 
 ### 🖥️ Editor de páginas PDF
@@ -75,12 +79,11 @@ Todas as operações funcionam sem cadastro e sem limites artificiais de plano q
 
 O editor preserva o arquivo original e exporta um novo PDF localmente. O plano completo está em [ROADMAP.md](ROADMAP.md).
 
-### 🌐 Interface
+### 🌐 Interface e Usabilidade
+- **Página Sobre (/about)** integrada com comparação direta frente a serviços na nuvem (iLovePDF, Smallpdf) e princípios de privacidade.
 - Português por padrão com opção de interface em inglês.
 - Layout responsivo para desktop e celular.
-- Sem cadastro, login, analytics ou recursos de IA.
-
-`PDF → Excel`, edição livre do texto existente no PDF e remoção de senha ainda não estão implementados. O status está em [ROADMAP.md](ROADMAP.md).
+- Sem cadastro, login, analytics ou rastreadores externos.
 
 ## 🚀 Como usar
 

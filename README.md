@@ -60,29 +60,34 @@ All operations run locally with full hardware performance and a 100 MB configura
 - **📄 Text → PDF** - Convert plain TXT files into clean PDF pages
 
 ### 📤 Convert from PDF
-- **🖼️ PDF → Images** - Extract every PDF page into high-resolution PNG images
-- **📝 PDF → Word** - Convert PDF files into fully editable Word (.docx) documents
+- **🖼️ PDF → JPG** - Convert PDF pages into compressed JPG images
+- **🖼️ PDF → PNG** - Convert PDF pages into high-definition PNG images
+- **🖼️ PDF → Images** - Extract every PDF page into separate image files
+- **📊 PDF → Excel** - Extract tables from PDF directly into editable Excel (.xlsx) spreadsheets (powered by `pdfplumber`)
+- **📝 PDF → Word** - Convert PDF files into fully editable Word (.docx) documents (powered by `pdf2docx`)
 - **📄 PDF → Text** - Extract selectable text into plain TXT files
 - **🔒 PDF → PDF/A** - Standardize documents to the archival PDF/A-1b standard (via Ghostscript)
 - **🔍 OCR PDF** - Optical Character Recognition for scanned PDFs and images using local Tesseract OCR
 
 ### 🔄 Organize, Edit and Secure PDF
 - **🔗 Merge PDFs** - Combine multiple PDF files in any order
-- **✂️ Split PDF** - Extract individual pages into separate PDFs
+- **✂️ Split PDF** - Extract all pages or specific page intervals (e.g. `1-3, 5, 8-10`)
 - **📦 Compress PDF** - Optimize images and reduce file size while preserving readability
 - **🔐 Protect PDF** - Encrypt PDF documents with AES-256 local passwords
-- **💧 Watermark PDF** - Apply custom text watermarks with position controls
+- **🔓 Unlock PDF** - Permanently remove password protection from protected PDF documents
+- **💧 Professional Watermark** - Apply subtle, 45° diagonal semi-transparent watermarks (or header/footer) with custom color and opacity controls
 - **🔢 Page numbers** - Add custom page numbering to headers or footers
 - **🖥️ Visual PDF Page Editor** - Interactive canvas to reorder by drag-and-drop, insert pages from external PDFs/images, rotate, duplicate, add blank pages and delete pages
 
 ### 💎 Modern User Interface & Flow
 - **🎨 Custom SVG Icons**: Dedicated vector icon for every tool instead of generic emojis.
 - **🏷️ Real-time Category Tabs**: Instant filtering by *All*, *Organize PDF*, *Convert PDF*, *Optimize PDF*, and *OCR*.
-- **📑 Separate Tab Navigation**: Dedicated routes (`/tool/<tool_name>` and `/editor`) that open in separate tabs with synchronized browser titles.
+- **📑 Separate Tab Navigation**: Dedicated routes (`/tool/<tool_name>`, `/editor`, and `/about`) that open in separate tabs with synchronized browser titles.
 - **⚡ Dynamic Loading & Stage Feedback**: Animated progress bar (`progressShimmer`), real-time contextual stage messages (e.g. OCR text recognition, image compression), and elapsed timer (`⏱️ 00:03`).
 - **📁 File Management**: File extension badges, human-readable file sizes (`KB` / `MB`), and individual removal buttons (`✕ Remove`).
 - **📥 One-Click Re-Download**: Result card retains downloaded files in memory, allowing instant re-download without reprocessing.
-- **🏷️ Standardized File Renaming**: Generated files strictly retain your original document's base name (e.g. `report_compressed.pdf`, `contract_merged.pdf`, `invoice.docx`, `document_ocr.txt`).
+- **🏷️ Standardized File Renaming**: Generated files strictly retain your original document's base name (e.g. `report_compressed.pdf`, `contract_merged.pdf`, `financial.xlsx`, `document_ocr.txt`).
+- **ℹ️ Dedicated About Page**: Built-in `/about` page detailing zero-cloud architecture, comparative benchmarks against online services, and open source documentation.
 - **🌐 Full Bilingual Support**: Toggle seamlessly between Portuguese (pt-BR) and English (EN).
 
 ---
