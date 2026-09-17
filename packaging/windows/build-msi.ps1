@@ -9,11 +9,16 @@ $Portable = Join-Path $Root "dist\LocalPDF"
 $Generated = Join-Path $PSScriptRoot "generated-files.wxs"
 $Output = Join-Path $Root "dist\LocalPDF.msi"
 
+$dotnetToolsPath = "$env:USERPROFILE\.dotnet\tools"
+if ($env:PATH -notlike "*$dotnetToolsPath*") {
+    $env:PATH = "$env:PATH;$dotnetToolsPath"
+}
+
 if (-not (Test-Path (Join-Path $Portable "LocalPDF.exe"))) {
     throw "Build the portable package first with build-portable.ps1."
 }
 if (-not (Get-Command wix -ErrorAction SilentlyContinue)) {
-    throw "WiX Toolset v4 is required. Install it via 'dotnet tool install --global wix' and ensure wix is on PATH."
+    throw "WiX Toolset v4 is required. Install it via 'dotnet tool install --global wix --version 4.0.6' and ensure wix is on PATH."
 }
 
 # Check if vendor binaries are populated
@@ -30,7 +35,7 @@ if (-not $hasTess -or -not $hasGs) {
 $extensions = & wix extension list 2>&1
 if ($LASTEXITCODE -eq 0 -and ($extensions -notmatch "WixToolset.Heat")) {
     Write-Host "Installing WixToolset.Heat extension for directory harvesting..."
-    & wix extension add WixToolset.Heat --global
+    & wix extension add WixToolset.Heat/4.0.6 --global
 }
 
 Push-Location $Root

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Setup completo: instala dependências (.NET SDK, WiX v4), configura certificado e gera MSI assinado.
 .DESCRIPTION
@@ -110,9 +110,9 @@ if ($wixExe) {
     Write-OK "WiX já instalado: $wixVersion"
 } else {
     Write-Host "Instalando WiX Toolset v4..." -ForegroundColor Yellow
-    & $dotnetExe tool install --global wix
+    & $dotnetExe tool install --global wix --version 4.0.6
     if ($LASTEXITCODE -ne 0) {
-        & $dotnetExe tool update --global wix
+        & $dotnetExe tool update --global wix --version 4.0.6
     }
 
     $dotnetToolsPath = "$env:USERPROFILE\.dotnet\tools"
@@ -132,7 +132,7 @@ if ($wixExe) {
 $extensions = & $wixExe extension list 2>&1
 if ($extensions -notmatch "WixToolset.Heat") {
     Write-Host "Instalando WixToolset.Heat..." -ForegroundColor Yellow
-    & $wixExe extension add WixToolset.Heat --global
+    & $wixExe extension add WixToolset.Heat/4.0.6 --global
 }
 Write-OK "WixToolset.Heat pronto."
 
