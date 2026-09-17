@@ -597,11 +597,80 @@ HTML_TEMPLATE = """
         }
         .tech-pill strong {
             color: #0f172a;
+        .web-mode-banner {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #1e3a8a;
+        }
+        .web-mode-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        .web-mode-banner-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .web-mode-banner-text p {
+            margin: 0;
+            line-height: 1.45;
+        }
+        .web-mode-banner-text strong {
+            color: #1d4ed8;
+        }
+        .web-mode-cta-btn {
+            background: #0078D4;
+            color: #ffffff !important;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.84rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            box-shadow: 0 3px 8px rgba(0, 120, 212, 0.25);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .web-mode-cta-btn:hover {
+            background: #0063b1;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(0, 120, 212, 0.35);
+        }
+        .nav-desktop-badge {
+            background: #0078D4;
+            color: #ffffff !important;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+        .nav-desktop-badge:hover {
+            background: #0063b1;
         }
         @media (max-width: 700px) {
             .about-shell { padding: 22px 16px; }
             .about-hero h2 { font-size: 1.5rem; }
             .about-grid-pillars { grid-template-columns: 1fr; }
+            .web-mode-banner { flex-direction: column; align-items: stretch; text-align: left; }
+            .web-mode-cta-btn { justify-content: center; text-align: center; }
         }
     </style>
 </head>
@@ -617,11 +686,29 @@ HTML_TEMPLATE = """
                 <a href="/tool/pdf-to-word" onclick="showTool('pdf-to-word'); return false;">Converter PDF</a>
                 <a href="/about" onclick="showAbout(); return false;">Sobre</a>
                 <a href="/" onclick="showHome(); return false;">Todas as ferramentas</a>
+                <a id="nav-desktop-download" class="nav-desktop-badge hidden" href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi" target="_blank" rel="noopener" title="Processamento 100% offline no seu computador">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>
+                    <span>Baixar para Windows</span>
+                </a>
                 <button id="language-toggle" class="language-toggle" type="button" onclick="toggleLanguage()">EN</button>
             </div>
         </nav>
 
         <div id="home-view">
+            <!-- Banner informativo para ambiente Web / Railway -->
+            <div id="env-banner" class="web-mode-banner hidden">
+                <div class="web-mode-banner-content">
+                    <span class="web-mode-banner-icon">☁️</span>
+                    <div class="web-mode-banner-text">
+                        <p><strong>Versão Web no Railway</strong>: Seus arquivos são processados na memória temporária do servidor e excluídos logo após o download. Para processamento 100% offline e ilimitado no seu PC:</p>
+                    </div>
+                </div>
+                <a class="web-mode-cta-btn" href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi" target="_blank" rel="noopener">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>
+                    <span>Baixar App Desktop (100% Local)</span>
+                </a>
+            </div>
+
             <div class="header">
                 <h1>Trabalhe com seus PDFs sem complicação</h1>
                 <p>Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.</p>
