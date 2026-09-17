@@ -1128,7 +1128,7 @@ HTML_TEMPLATE = """
             <div class="footer-grid">
                 <div class="footer-block">
                     <h4>LocalPDF.io</h4>
-                    <p>Ferramentas PDF gratuitas, locais e privadas. Sem cadastro e sem upload externo no modo local.</p>
+                    <p id="footer-desc">Ferramentas PDF gratuitas, locais e privadas. Sem cadastro e sem upload externo no modo local.</p>
                 </div>
                 <div class="footer-block">
                     <h4>Repositório</h4>
@@ -1155,6 +1155,7 @@ HTML_TEMPLATE = """
     <script>
         let currentTool = '';
         let currentLanguage = localStorage.getItem('localpdf-language') || 'pt';
+        let isWebMode = false;
         let uploadedFiles = [];
         let progressInterval = null;
         let progressSeconds = 0;
@@ -1339,7 +1340,26 @@ HTML_TEMPLATE = """
             'Conformidade LGPD & GDPR': 'LGPD & GDPR Compliance',
             'Por que escolher o LocalPDF.io?': 'Why choose LocalPDF.io?',
             'Recursos e Ferramentas Integradas': 'Integrated Features & Tools',
-            'Arquitetura & Tecnologias': 'Architecture & Technologies'
+            'Arquitetura & Tecnologias': 'Architecture & Technologies',
+            'Versão Web no Railway': 'Web Version on Railway',
+            'Seus arquivos são processados na memória temporária do servidor e excluídos logo após o download. Para processamento 100% offline e ilimitado no seu PC:': 'Your files are processed in server temporary memory and deleted right after download. For 100% offline and unlimited processing on your PC:',
+            'Baixar App Desktop (100% Local)': 'Download Desktop App (100% Local)',
+            'Baixar para Windows': 'Download for Windows',
+            'Versão Web (Railway) vs. Aplicativo Desktop Local': 'Web Version (Railway) vs. Local Desktop Application',
+            'Aplicativo Desktop (Windows .msi)': 'Desktop Application (Windows .msi)',
+            'Versão Web (Nuvem Railway)': 'Web Version (Railway Cloud)',
+            'Recomendado para Máxima Privacidade': 'Recommended for Maximum Privacy',
+            'Praticidade Imediata no Navegador': 'Instant Browser Convenience',
+            'Baixar Instalador Windows (.msi)': 'Download Windows Installer (.msi)',
+            'LocalPDF Desktop (Local)': 'LocalPDF Desktop (Local)',
+            'LocalPDF Web (Railway)': 'LocalPDF Web (Railway)',
+            'Serviços na Nuvem (iLovePDF, Smallpdf, etc.)': 'Cloud Services (iLovePDF, Smallpdf, etc.)',
+            'Seus arquivos saem do seu computador?': 'Do your files leave your computer?',
+            'Persistência ou retenção em disco': 'Disk persistence or retention',
+            'Limite de tamanho de arquivo': 'File size limit',
+            'Funciona sem conexão à Internet?': 'Works without internet connection?',
+            'Exige cadastro ou assinatura?': 'Requires registration or subscription?',
+            'Segurança para dados sensíveis e contratos': 'Security for sensitive data & contracts'
         };
 
         const toolTranslations = {
@@ -1560,6 +1580,7 @@ HTML_TEMPLATE = """
             uploadedFiles = [];
             updateFileList();
             hideResult();
+            updateToolPrivacyNotice();
 
             document.title = `${rawTitle} - LocalPDF.io`;
             if (window.location.pathname !== `/tool/${toolName}`) {
@@ -1568,13 +1589,28 @@ HTML_TEMPLATE = """
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        function updateToolPrivacyNotice() {
+            const privacyBadge = document.getElementById('tool-privacy-badge');
+            if (!privacyBadge) return;
+            if (isWebMode) {
+                privacyBadge.className = 'tool-privacy-notice web-mode';
+                privacyBadge.innerHTML = `<span>☁️</span><div><strong>${t('Modo Web Seguro (Railway):', 'Secure Web Mode (Railway):')}</strong> ${t('Seus arquivos são transmitidos com criptografia HTTPS, processados temporariamente na memória volátil do servidor e excluídos de forma definitiva imediatamente após o download. Nenhuma cópia é armazenada.', 'Your files are transmitted via HTTPS encryption, processed temporarily in server volatile memory and permanently deleted immediately after download. No copies are stored.')} <a href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi" target="_blank" rel="noopener">${t('Baixar App Desktop para 100% offline no PC', 'Download Desktop App for 100% offline on PC')}</a></div>`;
+            } else {
+                privacyBadge.className = 'tool-privacy-notice local-mode';
+                privacyBadge.innerHTML = `<span>🛡️</span><div><strong>${t('Processamento 100% Local:', '100% Local Processing:')}</strong> ${t('Seus arquivos são processados diretamente na memória do seu computador e nunca saem da sua máquina.', 'Your files are processed directly in your computer memory and never leave your machine.')}</div>`;
+            }
+        }
+
         function renderToolOptions(optionType) {
             const options = document.getElementById('options');
             if (optionType === 'password') {
+                const pwdNote = isWebMode
+                    ? t('A senha é usada apenas em memória temporária durante a geração do PDF e nunca é armazenada.', 'The password is used only in temporary memory during PDF generation and is never stored.')
+                    : t('A senha é usada somente durante o processamento local.', 'The password is used only during local processing.');
                 options.innerHTML = `
                     <label for="pdf-password">${t('Senha do PDF', 'PDF Password')}</label>
                     <input id="pdf-password" type="password" minlength="4" autocomplete="new-password" placeholder="${t('Digite uma senha com pelo menos 4 caracteres', 'Enter a password with at least 4 characters')}">
-                    <small>${t('A senha é usada somente durante o processamento local.', 'The password is used only during local processing.')}</small>
+                    <small>${pwdNote}</small>
                 `;
                 options.classList.remove('hidden');
                 return;
@@ -1620,10 +1656,13 @@ HTML_TEMPLATE = """
                 return;
             }
             if (optionType === 'unlock-password') {
+                const unlockNote = isWebMode
+                    ? t('A senha é usada apenas na memória temporária do servidor para remover a proteção e é descartada imediatamente.', 'The password is used only in temporary server memory to remove protection and is discarded immediately.')
+                    : t('A senha é usada apenas localmente na sua máquina para remover a proteção.', 'The password is used only locally on your computer to remove protection.');
                 options.innerHTML = `
                     <label for="pdf-unlock-password">${t('Senha do PDF para desbloquear', 'PDF Password to unlock')}</label>
                     <input id="pdf-unlock-password" type="password" autocomplete="current-password" placeholder="${t('Digite a senha atual do documento', 'Enter current document password')}">
-                    <small>${t('A senha é usada apenas localmente na sua máquina para remover a proteção.', 'The password is used only locally on your computer to remove protection.')}</small>
+                    <small>${unlockNote}</small>
                 `;
                 options.classList.remove('hidden');
                 return;
@@ -2050,6 +2089,10 @@ HTML_TEMPLATE = """
 
                     showToast(t('Arquivo processado e download iniciado!', 'File processed and download started!'), 'success');
 
+                    const successNote = isWebMode
+                        ? t('O arquivo foi processado com segurança em memória volátil e o download foi iniciado. O arquivo já foi excluído do servidor.', 'The file was securely processed in volatile memory and the download has started. The file has already been deleted from the server.')
+                        : t('O arquivo foi processado no seu computador e o download foi iniciado automaticamente.', 'The file was processed on your computer and the download started automatically.');
+
                     document.getElementById('result').innerHTML = `
                         <div class="result-card success">
                             <div class="result-header">
@@ -2057,7 +2100,7 @@ HTML_TEMPLATE = """
                             </div>
                             <div class="result-body">
                                 <span class="result-filename">📄 ${downloadFilename}</span>
-                                <p>${t('O arquivo foi processado no seu computador e o download foi iniciado automaticamente.', 'The file was processed on your computer and the download started automatically.')}</p>
+                                <p>${successNote}</p>
                                 <div class="result-actions">
                                     <button type="button" class="btn-download-again" onclick="downloadAgain()">${t('📥 Baixar novamente', '📥 Download again')}</button>
                                     <button type="button" class="btn-reset-flow" onclick="resetToolFlow()">${t('✨ Processar outro arquivo', '✨ Process another file')}</button>
