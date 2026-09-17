@@ -1,10 +1,12 @@
 import base64
+from datetime import date, datetime
 import io
 import json
 import os
 import shutil
 import sys
 import tempfile
+from xml.sax.saxutils import escape
 import zipfile
 
 import fitz  # PyMuPDF
@@ -20,8 +22,11 @@ from pdf2docx import Converter
 from pdf2docx.converter import ConversionException
 import pytesseract
 from PIL import Image
-from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape, letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.pdfgen import canvas
+from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from werkzeug.utils import secure_filename
 
 try:
@@ -2922,59 +2927,247 @@ def editor_export():
         gc.collect()
 
 
+def format_excel_cell_value(val_data, val_formula):
+    """Converte e formata valores de células do Excel para exibição profissional no PDF."""
+    if val_data is not None:
+        if isinstance(val_data, datetime):
+            if val_data.hour == 0 and val_data.minute == 0 and val_data.second == 0:
+                return val_data.strftime("%d/%m/%Y")
+            return val_data.strftime("%d/%m/%Y %H:%M")
+        if isinstance(val_data, date):
+            return val_data.strftime("%d/%m/%Y")
+        if isinstance(val_data, float):
+            if val_data.is_integer():
+                return str(int(val_data))
+            return f"{val_data:.2f}"
+        if isinstance(val_data, bool):
+            return "VERDADEIRO" if val_data else "FALSO"
+        s = str(val_data).strip()
+        if not s.startswith("<openpyxl."):
+            return s
+
+    if val_formula is not None:
+        if hasattr(val_formula, "text"):
+            text = getattr(val_formula, "text", "")
+            return f"={text}" if text and not text.startswith("=") else str(text)
+        if isinstance(val_formula, bool):
+            return "VERDADEIRO" if val_formula else "FALSO"
+        s = str(val_formula).strip()
+        if not s.startswith("<openpyxl."):
+            return s
+
+    return ""
+
+
 def excel_to_pdf(file, temp_dir):
+    """
+    Converte uma planilha Excel (.xlsx) em um documento PDF estruturado e profissional.
+    Suporta múltiplas abas, lê valores calculados e fórmulas, remove margens vazias,
+    e renderiza tabelas estilizadas com orientação dinâmica (Paisagem / Retrato).
+    """
     base_name = os.path.splitext(secure_filename(file.filename))[0] or "planilha"
     xlsx_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(xlsx_path)
 
     pdf_path = os.path.join(temp_dir, f"{base_name}.pdf")
-    c = canvas.Canvas(pdf_path, pagesize=letter)
-    width, height = letter
-    y_position = height - 50
+
+    wb_data = None
+    wb_raw = None
+    try:
+        wb_data = openpyxl.load_workbook(xlsx_path, data_only=True, read_only=False)
+    except Exception:
+        pass
 
     try:
-        workbook = openpyxl.load_workbook(xlsx_path)
-        for sheet_name in workbook.sheetnames:
-            sheet = workbook[sheet_name]
-            c.setFont("Helvetica", 10)
-            c.drawString(50, y_position, f"--- Planilha: {sheet_name} ---")
-            y_position -= 20
+        wb_raw = openpyxl.load_workbook(xlsx_path, data_only=False, read_only=False)
+    except Exception:
+        pass
 
-            for row_idx, row in enumerate(sheet.iter_rows()):
-                row_data = [
-                    str(cell.value) if cell.value is not None else "" for cell in row
-                ]
-                line_text = " | ".join(row_data)
+    workbook = wb_data or wb_raw
+    if not workbook:
+        raise ValueError("Não foi possível carregar o arquivo de planilha Excel.")
 
-                # Simples quebra de linha para caber na página
-                max_line_width = int(
-                    (width - 100) / 6
-                )  # Estimativa de caracteres por linha
-                if len(line_text) > max_line_width:
-                    # Implementação mais robusta de quebra de linha seria necessária
-                    line_text = line_text[:max_line_width] + "..."
+    sheet_names = workbook.sheetnames
 
-                if y_position < 50:
-                    c.showPage()
-                    y_position = height - 50
-                    c.setFont("Helvetica", 10)  # Reset font after new page
+    # Determinar maior número de colunas para definir orientação ideal
+    max_overall_cols = 1
+    for name in sheet_names:
+        ws_d = wb_data[name] if wb_data and name in wb_data.sheetnames else None
+        ws_r = wb_raw[name] if wb_raw and name in wb_raw.sheetnames else None
+        c_d = ws_d.max_column if ws_d and ws_d.max_column else 1
+        c_r = ws_r.max_column if ws_r and ws_r.max_column else 1
+        max_overall_cols = max(max_overall_cols, c_d, c_r)
 
-                c.drawString(50, y_position, line_text)
-                y_position -= 15  # Espaçamento menor para linhas de planilha
+    use_landscape = max_overall_cols > 6
+    page_size = landscape(A4) if use_landscape else A4
+    page_width, _ = page_size
+    margin = 28
+    usable_width = page_width - (2 * margin)
 
-            y_position -= 30  # Espaçamento entre planilhas
-            if (
-                y_position < 50 and sheet_name != workbook.sheetnames[-1]
-            ):  # Only show new page if not last sheet
-                c.showPage()
-                y_position = height - 50
+    doc = SimpleDocTemplate(
+        pdf_path,
+        pagesize=page_size,
+        leftMargin=margin,
+        rightMargin=margin,
+        topMargin=margin,
+        bottomMargin=margin,
+    )
 
-    except Exception as e:
-        # Handle potential errors with Excel files
-        c.drawString(50, y_position - 20, f"Erro ao ler planilha: {e}")
-        print(f"Erro ao ler planilha Excel: {e}")
+    styles = getSampleStyleSheet()
 
-    c.save()
+    # Ajuste dinâmico de fonte para caber mais colunas com legibilidade
+    if max_overall_cols <= 6:
+        f_size, f_leading = 9, 11
+    elif max_overall_cols <= 10:
+        f_size, f_leading = 8, 10
+    elif max_overall_cols <= 16:
+        f_size, f_leading = 7, 8.5
+    else:
+        f_size, f_leading = 6, 7.5
+
+    title_style = ParagraphStyle(
+        "ExcelSheetTitle",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=13,
+        leading=16,
+        textColor=colors.HexColor("#1e40af"),
+        spaceAfter=6,
+        spaceBefore=0,
+    )
+
+    cell_style = ParagraphStyle(
+        "ExcelCellText",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=f_size,
+        leading=f_leading,
+        textColor=colors.HexColor("#1e293b"),
+        wordWrap="CJK",
+    )
+
+    cell_header_style = ParagraphStyle(
+        "ExcelCellHeader",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=f_size,
+        leading=f_leading,
+        textColor=colors.HexColor("#0f172a"),
+        wordWrap="CJK",
+    )
+
+    empty_style = ParagraphStyle(
+        "ExcelEmptySheet",
+        parent=styles["Italic"],
+        fontName="Helvetica-Oblique",
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#94a3b8"),
+    )
+
+    elements = []
+
+    for sheet_idx, sheet_name in enumerate(sheet_names):
+        if sheet_idx > 0:
+            elements.append(PageBreak())
+
+        elements.append(Paragraph(f"<b>Planilha:</b> {escape(sheet_name)}", title_style))
+        elements.append(Spacer(1, 4))
+
+        ws_d = wb_data[sheet_name] if wb_data and sheet_name in wb_data.sheetnames else None
+        ws_r = wb_raw[sheet_name] if wb_raw and sheet_name in wb_raw.sheetnames else None
+
+        cur_rows = max(ws_d.max_row or 1 if ws_d else 1, ws_r.max_row or 1 if ws_r else 1)
+        cur_cols = max(ws_d.max_column or 1 if ws_d else 1, ws_r.max_column or 1 if ws_r else 1)
+
+        matrix = []
+        for r in range(1, cur_rows + 1):
+            row_cells = []
+            for c in range(1, cur_cols + 1):
+                vd = ws_d.cell(row=r, column=c).value if ws_d else None
+                vr = ws_r.cell(row=r, column=c).value if ws_r else None
+                row_cells.append(format_excel_cell_value(vd, vr))
+            matrix.append(row_cells)
+
+        # Remove linhas vazias nas bordas
+        non_empty_rows = [r for r, row in enumerate(matrix) if any(v != "" for v in row)]
+        if not non_empty_rows:
+            elements.append(Paragraph("<i>(Esta planilha não contém dados preenchidos)</i>", empty_style))
+            continue
+
+        min_r, max_r = non_empty_rows[0], non_empty_rows[-1]
+
+        # Remove colunas vazias nas bordas
+        non_empty_cols = [
+            c for c in range(cur_cols) if any(matrix[r][c] != "" for r in range(min_r, max_r + 1))
+        ]
+        if not non_empty_cols:
+            elements.append(Paragraph("<i>(Esta planilha não contém dados preenchidos)</i>", empty_style))
+            continue
+
+        min_c, max_c = non_empty_cols[0], non_empty_cols[-1]
+
+        trimmed = []
+        for r in range(min_r, max_r + 1):
+            trimmed.append(matrix[r][min_c : max_c + 1])
+
+        num_cols = max_c - min_c + 1
+
+        # Calcular larguras de coluna proporcionais
+        col_lens = []
+        for c in range(num_cols):
+            max_l = max(len(trimmed[r][c]) for r in range(len(trimmed)))
+            col_lens.append(max(max_l, 3))
+
+        total_weight = sum(col_lens)
+        col_widths = [(w / total_weight) * usable_width for w in col_lens]
+
+        min_col_w = 20
+        col_widths = [max(w, min_col_w) for w in col_widths]
+        if sum(col_widths) > usable_width:
+            norm_factor = usable_width / sum(col_widths)
+            col_widths = [w * norm_factor for w in col_widths]
+
+        table_rows = []
+        for r_idx, row in enumerate(trimmed):
+            row_cells = []
+            is_first = (r_idx == 0)
+            for val in row:
+                st = cell_header_style if is_first else cell_style
+                safe_text = escape(val) if val else "&nbsp;"
+                row_cells.append(Paragraph(safe_text, st))
+            table_rows.append(row_cells)
+
+        t = Table(table_rows, colWidths=col_widths, repeatRows=1)
+        t_style = [
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eff6ff")),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+            ("TOPPADDING", (0, 0), (-1, -1), 3),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+            ("LEFTPADDING", (0, 0), (-1, -1), 4),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]
+        for r in range(1, len(table_rows)):
+            if r % 2 == 1:
+                t_style.append(("BACKGROUND", (0, r), (-1, r), colors.HexColor("#f8fafc")))
+
+        t.setStyle(TableStyle(t_style))
+        elements.append(t)
+
+    doc.build(elements)
+
+    if wb_data:
+        try:
+            wb_data.close()
+        except Exception:
+            pass
+    if wb_raw:
+        try:
+            wb_raw.close()
+        except Exception:
+            pass
+
     return [pdf_path]
 
 

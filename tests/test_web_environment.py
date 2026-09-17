@@ -86,5 +86,49 @@ class WebEnvironmentTests(unittest.TestCase):
                 del os.environ["LOCALPDF_MODE"]
 
 
+    def test_excel_to_pdf_conversion_quality(self):
+        import io
+        from datetime import datetime
+        import openpyxl
+        from openpyxl.worksheet.formula import ArrayFormula
+        import pymupdf as fitz
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Janeiro"
+        ws["A1"] = "Mês"
+        ws["B1"] = "Data"
+        ws["C1"] = "Valor"
+        ws["A2"] = '="Janeiro "&AnoCalendario'
+        ws["B2"] = datetime(2021, 1, 15)
+        ws["C2"] = 1500.50
+        ws["A3"] = ArrayFormula("A3:C3", "CALC_ROW")
+
+        xlsx_bytes = io.BytesIO()
+        wb.save(xlsx_bytes)
+        xlsx_bytes.seek(0)
+
+        resp = self.client.post(
+            "/convert",
+            data={"tool": "excel-to-pdf", "files": [(xlsx_bytes, "calendario.xlsx")]},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("calendario.pdf", resp.headers.get("Content-Disposition", ""))
+
+        # Verify generated PDF content
+        pdf_doc = fitz.open(stream=resp.data, filetype="pdf")
+        self.assertGreaterEqual(pdf_doc.page_count, 1)
+        text = pdf_doc[0].get_text()
+        pdf_doc.close()
+
+        # Must not contain Python openpyxl object pointers or unformatted timestamps
+        self.assertNotIn("<openpyxl.", text)
+        self.assertNotIn("00:00:00", text)
+        self.assertIn("15/01/2021", text)
+        self.assertIn("Janeiro", text)
+
+
 if __name__ == "__main__":
     unittest.main()
+
