@@ -1400,6 +1400,7 @@ HTML_TEMPLATE = """
             currentLanguage = currentLanguage === 'pt' ? 'en' : 'pt';
             localStorage.setItem('localpdf-language', currentLanguage);
             translatePage();
+            if (typeof updateWebModeElements === 'function') updateWebModeElements();
             if (currentTool) showTool(currentTool);
         }
 
@@ -2477,6 +2478,34 @@ HTML_TEMPLATE = """
             }
         });
 
+        const isServerWebMode = {{ 'true' if is_web_mode else 'false' }};
+        isWebMode = isServerWebMode || (
+            window.location.hostname !== 'localhost' &&
+            window.location.hostname !== '127.0.0.1' &&
+            !window.location.hostname.endsWith('.local')
+        );
+
+        function updateWebModeElements() {
+            if (!isWebMode) return;
+            const envBanner = document.getElementById('env-banner');
+            if (envBanner) envBanner.classList.remove('hidden');
+            const navDownload = document.getElementById('nav-desktop-download');
+            if (navDownload) navDownload.classList.remove('hidden');
+            const mainSubtitle = document.getElementById('main-subtitle');
+            if (mainSubtitle) {
+                mainSubtitle.innerHTML = currentLanguage === 'en'
+                    ? 'Convert, organize and edit your documents with privacy and speed. Secure cloud processing with immediate file deletion — or <a href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi" target="_blank" style="color:#2563eb;font-weight:700;text-decoration:underline;">download the Desktop App</a> for 100% offline use on your PC.'
+                    : 'Converta, organize e edite documentos com privacidade e rapidez. Processamento seguro na nuvem com exclusão imediata dos arquivos — ou <a href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi" target="_blank" style="color:#2563eb;font-weight:700;text-decoration:underline;">baixe o App Desktop</a> para uso 100% local no seu PC.';
+            }
+            const footerDesc = document.getElementById('footer-desc');
+            if (footerDesc) {
+                footerDesc.innerHTML = currentLanguage === 'en'
+                    ? 'Free, secure and private PDF tools. In cloud mode (Railway), data is processed in ephemeral memory and deleted immediately. In desktop mode, 100% offline.'
+                    : 'Ferramentas PDF gratuitas, seguras e privadas. Na nuvem (Railway), os dados são processados em memória volátil e apagados imediatamente. No app desktop, 100% offline.';
+            }
+        }
+
+        updateWebModeElements();
         translatePage();
 
         // ── Skeleton → visible animation for tool cards ───────────────
@@ -2521,6 +2550,44 @@ HTML_TEMPLATE = """
 """
 
 
+def is_web_environment():
+    """Detects whether LocalPDF is running on Railway, a cloud container, or web host."""
+    mode = os.environ.get("LOCALPDF_MODE", "").lower()
+    if mode == "web":
+        return True
+    if mode == "local":
+        return False
+    if any(
+        os.environ.get(k)
+        for k in (
+            "RAILWAY_ENVIRONMENT",
+            "RAILWAY_PROJECT_ID",
+            "RAILWAY_STATIC_URL",
+            "RAILWAY_SERVICE_NAME",
+        )
+    ):
+        return True
+    try:
+        host = request.host.split(":")[0].lower()
+        if host not in ("localhost", "127.0.0.1", "0.0.0.0", "testserver") and not host.endswith(".local"):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+@app.after_request
+def add_privacy_and_security_headers(response):
+    """Adds security headers and disables browser/proxy caching for processed documents."""
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    if request.path in ("/convert", "/editor/export", "/editor/preview", "/preview-page"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 @app.route("/")
 @app.route("/tool/<tool_name>")
 @app.route("/tools/<tool_name>")
@@ -2532,7 +2599,12 @@ def index(tool_name=None):
         tool_name = "edit-pdf"
     elif request.path.rstrip("/") in ("/about", "/sobre"):
         tool_name = "about"
-    return render_template_string(HTML_TEMPLATE, initial_tool=tool_name or "")
+    web_mode = is_web_environment()
+    return render_template_string(
+        HTML_TEMPLATE,
+        initial_tool=tool_name or "",
+        is_web_mode=web_mode,
+    )
 
 
 @app.route("/healthz")
@@ -2636,6 +2708,8 @@ def preview_page():
         return jsonify({"error": "Não foi possível gerar o preview."}), 500
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+        import gc
+        gc.collect()
 
 
 @app.route("/favicon.svg")
@@ -2739,6 +2813,8 @@ def editor_preview():
         return jsonify({"error": "Não foi possível abrir o documento."}), 500
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+        import gc
+        gc.collect()
 
 
 def insert_editor_image(document, file_path, rotation=0):
@@ -2842,6 +2918,8 @@ def editor_export():
         return jsonify({"error": "Não foi possível exportar o PDF."}), 500
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+        import gc
+        gc.collect()
 
 
 def excel_to_pdf(file, temp_dir):
@@ -3054,7 +3132,9 @@ def convert():
     finally:
         # Diretório temporário limpo após preparar resposta (BytesIO) evitando remoção antecipada
         if os.path.exists(temp_dir):
-            shutil.rmtree(temp_dir)
+            shutil.rmtree(temp_dir, ignore_errors=True)
+        import gc
+        gc.collect()
 
 
 def images_to_pdf(files, temp_dir):
