@@ -648,6 +648,13 @@ HTML_TEMPLATE = """
                     <h3>PDF para PNG</h3>
                     <p>Converta páginas PDF em imagens PNG em alta definição</p>
                 </a>
+                <a class="tool-card" href="/tool/pdf-to-images" onclick="showTool('pdf-to-images'); return false;" data-category="converter">
+                    <div class="tool-icon" style="background: #fdf4ff; color: #a21caf;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                    <h3>PDF para Imagens</h3>
+                    <p>Converta páginas PDF em imagens separadas</p>
+                </a>
                 <a class="tool-card" href="/tool/images-to-pdf" onclick="showTool('images-to-pdf'); return false;" data-category="converter">
                     <div class="tool-icon" style="background: #f0fdf4; color: #16a34a;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
@@ -843,6 +850,115 @@ HTML_TEMPLATE = """
                 </div>
 
                 <div id="result" class="hidden"></div>
+            </div>
+        </div>
+
+        <div id="about-view" class="hidden">
+            <button class="back-btn" onclick="showHome()">← Voltar</button>
+            <div class="about-shell">
+                <div class="about-hero">
+                    <span class="about-badge">🛡️ 100% Privado &amp; Local</span>
+                    <h2>Sobre o LocalPDF.io</h2>
+                    <p>O LocalPDF.io nasceu com uma missão simples: fornecer um pacote profissional e completo de ferramentas para PDF diretamente no seu computador, com velocidade máxima, sem custos, sem filas e com privacidade absoluta.</p>
+                    <div class="about-badges-bar">
+                        <span class="tag-badge">Zero Nuvem</span>
+                        <span class="tag-badge">Sem Upload Externo</span>
+                        <span class="tag-badge">Funciona Offline</span>
+                        <span class="tag-badge">Sem Limite de Páginas</span>
+                        <span class="tag-badge">Instalador Windows (.msi)</span>
+                        <span class="tag-badge">Código Aberto MIT</span>
+                    </div>
+                </div>
+
+                <div class="about-grid-pillars">
+                    <div class="about-card">
+                        <div class="about-card-icon">🔒</div>
+                        <h3>Privacidade em Primeiro Lugar</h3>
+                        <p>Diferente de serviços web tradicionais que exigem o upload de seus dados confidenciais para servidores remotos, o LocalPDF executa cada conversão, corte e junção exclusivamente na memória da sua própria máquina.</p>
+                    </div>
+                    <div class="about-card">
+                        <div class="about-card-icon">⚡</div>
+                        <h3>Desempenho Ilimitado</h3>
+                        <p>Sem restrições de tamanho máximo de arquivo (15MB/50MB), sem contadores de tarefas diárias e sem esperas artificiais. Se o seu computador aguenta abrir o arquivo, o LocalPDF consegue processá-lo.</p>
+                    </div>
+                    <div class="about-card">
+                        <div class="about-card-icon">📴</div>
+                        <h3>Totalmente Offline</h3>
+                        <p>Leve seu trabalho para viagens, locais remotos ou ambientes corporativos isolados sem internet. O aplicativo desktop não requer conexão e funciona de forma 100% autônoma.</p>
+                    </div>
+                    <div class="about-card">
+                        <div class="about-card-icon">💼</div>
+                        <h3>Conformidade LGPD &amp; GDPR</h3>
+                        <p>Como nenhum arquivo, dado cadastral ou metadado trafega pela rede, sua empresa e seus clientes desfrutam de conformidade nativa com as mais rigorosas leis de proteção de dados.</p>
+                    </div>
+                </div>
+
+                <h3 class="about-section-title">📊 Por que escolher o LocalPDF.io?</h3>
+                <div class="about-table-wrapper">
+                    <table class="compare-table">
+                        <thead>
+                            <tr>
+                                <th>Recurso / Critério</th>
+                                <th style="background: #dbeafe; color: #1e40af;">LocalPDF.io</th>
+                                <th>Ferramentas na Nuvem (iLovePDF, Smallpdf, etc.)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Seus arquivos saem do seu computador?</strong></td>
+                                <td class="brand-col">❌ Nunca (100% processamento local)</td>
+                                <td>⚠️ Sim (enviados para servidores de terceiros)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Limite de tamanho de arquivo</strong></td>
+                                <td class="brand-col">✅ Sem limite artificial (usa sua RAM)</td>
+                                <td>❌ 15 MB a 50 MB (exigem plano pago)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Funciona sem conexão à Internet?</strong></td>
+                                <td class="brand-col">✅ Sim, totalmente offline</td>
+                                <td>❌ Não funciona sem conexão</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Exige cadastro ou assinatura?</strong></td>
+                                <td class="brand-col">✅ Totalmente livre e sem cadastro</td>
+                                <td>❌ Planos mensais ou anúncios invasivos</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Segurança para dados sensíveis e contratos</strong></td>
+                                <td class="brand-col">✅ Máxima segurança física no seu PC</td>
+                                <td>⚠️ Risco de vazamento em servidores na nuvem</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="about-section-title">🛠️ Recursos e Ferramentas Integradas</h3>
+                <div class="about-grid-pillars">
+                    <div class="about-card">
+                        <h3>Organizar &amp; Editar</h3>
+                        <p><strong>Mesclar PDFs:</strong> Una múltiplos documentos com ordenação flexível.<br><strong>Dividir PDF:</strong> Extraia todas as páginas ou intervalos personalizados (ex: 1-3, 5, 8-10).<br><strong>Editor Visual:</strong> Reordene, insira, gire, duplique e exclua páginas com visualização em miniaturas.</p>
+                    </div>
+                    <div class="about-card">
+                        <h3>Converter de/para PDF</h3>
+                        <p><strong>PDF para JPG / PNG:</strong> Extraia páginas com alta definição.<br><strong>PDF para Excel (.xlsx):</strong> Detecte e extraia tabelas em planilhas editáveis.<br><strong>PDF para Word (.docx):</strong> Converta mantendo o layout.<br><strong>OCR em PDF:</strong> Reconhecimento óptico de caracteres em documentos escaneados.</p>
+                    </div>
+                    <div class="about-card">
+                        <h3>Segurança &amp; Otimização</h3>
+                        <p><strong>Proteger PDF:</strong> Criptografe com senha forte AES-256.<br><strong>Desbloquear PDF:</strong> Remova senhas e restrições permanentemente.<br><strong>Comprimir PDF:</strong> Otimize e reduza o tamanho sem perder legibilidade.<br><strong>Marca d'Água:</strong> Aplique carimbos diagonais profissionais com transparência.</p>
+                    </div>
+                </div>
+
+                <h3 class="about-section-title">⚡ Arquitetura &amp; Tecnologias</h3>
+                <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">O LocalPDF.io é desenvolvido em Python moderno, integrando as mais respeitadas bibliotecas de computação gráfica e manipulação de documentos do mundo:</p>
+                <div class="about-tech-stack">
+                    <span class="tech-pill"><strong>PyMuPDF (fitz)</strong> · Motor veloz C++ para PDF</span>
+                    <span class="tech-pill"><strong>pdfplumber</strong> · Extração precisa de tabelas para Excel</span>
+                    <span class="tech-pill"><strong>pdf2docx</strong> · Reconstrução inteligente de documentos Word</span>
+                    <span class="tech-pill"><strong>ReportLab</strong> · Geração vetorial de PDFs e marca d'água</span>
+                    <span class="tech-pill"><strong>Tesseract OCR</strong> · Reconhecimento óptico neural</span>
+                    <span class="tech-pill"><strong>WiX Toolset v5</strong> · Empacotamento MSI assinado digitalmente</span>
+                </div>
             </div>
         </div>
 
