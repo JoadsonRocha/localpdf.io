@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 from app import app
 
@@ -248,6 +250,54 @@ class WebFeaturesTests(unittest.TestCase):
         self.assertEqual(resp_wm.status_code, 200)
         self.assertIn("minuta_marca_dagua.pdf", resp_wm.headers.get("Content-Disposition", ""))
 
+    def test_homepage_javascript_and_cards_visibility(self):
+        """Ensures that the homepage HTML has visible cards by default and valid JavaScript."""
+        import re
+        import subprocess
+
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+
+        # Card visibility default check
+        self.assertIn(".tools-grid .tool-card { opacity: 1;", html)
+
+        # Extract <script> content and test syntax via node if available
+        scripts = re.findall(
+            r'<script(?![^>]*type=["\']application/ld\+json["\'])[^>]*>(.*?)</script>',
+            html,
+            re.DOTALL,
+        )
+        self.assertTrue(len(scripts) > 0, "Nenhum script encontrado na página principal")
+
+        for script in scripts:
+            if not script.strip():
+                continue
+            with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as tf:
+                tf.write(script)
+                tf_path = tf.name
+            try:
+                # If node is available on system, check syntax
+                node_proc = subprocess.run(
+                    ["node", "--check", tf_path],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(
+                    node_proc.returncode,
+                    0,
+                    f"Erro de sintaxe JavaScript detectado:\n{node_proc.stderr}",
+                )
+            except FileNotFoundError:
+                # Node not installed in testing environment, fallback to basic syntax pattern check
+                self.assertNotIn(r"replace(/\/g", script)
+            finally:
+                try:
+                    os.remove(tf_path)
+                except OSError:
+                    pass
+
 
 if __name__ == "__main__":
     unittest.main()
+

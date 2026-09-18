@@ -435,7 +435,7 @@ HTML_TEMPLATE = """
             background-size: 200% 100%; animation: skeleton-shimmer 1.4s infinite linear;
             border-radius: 6px; color: transparent !important;
         }
-        .tools-grid .tool-card { opacity: 0; transform: translateY(8px); transition: opacity 0.35s ease, transform 0.35s ease; }
+        .tools-grid .tool-card { opacity: 1; transform: translateY(0); transition: opacity 0.35s ease, transform 0.35s ease; }
         .tools-grid .tool-card.card-visible { opacity: 1; transform: translateY(0); }
         .tools-grid .tool-card.card-hidden { opacity: 0 !important; display: none !important; }
 
@@ -2355,6 +2355,7 @@ HTML_TEMPLATE = """
             }
 
             if (saveRes.path) {
+                lastSavedPath = saveRes.path;
                 showToast(t('Arquivo salvo com sucesso no seu computador!', 'File saved successfully to your computer!'), 'success');
                 resultEl.innerHTML = `
                     <div class="result-card success">
@@ -2368,8 +2369,8 @@ HTML_TEMPLATE = """
                                 <span><strong>${t('Salvo em:', 'Saved to:')}</strong> ${saveRes.path}</span>
                             </div>
                             <div class="result-actions">
-                                <button type="button" class="btn-open-file" onclick="openSavedFile('${saveRes.path.replace(/\\/g, '\\\\')}')">📄 ${t('Abrir arquivo', 'Open file')}</button>
-                                <button type="button" class="btn-open-folder" onclick="openSavedFolder('${saveRes.path.replace(/\\/g, '\\\\')}')">📂 ${t('Abrir pasta', 'Open folder')}</button>
+                                <button type="button" class="btn-open-file" onclick="openSavedFile()">📄 ${t('Abrir arquivo', 'Open file')}</button>
+                                <button type="button" class="btn-open-folder" onclick="openSavedFolder()">📂 ${t('Abrir pasta', 'Open folder')}</button>
                                 <button type="button" class="btn-download-again" onclick="downloadAgain(false)">💾 ${t('Salvar em outro local...', 'Save elsewhere...')}</button>
                                 <button type="button" class="btn-reset-flow" onclick="resetToolFlow()">✨ ${t('Processar outro arquivo', 'Process another file')}</button>
                             </div>
