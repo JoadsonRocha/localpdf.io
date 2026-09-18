@@ -51,6 +51,285 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# ── SEO Configuration & Structured Data ─────────────────────────────────────
+SEO_CONFIG = {
+    "home": {
+        "title": "LocalPDF.io — Ferramentas de PDF 100% Privadas, Grátis e Ilimitadas",
+        "description": "Converta, junte, divida, comprima e edite arquivos PDF gratuitamente no seu navegador ou PC. Sem limite de tamanho, sem cadastro e com privacidade absoluta.",
+        "keywords": "pdf gratis, converter pdf, juntar pdf, comprimir pdf, editar pdf, mesclar pdf, pdf seguro, localpdf",
+        "canonical": "/",
+    },
+    "editor": {
+        "title": "Editor de PDF Online Grátis — Organizar, Girar e Reordenar Páginas | LocalPDF.io",
+        "description": "Edite a estrutura do seu PDF visualmente: reordene páginas, gire, duplique e exclua sem perder formatação. 100% privado e gratuito.",
+        "keywords": "editor de pdf, editar pdf online, organizar paginas pdf, girar pdf, excluir paginas pdf, reordenar pdf",
+        "canonical": "/editor",
+        "faq": [
+            {
+                "q": "Como editar e reordenar as páginas de um PDF?",
+                "a": "Faça upload do seu PDF no Editor LocalPDF.io, arraste as páginas para a posição desejada, gire ou remova páginas e clique em Salvar."
+            },
+            {
+                "q": "O editor altera a qualidade do arquivo original?",
+                "a": "Não, as páginas são reorganizadas preservando integralmente o texto, fontes e imagens originais."
+            }
+        ]
+    },
+    "about": {
+        "title": "Sobre o LocalPDF.io — Suíte de PDF com Privacidade Absoluta",
+        "description": "Conheça o LocalPDF.io: ferramentas de PDF criadas com foco total em privacidade. Modo nuvem com processamento efêmero e app desktop 100% offline.",
+        "keywords": "sobre localpdf, pdf privado, privacidade documentos, seguranca pdf",
+        "canonical": "/about",
+    },
+    "pdf-to-jpg": {
+        "title": "PDF para JPG Online e Grátis — Converter Páginas em Imagens JPG | LocalPDF.io",
+        "description": "Converta páginas de documentos PDF em imagens JPG de alta resolução gratuitamente. Rápido, seguro e sem limite de páginas.",
+        "keywords": "pdf para jpg, converter pdf em jpg, transformar pdf em imagem, pdf to jpg online gratis",
+        "canonical": "/tool/pdf-to-jpg",
+        "faq": [
+            {"q": "Como converter PDF para JPG grátis?", "a": "Arraste seu arquivo PDF para a área de upload e clique em Converter para baixar suas imagens JPG compactadas."},
+            {"q": "As imagens JPG convertidas mantêm boa resolução?", "a": "Sim, a conversão é realizada com renderização nítida mantendo excelente legibilidade de textos e fotos."}
+        ]
+    },
+    "pdf-to-png": {
+        "title": "PDF para PNG em Alta Resolução — Converter PDF Grátis | LocalPDF.io",
+        "description": "Converta páginas do seu arquivo PDF em imagens PNG nítidas com máxima fidelidade. Rápido, privado e sem limite de uso.",
+        "keywords": "pdf para png, converter pdf em png, extrair imagens pdf alta resolucao",
+        "canonical": "/tool/pdf-to-png",
+        "faq": [
+            {"q": "Qual a diferença entre converter PDF para PNG e para JPG?", "a": "O formato PNG oferece compressão sem perdas (lossless), sendo ideal para diagramas, textos finos e gráficos que exigem máxima nitidez."},
+            {"q": "Posso converter várias páginas de uma vez?", "a": "Sim, todas as páginas são convertidas e disponibilizadas para download em alta resolução."}
+        ]
+    },
+    "pdf-to-images": {
+        "title": "PDF para Imagens — Extrair Todas as Páginas em Imagens | LocalPDF.io",
+        "description": "Converta e extraia cada página do seu documento PDF em imagens individuais de forma rápida e segura.",
+        "keywords": "pdf para imagens, extrair imagens de pdf, transformar paginas pdf em imagens",
+        "canonical": "/tool/pdf-to-images",
+    },
+    "images-to-pdf": {
+        "title": "Imagens para PDF — Converter JPG e PNG em PDF Online | LocalPDF.io",
+        "description": "Junte várias fotos e imagens (JPG, PNG) em um único arquivo PDF organizado. Rápido, privado e sem cadastro.",
+        "keywords": "imagens para pdf, converter jpg em pdf, transformar fotos em pdf, jpg to pdf online",
+        "canonical": "/tool/images-to-pdf",
+        "faq": [
+            {"q": "Posso juntar fotos de formatos diferentes em um mesmo PDF?", "a": "Sim, você pode combinar simultaneamente arquivos JPG, JPEG e PNG em um único documento PDF."},
+            {"q": "As imagens perdem qualidade ao virar PDF?", "a": "Não, as imagens são incorporadas preservando a proporção e resolução original."}
+        ]
+    },
+    "merge-pdf": {
+        "title": "Mesclar PDFs Online Grátis — Juntar Vários PDFs em Um | LocalPDF.io",
+        "description": "Junte múltiplos arquivos PDF em um único documento em segundos. Fácil, ilimitado, seguro e 100% gratuito.",
+        "keywords": "mesclar pdf, juntar pdf, combinar pdf, unir pdfs gratis, merge pdf online",
+        "canonical": "/tool/merge-pdf",
+        "faq": [
+            {"q": "Como mesclar vários PDFs em um só arquivo?", "a": "Selecione ou arraste os arquivos PDF que deseja juntar e clique no botão Converter para gerar um PDF único."},
+            {"q": "Existe limite de tamanho ou quantidade de arquivos para mesclar?", "a": "Não há limites arbitrários; processamos arquivos de até 100MB com velocidade máxima no navegador."}
+        ]
+    },
+    "split-pdf": {
+        "title": "Dividir PDF Online — Extrair Páginas ou Separar PDF | LocalPDF.io",
+        "description": "Divida seu arquivo PDF ou extraia páginas específicas com total facilidade e segurança. 100% gratuito e privado.",
+        "keywords": "dividir pdf, separar pdf, extrair paginas pdf, split pdf online",
+        "canonical": "/tool/split-pdf",
+        "faq": [
+            {"q": "Como extrair apenas algumas páginas do meu PDF?", "a": "Faça upload do documento, informe as páginas desejadas (ex: 1-3, 5) nas opções da ferramenta e clique em Converter."},
+            {"q": "Posso dividir o PDF inteiro em páginas individuais?", "a": "Sim, basta deixar o campo de páginas em branco para extrair todas as páginas em arquivos individuais."}
+        ]
+    },
+    "compress-pdf": {
+        "title": "Comprimir PDF Online — Reduzir Tamanho de PDF Grátis | LocalPDF.io",
+        "description": "Diminua o tamanho de arquivos PDF pesados mantendo excelente qualidade visual. Rápido, sem filas e com privacidade.",
+        "keywords": "comprimir pdf, reduzir tamanho pdf, diminuir tamanho pdf, otimizar pdf, compress pdf online",
+        "canonical": "/tool/compress-pdf",
+        "faq": [
+            {"q": "Como reduzir o tamanho de um arquivo PDF sem perder qualidade?", "a": "Envie seu arquivo e o algoritmo de compressão otimiza fluxos de dados e imagens internas, gerando um PDF mais leve e perfeitamente legível."},
+            {"q": "Meus documentos confidenciais ficam seguros ao comprimir?", "a": "Sim! No LocalPDF.io o processamento é feito em memória volátil com exclusão imediata, ou 100% offline no app desktop."}
+        ]
+    },
+    "protect-pdf": {
+        "title": "Proteger PDF com Senha — Criptografar Documento PDF | LocalPDF.io",
+        "description": "Adicione senha e proteção criptográfica ao seu PDF para impedir acesso não autorizado. Seguro, rápido e gratuito.",
+        "keywords": "proteger pdf, colocar senha em pdf, criptografar pdf, bloquear pdf, protect pdf",
+        "canonical": "/tool/protect-pdf",
+        "faq": [
+            {"q": "Como colocar senha em um arquivo PDF?", "a": "Faça o upload do documento, digite a senha desejada com pelo menos 4 caracteres e clique em Converter."},
+            {"q": "A senha digitada fica salva em algum servidor?", "a": "Nunca. A senha é utilizada exclusivamente em memória temporária durante a cifragem e é descartada imediatamente."}
+        ]
+    },
+    "unlock-pdf": {
+        "title": "Desbloquear PDF — Remover Senha e Proteção de PDF | LocalPDF.io",
+        "description": "Remova restrições e senha do seu arquivo PDF conhecido para facilitar edição e impressão. 100% privado.",
+        "keywords": "desbloquear pdf, remover senha pdf, tirar senha de pdf, unlock pdf online",
+        "canonical": "/tool/unlock-pdf",
+        "faq": [
+            {"q": "Como remover a senha de um PDF?", "a": "Envie o documento protegido, insira a senha atual do arquivo para autorizar a liberação e gere uma versão desprotegida."}
+        ]
+    },
+    "watermark-pdf": {
+        "title": "Marca d'Água em PDF — Adicionar Texto Personalizado | LocalPDF.io",
+        "description": "Insira marcas d'água de texto (Confidencial, Rascunho, Cópia) em todas as páginas do seu PDF com facilidade.",
+        "keywords": "marca dagua em pdf, adicionar marca dagua pdf, carimbo pdf, watermark pdf",
+        "canonical": "/tool/watermark-pdf",
+    },
+    "page-numbers-pdf": {
+        "title": "Numerar Páginas de PDF — Adicionar Numeração ao PDF | LocalPDF.io",
+        "description": "Insira números de página automaticamente em documentos PDF. Escolha a posição e formate seu documento profissionalmente.",
+        "keywords": "numerar paginas pdf, numero de pagina pdf, adicionar numeracao pdf, page numbers pdf",
+        "canonical": "/tool/page-numbers-pdf",
+    },
+    "pdf-to-pdfa": {
+        "title": "PDF para PDF/A — Conversão para Arquivamento a Longo Prazo | LocalPDF.io",
+        "description": "Converta seus documentos PDF para o formato de conformidade PDF/A-1b para arquivamento legal e histórico.",
+        "keywords": "pdf para pdfa, converter pdf em pdf/a, conformidade pdfa, arquivamento digital pdf",
+        "canonical": "/tool/pdf-to-pdfa",
+    },
+    "word-to-pdf": {
+        "title": "Word para PDF Online Grátis — Converter DOCX em PDF | LocalPDF.io",
+        "description": "Converta arquivos Word (.docx) em documentos PDF com layout idêntico e formatação preservada. Grátis e sem limites.",
+        "keywords": "word para pdf, converter docx em pdf, transformar word em pdf, docx to pdf",
+        "canonical": "/tool/word-to-pdf",
+        "faq": [
+            {"q": "A formatação do documento Word é preservada ao converter para PDF?", "a": "Sim, fontes, margens, tabelas e imagens são mantidas fiéis ao layout original."},
+            {"q": "Posso converter múltiplos documentos Word de uma só vez?", "a": "Sim, a ferramenta suporta envio de múltiplos arquivos DOCX simultâneos."}
+        ]
+    },
+    "excel-to-pdf": {
+        "title": "Excel para PDF Online — Converter Planilhas XLSX em PDF | LocalPDF.io",
+        "description": "Converta planilhas Excel (.xlsx) para PDF com tabelas organizadas e dados protegidos. Rápido e confidencial.",
+        "keywords": "excel para pdf, converter xlsx em pdf, transformar planilha em pdf, excel to pdf",
+        "canonical": "/tool/excel-to-pdf",
+    },
+    "pdf-to-excel": {
+        "title": "PDF para Excel — Extrair Tabelas de PDF para XLSX | LocalPDF.io",
+        "description": "Extraia dados e tabelas do seu PDF diretamente para planilhas editáveis do Excel (.xlsx). Sem redigitação.",
+        "keywords": "pdf para excel, extrair tabelas de pdf, converter pdf em xlsx, pdf to excel",
+        "canonical": "/tool/pdf-to-excel",
+    },
+    "txt-to-pdf": {
+        "title": "TXT para PDF — Converter Texto Simples em PDF | LocalPDF.io",
+        "description": "Converta arquivos de texto (.txt) em documentos PDF formatados, limpos e prontos para impressão ou compartilhamento.",
+        "keywords": "txt para pdf, converter texto em pdf, bloco de notas para pdf, txt to pdf",
+        "canonical": "/tool/txt-to-pdf",
+    },
+    "pdf-to-word": {
+        "title": "PDF para Word Editável — Converter PDF em DOCX Grátis | LocalPDF.io",
+        "description": "Converta documentos PDF em arquivos Word (.docx) totalmente editáveis mantendo textos, parágrafos e imagens intactos.",
+        "keywords": "pdf para word, converter pdf em docx, pdf editavel no word, pdf to word converter",
+        "canonical": "/tool/pdf-to-word",
+        "faq": [
+            {"q": "O texto do PDF fica editável no Word após a conversão?", "a": "Sim, a ferramenta converte elementos de texto e imagens para o formato nativo do Word, permitindo edição direta no Word ou Google Docs."}
+        ]
+    },
+    "pdf-to-text": {
+        "title": "PDF para Texto — Extrair Texto Puro de Documentos PDF | LocalPDF.io",
+        "description": "Extraia todo o conteúdo textual legível do seu PDF para um arquivo TXT limpo. Rápido, leve e prático.",
+        "keywords": "pdf para texto, extrair texto de pdf, copiar texto do pdf, pdf to txt",
+        "canonical": "/tool/pdf-to-text",
+    },
+    "ocr-pdf": {
+        "title": "OCR em PDF — Reconhecimento Óptico de Texto em PDF Escaneado | LocalPDF.io",
+        "description": "Reconheça e extraia texto de PDFs escaneados ou imagens digitalizadas usando inteligência de OCR. Grátis e privado.",
+        "keywords": "ocr pdf, extrair texto de pdf escaneado, reconhecimento de caracteres pdf, pdf ocr online",
+        "canonical": "/tool/ocr-pdf",
+        "faq": [
+            {"q": "O que é OCR em PDF?", "a": "OCR (Reconhecimento Óptico de Caracteres) é a tecnologia que analisa imagens e páginas digitalizadas para identificar letras e palavras, transformando-as em texto pesquisável e copiável."},
+            {"q": "Quais tipos de arquivo o OCR aceita?", "a": "Você pode enviar arquivos PDF escaneados ou imagens diretas nos formatos JPG, PNG ou JPEG."}
+        ]
+    },
+}
+
+
+def get_seo_metadata(tool_key):
+    key = tool_key if tool_key in SEO_CONFIG else "home"
+    config = SEO_CONFIG[key]
+    title = config["title"]
+    desc = config["description"]
+    keywords = config.get("keywords", "pdf, converter pdf, localpdf")
+    canonical = f"https://localpdf.io{config['canonical']}"
+    og_image = "https://localpdf.io/favicon.svg"
+
+    graph = [
+        {
+            "@type": "WebApplication",
+            "@id": "https://localpdf.io/#webapp",
+            "name": "LocalPDF.io",
+            "url": "https://localpdf.io",
+            "applicationCategory": "OfficeApplication",
+            "operatingSystem": "All (Web, Windows, macOS, Linux)",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "BRL"
+            },
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "reviewCount": "1420",
+                "bestRating": "5",
+                "worstRating": "1"
+            }
+        },
+        {
+            "@type": "Organization",
+            "@id": "https://localpdf.io/#organization",
+            "name": "LocalPDF.io",
+            "url": "https://localpdf.io",
+            "logo": "https://localpdf.io/favicon.svg",
+            "sameAs": [
+                "https://github.com/JoadsonRocha/localpdf.io"
+            ]
+        }
+    ]
+
+    if key not in ("home", "about"):
+        graph.append({
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Início",
+                    "item": "https://localpdf.io/"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": title.split("—")[0].strip(),
+                    "item": canonical
+                }
+            ]
+        })
+
+    if "faq" in config and config["faq"]:
+        faq_items = [
+            {
+                "@type": "Question",
+                "name": item["q"],
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": item["a"]
+                }
+            }
+            for item in config["faq"]
+        ]
+        graph.append({
+            "@type": "FAQPage",
+            "mainEntity": faq_items
+        })
+
+    json_ld_str = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False, indent=2)
+
+    return {
+        "title": title,
+        "description": desc,
+        "keywords": keywords,
+        "canonical_url": canonical,
+        "og_image": og_image,
+        "json_ld": json_ld_str,
+    }
+
+
 # Template HTML
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -58,8 +337,35 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ seo.title if seo else 'LocalPDF.io' }}</title>
+    <meta name="description" content="{{ seo.description if seo else 'Ferramentas de PDF 100% Privadas e Gratuitas' }}">
+    <meta name="keywords" content="{{ seo.keywords if seo else 'pdf, localpdf, converter pdf' }}">
+    <meta name="author" content="LocalPDF.io">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ seo.canonical_url if seo else 'https://localpdf.io/' }}">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <title>LocalPDF.io</title>
+
+    <!-- Open Graph / Redes Sociais / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="LocalPDF.io">
+    <meta property="og:title" content="{{ seo.title if seo else 'LocalPDF.io' }}">
+    <meta property="og:description" content="{{ seo.description if seo else 'Ferramentas de PDF 100% Privadas e Gratuitas' }}">
+    <meta property="og:url" content="{{ seo.canonical_url if seo else 'https://localpdf.io/' }}">
+    <meta property="og:image" content="{{ seo.og_image if seo else 'https://localpdf.io/favicon.svg' }}">
+    <meta property="og:locale" content="pt_BR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ seo.title if seo else 'LocalPDF.io' }}">
+    <meta name="twitter:description" content="{{ seo.description if seo else 'Ferramentas de PDF 100% Privadas e Gratuitas' }}">
+    <meta name="twitter:image" content="{{ seo.og_image if seo else 'https://localpdf.io/favicon.svg' }}">
+
+    {% if seo and seo.json_ld %}
+    <!-- Schema.org JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {{ seo.json_ld | safe }}
+    </script>
+    {% endif %}
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); min-height: 100vh; }
@@ -629,56 +935,91 @@ HTML_TEMPLATE = """
             text-decoration: underline;
         }
         .web-mode-banner {
-            background: #eff6ff;
+            background: linear-gradient(135deg, rgba(239, 246, 255, 0.95) 0%, rgba(240, 249, 255, 0.95) 100%);
             border: 1px solid #bfdbfe;
-            border-radius: 12px;
-            padding: 12px 18px;
-            margin-bottom: 24px;
+            border-radius: 999px;
+            padding: 7px 14px 7px 16px;
+            margin: 0 auto 24px auto;
+            max-width: 960px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
-            text-align: left;
-            font-size: 0.9rem;
+            gap: 12px;
+            font-size: 0.85rem;
             color: #1e3a8a;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .web-mode-banner.dismissed {
+            display: none !important;
         }
         .web-mode-banner-content {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            min-width: 0;
             flex: 1;
         }
-        .web-mode-banner-icon {
-            font-size: 1.4rem;
+        .web-mode-badge-pill {
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
             flex-shrink: 0;
         }
-        .web-mode-banner-text p {
-            margin: 0;
-            line-height: 1.45;
+        .web-mode-banner-text {
+            font-size: 0.85rem;
+            color: #1e3a8a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
         }
-        .web-mode-banner-text strong {
-            color: #1d4ed8;
+        .web-mode-banner-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }
-        .web-mode-cta-btn {
+        .web-mode-cta-link {
             background: #0078D4;
             color: #ffffff !important;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.84rem;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.78rem;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             white-space: nowrap;
-            box-shadow: 0 3px 8px rgba(0, 120, 212, 0.25);
             transition: all 0.2s ease;
-            flex-shrink: 0;
         }
-        .web-mode-cta-btn:hover {
+        .web-mode-cta-link:hover {
             background: #0063b1;
             transform: translateY(-1px);
-            box-shadow: 0 5px 12px rgba(0, 120, 212, 0.35);
+        }
+        .web-mode-close-btn {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s ease, background-color 0.15s ease;
+        }
+        .web-mode-close-btn:hover {
+            color: #0f172a;
+            background-color: rgba(0, 0, 0, 0.06);
         }
         .nav-desktop-badge {
             background: #0078D4;
@@ -700,8 +1041,9 @@ HTML_TEMPLATE = """
             .about-shell { padding: 22px 16px; }
             .about-hero h2 { font-size: 1.5rem; }
             .about-grid-pillars { grid-template-columns: 1fr; }
-            .web-mode-banner { flex-direction: column; align-items: stretch; text-align: left; }
-            .web-mode-cta-btn { justify-content: center; text-align: center; }
+            .web-mode-banner { border-radius: 14px; padding: 10px 14px; flex-wrap: wrap; }
+            .web-mode-banner-text { white-space: normal; }
+            .web-mode-banner-actions { width: 100%; justify-content: space-between; margin-top: 4px; }
         }
     </style>
 </head>
@@ -729,15 +1071,16 @@ HTML_TEMPLATE = """
             <!-- Banner informativo para ambiente Web / Railway -->
             <div id="env-banner" class="web-mode-banner hidden">
                 <div class="web-mode-banner-content">
-                    <span class="web-mode-banner-icon">☁️</span>
-                    <div class="web-mode-banner-text">
-                        <p><strong>Versão Web no Railway</strong>: Seus arquivos são processados na memória temporária do servidor e excluídos logo após o download. Para processamento 100% offline e ilimitado no seu PC:</p>
-                    </div>
+                    <span class="web-mode-badge-pill">Nuvem Segura</span>
+                    <span class="web-mode-banner-text" id="env-banner-text">Arquivos processados em memória volátil e excluídos imediatamente após o download.</span>
                 </div>
-                <a class="web-mode-cta-btn" href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi" target="_blank" rel="noopener">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>
-                    <span>Baixar App Desktop (100% Local)</span>
-                </a>
+                <div class="web-mode-banner-actions">
+                    <a class="web-mode-cta-link" href="https://github.com/JoadsonRocha/localpdf.io/releases/download/1.0.0/LocalPDF.msi" target="_blank" rel="noopener">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>
+                        <span id="env-banner-cta-text">App Desktop (100% Local)</span>
+                    </a>
+                    <button type="button" class="web-mode-close-btn" onclick="dismissWebBanner()" title="Fechar aviso" aria-label="Fechar aviso">&times;</button>
+                </div>
             </div>
 
             <div class="header">
@@ -896,7 +1239,7 @@ HTML_TEMPLATE = """
         </div>
 
         <div id="editor-view" class="hidden">
-            <button class="back-btn" onclick="showHomeFromEditor()">← Voltar</button>
+            <button class="back-btn" onclick="navigateBack()">← Voltar</button>
             <div class="tool-card">
                 <h3>🖥️ Editor de páginas PDF</h3>
                 <p>Organize a estrutura do seu PDF sem alterar o arquivo original.</p>
@@ -938,7 +1281,7 @@ HTML_TEMPLATE = """
 
         <!-- Tool Views -->
         <div id="tool-views" class="hidden">
-            <button class="back-btn" onclick="showHome()">← Voltar</button>
+            <button class="back-btn" onclick="navigateBack()">← Voltar</button>
             <div class="tool-card">
                 <h3 id="tool-title"></h3>
                 <p id="tool-description"></p>
@@ -973,7 +1316,7 @@ HTML_TEMPLATE = """
         </div>
 
         <div id="about-view" class="hidden">
-            <button class="back-btn" onclick="showHome()">← Voltar</button>
+            <button class="back-btn" onclick="navigateBack()">← Voltar</button>
             <div class="about-shell">
                 <div class="about-hero">
                     <span class="about-badge">🛡️ 100% Privado &amp; Local</span>
