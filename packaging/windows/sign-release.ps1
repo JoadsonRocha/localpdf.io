@@ -64,10 +64,14 @@ if ($Target -in @("All", "Binaries")) {
         Write-Warning "LocalPDF.exe não encontrado em $exePath."
     }
 
-    # Also sign any vendor binaries if present
-    Get-ChildItem -Path $PortableDir -Recurse -Include "*.exe", "*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
-        if ($_.FullName -ne $exePath) {
-            Sign-File $_.FullName
+    # Also sign unsigned vendor binaries if present (do not overwrite signatures of internal/system DLLs)
+    $vendorDir = Join-Path $PortableDir "vendor"
+    if (Test-Path $vendorDir) {
+        Get-ChildItem -Path $vendorDir -Recurse -Include "*.exe", "*.dll" -ErrorAction SilentlyContinue | ForEach-Object {
+            $existingSig = Get-AuthenticodeSignature $_.FullName -ErrorAction SilentlyContinue
+            if (-not $existingSig -or $existingSig.Status -ne "Valid") {
+                Sign-File $_.FullName
+            }
         }
     }
 }

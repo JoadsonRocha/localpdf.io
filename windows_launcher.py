@@ -116,8 +116,8 @@ if __name__ == "__main__":
                 min_size=(900, 600),
                 background_color="#eff6ff",
             )
-            launched_native_window = True
             webview.start(gui="edgechromium")
+            launched_native_window = True
         except Exception:
             launched_native_window = False
 

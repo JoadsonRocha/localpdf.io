@@ -46,7 +46,7 @@ try {
     }
 
     Write-Host "Building MSI installer: $Output..."
-    & wix build packaging\windows\installer.wxs -o $Output
+    & wix build -arch x64 packaging\windows\installer.wxs -o $Output
     if ($LASTEXITCODE -ne 0) { throw "WiX build failed." }
 
     Write-Host "MSI created successfully at $Output"
