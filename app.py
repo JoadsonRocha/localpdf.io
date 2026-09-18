@@ -3,6 +3,7 @@ from datetime import date, datetime
 import io
 import json
 import os
+import pathlib
 import shutil
 import sys
 import tempfile
@@ -441,14 +442,20 @@ HTML_TEMPLATE = """
         .result-card { margin-top: 24px; padding: 22px; border-radius: 12px; text-align: left; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .result-card.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .result-card.warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
         .result-card.error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
         .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
         .result-header h4 { font-size: 1.15rem; font-weight: 700; margin: 0; }
         .result-body p { font-size: 0.92rem; margin-bottom: 12px; opacity: 0.95; line-height: 1.5; }
         .result-filename { font-weight: 700; word-break: break-all; color: #0f172a; background: rgba(255,255,255,0.8); padding: 6px 12px; border-radius: 6px; display: inline-block; margin-bottom: 12px; border: 1px solid rgba(0,0,0,0.06); font-size: 0.9rem; }
+        .saved-path-badge { display: flex; align-items: flex-start; gap: 8px; font-size: 0.88rem; color: #1e293b; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; word-break: break-all; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
         .result-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
         .btn-download-again { background: #16a34a; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; box-shadow: 0 4px 10px rgba(22,163,74,0.2); font-family: inherit; }
         .btn-download-again:hover { background: #15803d; }
+        .btn-open-file { background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; box-shadow: 0 4px 10px rgba(37,99,235,0.2); font-family: inherit; }
+        .btn-open-file:hover { background: #1d4ed8; }
+        .btn-open-folder { background: #475569; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; box-shadow: 0 4px 10px rgba(71,85,105,0.2); font-family: inherit; }
+        .btn-open-folder:hover { background: #334155; }
         .btn-reset-flow { background: #ffffff; color: #334155; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
         .btn-reset-flow:hover { background: #f8fafc; border-color: #94a3b8; }
         .btn-try-again { background: #dc2626; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
@@ -2217,16 +2224,190 @@ HTML_TEMPLATE = """
             if (fileInput) fileInput.value = '';
         }
 
-        function downloadAgain() {
-            if (!lastDownloadedBlob) return;
-            const url = window.URL.createObjectURL(lastDownloadedBlob);
+        let lastSavedPath = '';
+
+        async function openSavedFile(path) {
+            const targetPath = path || lastSavedPath;
+            if (!targetPath) return;
+            if (window.pywebview && window.pywebview.api && window.pywebview.api.open_saved_file) {
+                try {
+                    const ok = await window.pywebview.api.open_saved_file(targetPath);
+                    if (ok) return;
+                } catch (e) {}
+            }
+            try {
+                await fetch('/api/desktop/open-file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: targetPath })
+                });
+            } catch (e) {
+                showToast(t('Não foi possível abrir o arquivo.', 'Could not open file.'), 'error');
+            }
+        }
+
+        async function openSavedFolder(path) {
+            const targetPath = path || lastSavedPath;
+            if (!targetPath) return;
+            if (window.pywebview && window.pywebview.api && window.pywebview.api.open_saved_folder) {
+                try {
+                    const ok = await window.pywebview.api.open_saved_folder(targetPath);
+                    if (ok) return;
+                } catch (e) {}
+            }
+            try {
+                await fetch('/api/desktop/open-folder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: targetPath })
+                });
+            } catch (e) {
+                showToast(t('Não foi possível abrir a pasta.', 'Could not open folder.'), 'error');
+            }
+        }
+
+        async function saveDocumentResult(blob, filename, forceDownloads = false) {
+            const isDesktop = !isWebMode || (window.pywebview && window.pywebview.api);
+
+            if (isDesktop) {
+                // If not forced to Downloads, try native SaveFileDialog in PyWebView
+                if (!forceDownloads && window.pywebview && window.pywebview.api && window.pywebview.api.choose_save_path) {
+                    try {
+                        const chosenPath = await window.pywebview.api.choose_save_path(filename);
+                        if (!chosenPath) {
+                            // User clicked cancel on the dialog
+                            return { cancelled: true, filename };
+                        }
+                        // Write to the chosen destination path via backend
+                        const formData = new FormData();
+                        formData.append('file', blob, filename);
+                        formData.append('path', chosenPath);
+                        const resp = await fetch('/api/desktop/write-file', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        if (resp.ok) {
+                            const resData = await resp.json();
+                            lastSavedPath = resData.path || chosenPath;
+                            return { success: true, path: lastSavedPath, filename };
+                        }
+                    } catch (e) {
+                        console.warn('Native dialog failed, falling back to Downloads folder:', e);
+                    }
+                }
+
+                // Automatic save to user's Downloads folder
+                try {
+                    const formData = new FormData();
+                    formData.append('file', blob, filename);
+                    const resp = await fetch('/api/desktop/save', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (resp.ok) {
+                        const resData = await resp.json();
+                        lastSavedPath = resData.path;
+                        return { success: true, path: resData.path, filename: resData.filename || filename };
+                    }
+                } catch (e) {
+                    console.warn('Desktop save to Downloads failed:', e);
+                }
+            }
+
+            // Web mode fallback (or if desktop endpoints unavailable)
+            const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = lastDownloadedFilename;
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                if (a.parentNode) a.parentNode.removeChild(a);
+            }, 60000);
+
+            return { success: true, webDownload: true, filename };
+        }
+
+        function renderResultCard(saveRes) {
+            const resultEl = document.getElementById('result');
+            if (!saveRes || !resultEl) return;
+
+            if (saveRes.cancelled) {
+                resultEl.innerHTML = `
+                    <div class="result-card warning">
+                        <div class="result-header">
+                            <h4>⚠️ ${t('Salvamento cancelado', 'Save cancelled')}</h4>
+                        </div>
+                        <div class="result-body">
+                            <span class="result-filename">📄 ${saveRes.filename || lastDownloadedFilename}</span>
+                            <p>${t('O processamento foi concluído com sucesso. Como você cancelou a seleção da pasta, escolha como deseja salvar o arquivo:', 'The processing was completed successfully. Since you cancelled folder selection, choose how you would like to save the file:')}</p>
+                            <div class="result-actions">
+                                <button type="button" class="btn-download-again" onclick="downloadAgain(true)">📥 ${t('Salvar em Downloads', 'Save to Downloads')}</button>
+                                <button type="button" class="btn-open-folder" onclick="downloadAgain(false)">💾 ${t('Escolher pasta...', 'Choose folder...')}</button>
+                                <button type="button" class="btn-reset-flow" onclick="resetToolFlow()">✨ ${t('Processar outro arquivo', 'Process another file')}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultEl.classList.remove('hidden');
+                return;
+            }
+
+            if (saveRes.path) {
+                showToast(t('Arquivo salvo com sucesso no seu computador!', 'File saved successfully to your computer!'), 'success');
+                resultEl.innerHTML = `
+                    <div class="result-card success">
+                        <div class="result-header">
+                            <h4>✅ ${t('Concluído e salvo no seu computador!', 'Completed and saved on your computer!')}</h4>
+                        </div>
+                        <div class="result-body">
+                            <span class="result-filename">📄 ${saveRes.filename || lastDownloadedFilename}</span>
+                            <div class="saved-path-badge">
+                                <span>💾</span>
+                                <span><strong>${t('Salvo em:', 'Saved to:')}</strong> ${saveRes.path}</span>
+                            </div>
+                            <div class="result-actions">
+                                <button type="button" class="btn-open-file" onclick="openSavedFile('${saveRes.path.replace(/\\/g, '\\\\')}')">📄 ${t('Abrir arquivo', 'Open file')}</button>
+                                <button type="button" class="btn-open-folder" onclick="openSavedFolder('${saveRes.path.replace(/\\/g, '\\\\')}')">📂 ${t('Abrir pasta', 'Open folder')}</button>
+                                <button type="button" class="btn-download-again" onclick="downloadAgain(false)">💾 ${t('Salvar em outro local...', 'Save elsewhere...')}</button>
+                                <button type="button" class="btn-reset-flow" onclick="resetToolFlow()">✨ ${t('Processar outro arquivo', 'Process another file')}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                resultEl.classList.remove('hidden');
+                return;
+            }
+
+            // Web download mode
+            showToast(t('Arquivo processado e download iniciado!', 'File processed and download started!'), 'success');
+            const successNote = isWebMode
+                ? t('O arquivo foi processado com segurança em memória volátil e o download foi iniciado. O arquivo já foi excluído do servidor.', 'The file was securely processed in volatile memory and the download has started. The file has already been deleted from the server.')
+                : t('O arquivo foi processado no seu computador e o download foi iniciado automaticamente.', 'The file was processed on your computer and the download started automatically.');
+
+            resultEl.innerHTML = `
+                <div class="result-card success">
+                    <div class="result-header">
+                        <h4>✅ ${t('Concluído com sucesso!', 'Completed successfully!')}</h4>
+                    </div>
+                    <div class="result-body">
+                        <span class="result-filename">📄 ${lastDownloadedFilename}</span>
+                        <p>${successNote}</p>
+                        <div class="result-actions">
+                            <button type="button" class="btn-download-again" onclick="downloadAgain(false)">📥 ${t('Baixar novamente', 'Download again')}</button>
+                            <button type="button" class="btn-reset-flow" onclick="resetToolFlow()">✨ ${t('Processar outro arquivo', 'Process another file')}</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            resultEl.classList.remove('hidden');
+        }
+
+        async function downloadAgain(forceDownloads = false) {
+            if (!lastDownloadedBlob) return;
+            const res = await saveDocumentResult(lastDownloadedBlob, lastDownloadedFilename, forceDownloads);
+            renderResultCard(res);
         }
 
         // ── Named progress stages per tool ───────────────────────────
@@ -2497,37 +2678,8 @@ HTML_TEMPLATE = """
                     lastDownloadedBlob = blob;
                     lastDownloadedFilename = downloadFilename;
 
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = downloadFilename;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-
-                    showToast(t('Arquivo processado e download iniciado!', 'File processed and download started!'), 'success');
-
-                    const successNote = isWebMode
-                        ? t('O arquivo foi processado com segurança em memória volátil e o download foi iniciado. O arquivo já foi excluído do servidor.', 'The file was securely processed in volatile memory and the download has started. The file has already been deleted from the server.')
-                        : t('O arquivo foi processado no seu computador e o download foi iniciado automaticamente.', 'The file was processed on your computer and the download started automatically.');
-
-                    document.getElementById('result').innerHTML = `
-                        <div class="result-card success">
-                            <div class="result-header">
-                                <h4>✅ ${t('Concluído com sucesso!', 'Completed successfully!')}</h4>
-                            </div>
-                            <div class="result-body">
-                                <span class="result-filename">📄 ${downloadFilename}</span>
-                                <p>${successNote}</p>
-                                <div class="result-actions">
-                                    <button type="button" class="btn-download-again" onclick="downloadAgain()">${t('📥 Baixar novamente', '📥 Download again')}</button>
-                                    <button type="button" class="btn-reset-flow" onclick="resetToolFlow()">${t('✨ Processar outro arquivo', '✨ Process another file')}</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('result').classList.remove('hidden');
+                    const saveRes = await saveDocumentResult(blob, downloadFilename);
+                    renderResultCard(saveRes);
                 } else {
                     let errorDetail = '';
                     try {
@@ -2867,13 +3019,15 @@ HTML_TEMPLATE = """
                     throw new Error(data.error || 'Não foi possível exportar o PDF.');
                 }
                 const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'localpdf-editado.pdf';
-                link.click();
-                URL.revokeObjectURL(url);
-                status.textContent = 'PDF editado baixado com sucesso.';
+                const saveRes = await saveDocumentResult(blob, 'localpdf-editado.pdf');
+                if (saveRes.cancelled) {
+                    status.textContent = t('Salvamento cancelado.', 'Save cancelled.');
+                } else if (saveRes.path) {
+                    status.textContent = t(`PDF salvo em: ${saveRes.path}`, `PDF saved to: ${saveRes.path}`);
+                    showToast(t('PDF editado salvo com sucesso!', 'Edited PDF saved successfully!'), 'success');
+                } else {
+                    status.textContent = t('PDF editado baixado com sucesso.', 'Edited PDF downloaded successfully.');
+                }
             } catch (error) {
                 status.textContent = error.message;
             }
@@ -3063,7 +3217,16 @@ def add_privacy_and_security_headers(response):
     """Adds security headers and disables browser/proxy caching for processed documents."""
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    if request.path in ("/convert", "/editor/export", "/editor/preview", "/preview-page"):
+    if request.path in (
+        "/convert",
+        "/editor/export",
+        "/editor/preview",
+        "/preview-page",
+        "/api/desktop/save",
+        "/api/desktop/write-file",
+        "/api/desktop/open-folder",
+        "/api/desktop/open-file",
+    ):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
@@ -3247,8 +3410,136 @@ def preview_page():
         return jsonify({"error": "Não foi possível gerar o preview."}), 500
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
-        import gc
-        gc.collect()
+# ── Desktop Integration Endpoints (Local Mode Only) ─────────────────────────
+DESKTOP_ALLOWED_EXTENSIONS = ALLOWED_EXTENSIONS | {"zip"}
+
+
+def is_safe_desktop_path(target_path):
+    """Ensures destination path is a safe user path and not a restricted system directory."""
+    if not target_path:
+        return False
+    norm = os.path.abspath(target_path)
+    # Block system directories
+    for env_var in ("WINDIR", "SystemRoot", "ProgramFiles", "ProgramFiles(x86)", "ProgramData"):
+        sys_dir = os.environ.get(env_var)
+        if sys_dir and norm.lower().startswith(os.path.abspath(sys_dir).lower()):
+            return False
+    # Validate extension
+    ext = os.path.splitext(norm)[1].lstrip(".").lower()
+    if ext not in DESKTOP_ALLOWED_EXTENSIONS:
+        return False
+    return True
+
+
+@app.route("/api/desktop/save", methods=["POST"])
+def desktop_save_to_downloads():
+    """Saves the converted document directly to the user's Downloads directory."""
+    if is_web_environment():
+        return jsonify({"error": "Disponível apenas no modo desktop"}), 403
+
+    if "file" not in request.files:
+        return jsonify({"error": "Nenhum arquivo enviado"}), 400
+
+    file = request.files["file"]
+    if not file or not file.filename:
+        return jsonify({"error": "Arquivo inválido"}), 400
+
+    filename = secure_filename(file.filename)
+    ext = os.path.splitext(filename)[1].lstrip(".").lower()
+    if ext not in DESKTOP_ALLOWED_EXTENSIONS:
+        return jsonify({"error": f"Extensão não permitida: {ext}"}), 400
+
+    downloads_dir = pathlib.Path.home() / "Downloads"
+    if not downloads_dir.exists():
+        downloads_dir = pathlib.Path.home()
+
+    target = downloads_dir / filename
+    stem = target.stem
+    suffix = target.suffix
+    c = 1
+    while target.exists():
+        target = downloads_dir / f"{stem} ({c}){suffix}"
+        c += 1
+
+    file.save(str(target))
+    return jsonify({
+        "success": True,
+        "path": str(target),
+        "filename": target.name,
+        "directory": str(downloads_dir),
+    })
+
+
+@app.route("/api/desktop/write-file", methods=["POST"])
+def desktop_write_to_path():
+    """Writes the converted document to the specific path chosen by the user in the Save dialog."""
+    if is_web_environment():
+        return jsonify({"error": "Disponível apenas no modo desktop"}), 403
+
+    if "file" not in request.files:
+        return jsonify({"error": "Nenhum arquivo enviado"}), 400
+
+    target_path = request.form.get("path", "").strip()
+    if not target_path or not is_safe_desktop_path(target_path):
+        return jsonify({"error": "Caminho de salvamento inválido ou não permitido"}), 400
+
+    file = request.files["file"]
+    if not file:
+        return jsonify({"error": "Arquivo inválido"}), 400
+
+    parent_dir = os.path.dirname(target_path)
+    if parent_dir and not os.path.exists(parent_dir):
+        os.makedirs(parent_dir, exist_ok=True)
+
+    file.save(target_path)
+    return jsonify({
+        "success": True,
+        "path": os.path.abspath(target_path),
+        "filename": os.path.basename(target_path),
+    })
+
+
+@app.route("/api/desktop/open-folder", methods=["POST"])
+def desktop_open_folder():
+    """Highlights the saved file in Windows Explorer."""
+    if is_web_environment():
+        return jsonify({"error": "Disponível apenas no modo desktop"}), 403
+
+    data = request.get_json(silent=True) or {}
+    path = data.get("path", "").strip()
+    if not path or not os.path.exists(path):
+        return jsonify({"error": "Arquivo não encontrado"}), 404
+
+    try:
+        import subprocess
+
+        abs_path = os.path.abspath(path)
+        subprocess.Popen(["explorer.exe", f"/select,{abs_path}"])
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/desktop/open-file", methods=["POST"])
+def desktop_open_file():
+    """Opens the saved file in the Windows default application."""
+    if is_web_environment():
+        return jsonify({"error": "Disponível apenas no modo desktop"}), 403
+
+    data = request.get_json(silent=True) or {}
+    path = data.get("path", "").strip()
+    if not path or not os.path.exists(path):
+        return jsonify({"error": "Arquivo não encontrado"}), 404
+
+    ext = os.path.splitext(path)[1].lstrip(".").lower()
+    if ext not in DESKTOP_ALLOWED_EXTENSIONS:
+        return jsonify({"error": "Extensão não permitida"}), 400
+
+    try:
+        os.startfile(os.path.abspath(path))
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/favicon.svg")
