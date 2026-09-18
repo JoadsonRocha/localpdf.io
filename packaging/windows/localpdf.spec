@@ -21,9 +21,15 @@ hiddenimports = [
     "docx",
     "reportlab",
     "pdfplumber",
+    "webview",
+    "webview.platforms.winforms",
+    "pythonnet",
+    "clr_loader",
+    "bottle",
+    "proxy_tools",
 ]
 
-for package in ("fitz", "pdf2docx", "PIL", "docx", "reportlab", "openpyxl", "pdfplumber"):
+for package in ("fitz", "pdf2docx", "PIL", "docx", "reportlab", "openpyxl", "pdfplumber", "webview", "pythonnet", "clr_loader"):
     try:
         package_datas, package_binaries, package_hidden = collect_all(package)
         datas.extend(package_datas)
