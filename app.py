@@ -1906,7 +1906,58 @@ HTML_TEMPLATE = """
             });
         }
 
-        function showTool(toolName) {
+        let hasNavigatedInApp = false;
+
+        function navigateBack() {
+            if (hasNavigatedInApp && window.history.length > 1) {
+                window.history.back();
+            } else {
+                showHome(true);
+            }
+        }
+
+        function updateDocumentSEO(view, toolName, rawTitle, rawDesc) {
+            let title = 'LocalPDF.io — Ferramentas de PDF 100% Privadas, Grátis e Ilimitadas';
+            let desc = 'Converta, junte, divida, comprima e edite arquivos PDF gratuitamente no seu navegador ou PC. Sem limite de tamanho, sem cadastro e com privacidade absoluta.';
+            let canonicalPath = '/';
+
+            if (view === 'tool' && toolName) {
+                const tName = rawTitle || (tools[toolName] ? tools[toolName].title : toolName);
+                title = `${tName} Online e Grátis — LocalPDF.io`;
+                desc = rawDesc || (tools[toolName] ? tools[toolName].description : '');
+                canonicalPath = `/tool/${toolName}`;
+            } else if (view === 'editor') {
+                title = currentLanguage === 'en' ? 'PDF Editor Online & Free — LocalPDF.io' : 'Editor de PDF Online Grátis — Organizar, Girar e Reordenar Páginas | LocalPDF.io';
+                desc = currentLanguage === 'en' ? 'Reorder, rotate, duplicate and delete PDF pages visually.' : 'Edite a estrutura do seu PDF visualmente: reordene páginas, gire, duplique e exclua sem perder formatação. 100% privado e gratuito.';
+                canonicalPath = '/editor';
+            } else if (view === 'about') {
+                title = currentLanguage === 'en' ? 'About LocalPDF.io — 100% Private PDF Suite' : 'Sobre o LocalPDF.io — Suíte de PDF com Privacidade Absoluta';
+                desc = currentLanguage === 'en' ? 'Learn about LocalPDF.io: private, fast PDF processing.' : 'Conheça o LocalPDF.io: ferramentas de PDF criadas com foco total em privacidade. Modo nuvem com processamento efêmero e app desktop 100% offline.';
+                canonicalPath = '/about';
+            }
+
+            document.title = title;
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) metaDesc.setAttribute('content', desc);
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            if (ogTitle) ogTitle.setAttribute('content', title);
+            const ogDesc = document.querySelector('meta[property="og:description"]');
+            if (ogDesc) ogDesc.setAttribute('content', desc);
+            const canonical = document.querySelector('link[rel="canonical"]');
+            if (canonical) canonical.setAttribute('href', `https://localpdf.io${canonicalPath}`);
+        }
+
+        function dismissWebBanner() {
+            const banner = document.getElementById('env-banner');
+            if (banner) {
+                banner.classList.add('dismissed');
+                try {
+                    sessionStorage.setItem('localpdf_banner_dismissed', '1');
+                } catch (e) {}
+            }
+        }
+
+        function showTool(toolName, push = true) {
             currentTool = toolName;
             const tool = tools[toolName];
             if (!tool) return;
@@ -1931,9 +1982,14 @@ HTML_TEMPLATE = """
             hideResult();
             updateToolPrivacyNotice();
 
-            document.title = `${rawTitle} - LocalPDF.io`;
-            if (window.location.pathname !== `/tool/${toolName}`) {
-                history.pushState(null, '', `/tool/${toolName}`);
+            updateDocumentSEO('tool', toolName, rawTitle, rawDesc);
+
+            if (push) {
+                hasNavigatedInApp = true;
+                const targetUrl = `/tool/${toolName}`;
+                if (window.location.pathname !== targetUrl) {
+                    history.pushState({ localpdf: true, view: 'tool', tool: toolName }, '', targetUrl);
+                }
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -2029,7 +2085,7 @@ HTML_TEMPLATE = """
             options.classList.add('hidden');
         }
 
-        function showHome() {
+        function showHome(push = true) {
             currentTool = null;
             document.getElementById('home-view').classList.remove('hidden');
             document.getElementById('tool-views').classList.add('hidden');
@@ -2038,14 +2094,21 @@ HTML_TEMPLATE = """
             const aboutView = document.getElementById('about-view');
             if (aboutView) aboutView.classList.add('hidden');
             uploadedFiles = [];
-            document.title = 'LocalPDF.io';
-            if (window.location.pathname !== '/') {
-                history.pushState(null, '', '/');
+            hideResult();
+            if (typeof resetEditor === 'function') resetEditor();
+
+            updateDocumentSEO('home');
+
+            if (push) {
+                const targetUrl = '/';
+                if (window.location.pathname !== targetUrl) {
+                    history.pushState({ localpdf: true, view: 'home' }, '', targetUrl);
+                }
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function showAbout() {
+        function showAbout(push = true) {
             currentTool = null;
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('tool-views').classList.add('hidden');
@@ -2054,9 +2117,16 @@ HTML_TEMPLATE = """
             const aboutView = document.getElementById('about-view');
             if (aboutView) aboutView.classList.remove('hidden');
             uploadedFiles = [];
-            document.title = `${t('Sobre o LocalPDF.io', 'About LocalPDF.io')} - LocalPDF.io`;
-            if (window.location.pathname !== '/about') {
-                history.pushState(null, '', '/about');
+            hideResult();
+
+            updateDocumentSEO('about');
+
+            if (push) {
+                hasNavigatedInApp = true;
+                const targetUrl = '/about';
+                if (window.location.pathname !== targetUrl && window.location.pathname !== '/sobre') {
+                    history.pushState({ localpdf: true, view: 'about' }, '', targetUrl);
+                }
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -2508,30 +2578,29 @@ HTML_TEMPLATE = """
         let editorPendingPages = [];
         let editorPendingFiles = [];
 
-        function showEditor() {
+        function showEditor(push = true) {
             currentTool = 'edit-pdf';
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('tool-views').classList.add('hidden');
+            const aboutView = document.getElementById('about-view');
+            if (aboutView) aboutView.classList.add('hidden');
             document.getElementById('editor-view').classList.remove('hidden');
             resetEditor();
-            document.title = (currentLanguage === 'en' ? 'Edit PDF' : 'Editar PDF') + ' - LocalPDF.io';
-            if (window.location.pathname !== '/editor') {
-                history.pushState(null, '', '/editor');
+
+            updateDocumentSEO('editor');
+
+            if (push) {
+                hasNavigatedInApp = true;
+                const targetUrl = '/editor';
+                if (window.location.pathname !== targetUrl && window.location.pathname !== '/tool/edit-pdf') {
+                    history.pushState({ localpdf: true, view: 'editor' }, '', targetUrl);
+                }
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function showHomeFromEditor() {
-            currentTool = null;
-            document.getElementById('editor-view').classList.add('hidden');
-            document.getElementById('tool-views').classList.add('hidden');
-            document.getElementById('home-view').classList.remove('hidden');
-            resetEditor();
-            document.title = 'LocalPDF.io';
-            if (window.location.pathname !== '/') {
-                history.pushState(null, '', '/');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            navigateBack();
         }
 
         function resetEditor() {
@@ -2836,7 +2905,31 @@ HTML_TEMPLATE = """
         function updateWebModeElements() {
             if (!isWebMode) return;
             const envBanner = document.getElementById('env-banner');
-            if (envBanner) envBanner.classList.remove('hidden');
+            let isDismissed = false;
+            try {
+                isDismissed = sessionStorage.getItem('localpdf_banner_dismissed') === '1';
+            } catch (e) {}
+
+            if (envBanner) {
+                if (isDismissed) {
+                    envBanner.classList.add('dismissed');
+                } else {
+                    envBanner.classList.remove('hidden');
+                    envBanner.classList.remove('dismissed');
+                }
+            }
+            const bannerText = document.getElementById('env-banner-text');
+            if (bannerText) {
+                bannerText.textContent = currentLanguage === 'en'
+                    ? 'Files processed in volatile memory and deleted immediately after download.'
+                    : 'Arquivos processados em memória volátil e excluídos imediatamente após o download.';
+            }
+            const bannerCta = document.getElementById('env-banner-cta-text');
+            if (bannerCta) {
+                bannerCta.textContent = currentLanguage === 'en'
+                    ? 'Desktop App (100% Local)'
+                    : 'App Desktop (100% Local)';
+            }
             const navDownload = document.getElementById('nav-desktop-download');
             if (navDownload) navDownload.classList.remove('hidden');
             const mainSubtitle = document.getElementById('main-subtitle');
@@ -2868,28 +2961,69 @@ HTML_TEMPLATE = """
             });
         })();
 
+        // ── History State & Client-side Routing ──────────────────────
+        (function initHistoryState() {
+            const path = window.location.pathname.replace(/^[/]+|[/]+$/g, '');
+            let initialViewState = { localpdf: true, view: 'home' };
+            if (path === 'editor' || path === 'tool/edit-pdf' || path === 'tools/edit-pdf') {
+                initialViewState = { localpdf: true, view: 'editor' };
+            } else if (path === 'about' || path === 'sobre') {
+                initialViewState = { localpdf: true, view: 'about' };
+            } else if (path.startsWith('tool/') || path.startsWith('tools/')) {
+                const name = path.replace(/^tools?\//, '');
+                if (tools[name]) {
+                    initialViewState = { localpdf: true, view: 'tool', tool: name };
+                }
+            }
+            if (!history.state) {
+                history.replaceState(initialViewState, '', window.location.href);
+            }
+        })();
+
         const initialToolFromRoute = "{{ initial_tool or '' }}";
         if (initialToolFromRoute) {
             if (initialToolFromRoute === 'edit-pdf' || initialToolFromRoute === 'editor') {
-                showEditor();
+                showEditor(false);
             } else if (initialToolFromRoute === 'about' || initialToolFromRoute === 'sobre') {
-                showAbout();
+                showAbout(false);
             } else if (tools[initialToolFromRoute]) {
-                showTool(initialToolFromRoute);
+                showTool(initialToolFromRoute, false);
             }
         }
 
-        window.addEventListener('popstate', () => {
+        window.addEventListener('popstate', (event) => {
+            const state = event.state;
             const path = window.location.pathname.replace(/^[/]+|[/]+$/g, '');
+
+            if (state && state.view) {
+                if (state.view === 'home') {
+                    showHome(false);
+                } else if (state.view === 'tool' && state.tool) {
+                    showTool(state.tool, false);
+                } else if (state.view === 'editor') {
+                    showEditor(false);
+                } else if (state.view === 'about') {
+                    showAbout(false);
+                }
+                return;
+            }
+
+            // Fallback URL routing if state is null
             if (!path) {
-                showHome();
-            } else if (path === 'editor' || path === 'tool/edit-pdf') {
-                showEditor();
+                showHome(false);
+            } else if (path === 'editor' || path === 'tool/edit-pdf' || path === 'tools/edit-pdf') {
+                showEditor(false);
             } else if (path === 'about' || path === 'sobre') {
-                showAbout();
-            } else if (path.startsWith('tool/')) {
-                const name = path.replace('tool/', '');
-                if (tools[name]) showTool(name);
+                showAbout(false);
+            } else if (path.startsWith('tool/') || path.startsWith('tools/')) {
+                const name = path.replace(/^tools?\//, '');
+                if (tools[name]) {
+                    showTool(name, false);
+                } else {
+                    showHome(false);
+                }
+            } else {
+                showHome(false);
             }
         });
     </script>
@@ -2936,6 +3070,51 @@ def add_privacy_and_security_headers(response):
     return response
 
 
+@app.route("/robots.txt")
+def robots_txt():
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /convert\n"
+        "Disallow: /preview-page\n"
+        "Disallow: /editor/preview\n"
+        "Disallow: /editor/export\n"
+        "Disallow: /healthz\n"
+        "Disallow: /splash\n"
+        "Sitemap: https://localpdf.io/sitemap.xml\n"
+    )
+    return app.response_class(content, mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    today = date.today().isoformat()
+    urls = [
+        {"loc": "https://localpdf.io/", "priority": "1.0", "changefreq": "daily"},
+        {"loc": "https://localpdf.io/editor", "priority": "0.9", "changefreq": "weekly"},
+        {"loc": "https://localpdf.io/about", "priority": "0.8", "changefreq": "monthly"},
+    ]
+    for tool_key in SEO_CONFIG.keys():
+        if tool_key not in ("home", "editor", "about"):
+            urls.append({
+                "loc": f"https://localpdf.io/tool/{tool_key}",
+                "priority": "0.9",
+                "changefreq": "weekly"
+            })
+
+    xml_entries = "\n".join(
+        f"  <url>\n    <loc>{u['loc']}</loc>\n    <lastmod>{today}</lastmod>\n    <changefreq>{u['changefreq']}</changefreq>\n    <priority>{u['priority']}</priority>\n  </url>"
+        for u in urls
+    )
+    xml_content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{xml_entries}\n"
+        "</urlset>"
+    )
+    return app.response_class(xml_content, mimetype="application/xml")
+
+
 @app.route("/")
 @app.route("/tool/<tool_name>")
 @app.route("/tools/<tool_name>")
@@ -2943,15 +3122,27 @@ def add_privacy_and_security_headers(response):
 @app.route("/about")
 @app.route("/sobre")
 def index(tool_name=None):
-    if request.path.rstrip("/") == "/editor":
-        tool_name = "edit-pdf"
-    elif request.path.rstrip("/") in ("/about", "/sobre"):
-        tool_name = "about"
+    raw_path = request.path.rstrip("/")
+    if raw_path in ("/editor", "/tool/edit-pdf", "/tools/edit-pdf"):
+        seo_key = "editor"
+        client_initial_tool = "edit-pdf"
+    elif raw_path in ("/about", "/sobre"):
+        seo_key = "about"
+        client_initial_tool = "about"
+    elif tool_name:
+        seo_key = tool_name.lower()
+        client_initial_tool = tool_name.lower()
+    else:
+        seo_key = "home"
+        client_initial_tool = ""
+
+    seo_data = get_seo_metadata(seo_key)
     web_mode = is_web_environment()
     return render_template_string(
         HTML_TEMPLATE,
-        initial_tool=tool_name or "",
+        initial_tool=client_initial_tool,
         is_web_mode=web_mode,
+        seo=seo_data,
     )
 
 
