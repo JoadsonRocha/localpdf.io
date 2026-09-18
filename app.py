@@ -2970,7 +2970,7 @@ HTML_TEMPLATE = """
             } else if (path === 'about' || path === 'sobre') {
                 initialViewState = { localpdf: true, view: 'about' };
             } else if (path.startsWith('tool/') || path.startsWith('tools/')) {
-                const name = path.replace(/^tools?\//, '');
+                const name = path.replace(/^tools?[/]/, '');
                 if (tools[name]) {
                     initialViewState = { localpdf: true, view: 'tool', tool: name };
                 }
@@ -3016,7 +3016,7 @@ HTML_TEMPLATE = """
             } else if (path === 'about' || path === 'sobre') {
                 showAbout(false);
             } else if (path.startsWith('tool/') || path.startsWith('tools/')) {
-                const name = path.replace(/^tools?\//, '');
+                const name = path.replace(/^tools?[/]/, '');
                 if (tools[name]) {
                     showTool(name, false);
                 } else {

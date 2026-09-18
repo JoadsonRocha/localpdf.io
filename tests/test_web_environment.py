@@ -128,7 +128,72 @@ class WebEnvironmentTests(unittest.TestCase):
         self.assertIn("15/01/2021", text)
         self.assertIn("Janeiro", text)
 
+    def test_robots_txt(self):
+        resp = self.client.get("/robots.txt")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("text/plain", resp.headers.get("Content-Type", ""))
+        body = resp.get_data(as_text=True)
+        self.assertIn("User-agent: *", body)
+        self.assertIn("Allow: /", body)
+        self.assertIn("Sitemap: https://localpdf.io/sitemap.xml", body)
+
+    def test_sitemap_xml(self):
+        resp = self.client.get("/sitemap.xml")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("xml", resp.headers.get("Content-Type", ""))
+        body = resp.get_data(as_text=True)
+        self.assertIn("<urlset", body)
+        self.assertIn("<loc>https://localpdf.io/</loc>", body)
+        self.assertIn("<loc>https://localpdf.io/editor</loc>", body)
+        self.assertIn("<loc>https://localpdf.io/about</loc>", body)
+        self.assertIn("<loc>https://localpdf.io/tool/merge-pdf</loc>", body)
+        self.assertIn("<loc>https://localpdf.io/tool/compress-pdf</loc>", body)
+        self.assertIn("<loc>https://localpdf.io/tool/pdf-to-word</loc>", body)
+
+    def test_seo_metadata_home(self):
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("<title>LocalPDF.io — Ferramentas de PDF 100% Privadas", html)
+        self.assertIn('<meta name="description"', html)
+        self.assertIn('<meta name="robots" content="index, follow">', html)
+        self.assertIn('<link rel="canonical" href="https://localpdf.io/">', html)
+        self.assertIn('<meta property="og:title"', html)
+        self.assertIn('<meta name="twitter:card" content="summary_large_image">', html)
+        self.assertIn('"@type": "WebApplication"', html)
+        self.assertIn('"@type": "Organization"', html)
+
+    def test_seo_metadata_tool_pages(self):
+        resp = self.client.get("/tool/merge-pdf")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        self.assertIn("Mesclar PDFs Online Grátis", html)
+        self.assertIn('<link rel="canonical" href="https://localpdf.io/tool/merge-pdf">', html)
+        self.assertIn('"@type": "BreadcrumbList"', html)
+        self.assertIn('"@type": "FAQPage"', html)
+
+        resp_split = self.client.get("/tool/split-pdf")
+        self.assertEqual(resp_split.status_code, 200)
+        html_split = resp_split.get_data(as_text=True)
+        self.assertIn("Dividir PDF Online", html_split)
+        self.assertIn('<link rel="canonical" href="https://localpdf.io/tool/split-pdf">', html_split)
+
+    def test_navigation_and_banner_markup(self):
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+        # Check UI back buttons now call navigateBack()
+        self.assertIn('onclick="navigateBack()"', html)
+        # Check navigateBack and updateDocumentSEO exist in client script
+        self.assertIn('function navigateBack()', html)
+        self.assertIn('function updateDocumentSEO(', html)
+        # Check web mode banner has clean pill elements and dismiss button
+        self.assertIn('web-mode-badge-pill', html)
+        self.assertIn('dismissWebBanner()', html)
+        self.assertIn('web-mode-close-btn', html)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
