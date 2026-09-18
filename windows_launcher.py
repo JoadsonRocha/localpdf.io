@@ -38,14 +38,21 @@ from waitress import serve
 
 from app import app
 
+try:
+    import webview
+except ImportError:
+    webview = None
+
 MUTEX_NAME = "LocalPDF_io_SingleInstance_Mutex"
 ERROR_ALREADY_EXISTS = 183
+WINDOW_TITLE = "LocalPDF.io"
 
 
 def acquire_single_instance_mutex():
     """
     Ensures only one instance of LocalPDF runs at a time.
-    If already running, opens the browser to the existing instance and exits.
+    If already running, restores and brings the existing native window to front
+    or opens the browser to the existing instance and exits.
     """
     if sys.platform != "win32":
         return None
@@ -56,7 +63,13 @@ def acquire_single_instance_mutex():
 
     if last_error == ERROR_ALREADY_EXISTS:
         port = int(os.environ.get("LOCALPDF_PORT", "5000"))
-        webbrowser.open(f"http://127.0.0.1:{port}/")
+        user32 = ctypes.windll.user32
+        hwnd = user32.FindWindowW(None, WINDOW_TITLE)
+        if hwnd:
+            user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+            user32.SetForegroundWindow(hwnd)
+        else:
+            webbrowser.open(f"http://127.0.0.1:{port}/")
         sys.exit(0)
 
     return mutex
@@ -74,8 +87,6 @@ def find_port(start=5000):
 
 
 def open_browser(port):
-    # Open /splash immediately — it polls /healthz and auto-redirects to / when ready.
-    # This eliminates the blank/connection-refused page during cold startup.
     time.sleep(0.3)
     webbrowser.open(f"http://127.0.0.1:{port}/splash")
 
@@ -83,5 +94,35 @@ def open_browser(port):
 if __name__ == "__main__":
     _mutex = acquire_single_instance_mutex()
     port = find_port(int(os.environ.get("LOCALPDF_PORT", "5000")))
-    threading.Thread(target=open_browser, args=(port,), daemon=True).start()
-    serve(app, host="127.0.0.1", port=port, threads=4)
+
+    # Start the local server in a background daemon thread
+    server_thread = threading.Thread(
+        target=serve,
+        args=(app,),
+        kwargs={"host": "127.0.0.1", "port": port, "threads": 4},
+        daemon=True,
+    )
+    server_thread.start()
+
+    # Launch native desktop application window if webview is available
+    launched_native_window = False
+    if webview is not None:
+        try:
+            webview.create_window(
+                title=WINDOW_TITLE,
+                url=f"http://127.0.0.1:{port}/splash",
+                width=1280,
+                height=840,
+                min_size=(900, 600),
+                background_color="#eff6ff",
+            )
+            launched_native_window = True
+            webview.start(gui="edgechromium")
+        except Exception:
+            launched_native_window = False
+
+    # Fallback to default browser if native window could not be opened
+    if not launched_native_window:
+        threading.Thread(target=open_browser, args=(port,), daemon=True).start()
+        while True:
+            time.sleep(1)
