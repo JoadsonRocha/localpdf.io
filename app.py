@@ -35,12 +35,106 @@ try:
 except ImportError:
     pdfplumber = None
 
+
+def configure_native_dependencies():
+    """Auto-detects and configures Tesseract OCR and Ghostscript on Windows/Linux."""
+    base_dir = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    vendor_dir = os.path.join(base_dir, "vendor")
+
+    # 1. Tesseract detection
+    tess_candidates = [
+        os.path.join(vendor_dir, "tesseract"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "Tesseract-OCR"),
+        r"C:\Program Files\Tesseract-OCR",
+        r"C:\Program Files (x86)\Tesseract-OCR",
+    ]
+    detected_tess_dir = None
+    for cand in tess_candidates:
+        if cand and os.path.isfile(os.path.join(cand, "tesseract.exe")):
+            detected_tess_dir = cand
+            break
+
+    if detected_tess_dir:
+        tess_exe = os.path.join(detected_tess_dir, "tesseract.exe")
+        tessdata = os.path.join(detected_tess_dir, "tessdata")
+        if os.path.isdir(tessdata):
+            os.environ.setdefault("TESSDATA_PREFIX", tessdata)
+        try:
+            pytesseract.pytesseract.tesseract_cmd = tess_exe
+        except Exception:
+            pass
+
+    # 2. Ghostscript detection & DLL directory registration
+    gs_bin_candidates = [
+        os.path.join(vendor_dir, "ghostscript", "bin"),
+    ]
+    for gs_root in (r"C:\Program Files\gs", r"C:\Program Files (x86)\gs"):
+        if os.path.isdir(gs_root):
+            try:
+                for entry in sorted(os.listdir(gs_root), reverse=True):
+                    candidate_bin = os.path.join(gs_root, entry, "bin")
+                    if os.path.isdir(candidate_bin):
+                        gs_bin_candidates.append(candidate_bin)
+            except OSError:
+                pass
+
+    detected_gs_bin = None
+    for cand in gs_bin_candidates:
+        if cand and os.path.isdir(cand):
+            has_gs = any(
+                os.path.isfile(os.path.join(cand, f))
+                for f in ("gswin64c.exe", "gswin32c.exe", "gsdll64.dll", "gsdll32.dll", "gs")
+            )
+            if has_gs:
+                detected_gs_bin = cand
+                break
+
+    if detected_gs_bin and hasattr(os, "add_dll_directory"):
+        try:
+            os.add_dll_directory(detected_gs_bin)
+        except OSError:
+            pass
+
+    path_additions = [p for p in (detected_tess_dir, detected_gs_bin) if p]
+    if path_additions:
+        os.environ["PATH"] = os.pathsep.join(path_additions + [os.environ.get("PATH", "")])
+
+
+configure_native_dependencies()
+
+
+def get_ghostscript_command():
+    """Returns path or command to ghostscript CLI if available."""
+    for cmd in ("gswin64c", "gswin32c", "gs"):
+        if shutil.which(cmd):
+            return cmd
+    for gs_root in (r"C:\Program Files\gs", r"C:\Program Files (x86)\gs"):
+        if os.path.isdir(gs_root):
+            try:
+                for entry in sorted(os.listdir(gs_root), reverse=True):
+                    bin_dir = os.path.join(gs_root, entry, "bin")
+                    for exe in ("gswin64c.exe", "gswin32c.exe", "gs.exe"):
+                        p = os.path.join(bin_dir, exe)
+                        if os.path.isfile(p):
+                            return p
+            except OSError:
+                pass
+    base_dir = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    vendor_gs = os.path.join(base_dir, "vendor", "ghostscript", "bin")
+    for exe in ("gswin64c.exe", "gswin32c.exe", "gs.exe"):
+        p = os.path.join(vendor_gs, exe)
+        if os.path.isfile(p):
+            return p
+    return None
+
+
 try:
     import ghostscript
 except (ImportError, RuntimeError):
     ghostscript = None
 
 app = Flask(__name__)
+
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB max
 app.config["UPLOAD_FOLDER"] = os.path.join(tempfile.gettempdir(), "localpdf_uploads")
 app.config["OUTPUT_FOLDER"] = os.path.join(tempfile.gettempdir(), "localpdf_outputs")
@@ -3515,7 +3609,7 @@ def desktop_open_folder():
         import subprocess
 
         abs_path = os.path.abspath(path)
-        subprocess.Popen(["explorer.exe", f"/select,{abs_path}"])
+        subprocess.Popen(f'explorer.exe /select,"{abs_path}"')
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -3546,9 +3640,21 @@ def desktop_open_file():
 @app.route("/favicon.svg")
 def favicon():
     base_dir = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
-    favicon_path = os.path.join(base_dir, "favicon.svg")
-    if not os.path.exists(favicon_path):
-        favicon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "favicon.svg")
+    candidates = [
+        os.path.join(base_dir, "favicon.svg"),
+        os.path.join(base_dir, "_internal", "favicon.svg"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "favicon.svg"),
+    ]
+    favicon_path = None
+    for c in candidates:
+        if os.path.isfile(c):
+            favicon_path = c
+            break
+
+    if not favicon_path:
+        svg_fallback = b"<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\xf0\x9f\x93\x84</text></svg>"
+        return send_file(io.BytesIO(svg_fallback), mimetype="image/svg+xml")
+
     with open(favicon_path, "rb") as f:
         data = f.read()
     return send_file(io.BytesIO(data), mimetype="image/svg+xml")
@@ -3998,54 +4104,69 @@ def excel_to_pdf(file, temp_dir):
 
 
 def txt_to_pdf(file, temp_dir):
+    """
+    Converte arquivo de texto para PDF profissional com suporte a múltiplas codificações
+    (UTF-8, UTF-8-BOM, CP1252, Latin-1) e paginação limpa via ReportLab.
+    """
+    from reportlab.platypus import Preformatted
+
     base_name = os.path.splitext(secure_filename(file.filename))[0] or "texto"
     txt_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(txt_path)
 
     pdf_path = os.path.join(temp_dir, f"{base_name}.pdf")
-    c = canvas.Canvas(pdf_path, pagesize=letter)
-    width, height = letter
-    y_position = height - 50
 
-    c.setFont("Helvetica", 12)
+    # Suporte a múltiplas codificações para evitar erro em arquivos ANSI/Windows
+    content = None
+    for enc in ("utf-8-sig", "utf-8", "cp1252", "latin-1"):
+        try:
+            with open(txt_path, "r", encoding=enc) as f:
+                content = f.read()
+            break
+        except (UnicodeDecodeError, OSError):
+            continue
 
-    try:
-        with open(txt_path, "r", encoding="utf-8") as f:
-            for line in f:
-                # Simples quebra de linha para caber na página
-                text_line = line.strip()
-                max_width_px = width - 100  # Margens de 50px de cada lado
+    if content is None:
+        try:
+            with open(txt_path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+        except Exception:
+            content = ""
 
-                # Estimar a largura do texto para quebrar linhas
-                # ReportLab não tem quebra automática de texto complexa por default
-                # Esta é uma estimativa MUITO simples; para algo robusto, precisaria de TextObject
-                approx_char_width_px = 7  # Média para Helvetica 12
-                chars_per_line = int(max_width_px / approx_char_width_px)
+    styles = getSampleStyleSheet()
+    code_style = ParagraphStyle(
+        "TxtStyle",
+        parent=styles["Code"],
+        fontName="Courier",
+        fontSize=9.5,
+        leading=13,
+        textColor=colors.HexColor("#1e293b"),
+    )
 
-                if len(text_line) > chars_per_line:
-                    # Quebra simples da linha
-                    chunks = [
-                        text_line[i : i + chars_per_line]
-                        for i in range(0, len(text_line), chars_per_line)
-                    ]
-                else:
-                    chunks = [text_line]
+    doc = SimpleDocTemplate(
+        pdf_path,
+        pagesize=A4,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=36,
+        bottomMargin=36,
+    )
 
-                for chunk in chunks:
-                    if y_position < 50:  # Margem inferior
-                        c.showPage()
-                        y_position = height - 50
-                        c.setFont("Helvetica", 12)  # Reset font after new page
+    story = []
+    lines = content.splitlines()
+    chunk_size = 50
+    for i in range(0, max(len(lines), 1), chunk_size):
+        chunk_text = "\n".join(lines[i : i + chunk_size])
+        if chunk_text.strip():
+            story.append(Preformatted(chunk_text, code_style))
+            story.append(Spacer(1, 4))
 
-                    c.drawString(50, y_position, chunk)
-                    y_position -= 15  # Espaçamento entre linhas
+    if not story:
+        story.append(Preformatted("(Arquivo de texto vazio)", code_style))
 
-    except Exception as e:
-        c.drawString(50, y_position - 20, f"Erro ao ler arquivo de texto: {e}")
-        print(f"Erro ao ler arquivo de texto: {e}")
-
-    c.save()
+    doc.build(story)
     return [pdf_path]
+
 
 
 @app.route("/convert", methods=["POST"])
@@ -4158,8 +4279,11 @@ def convert():
 
 def images_to_pdf(files, temp_dir):
     """
-    Combina uma ou múltiplas imagens (JPG, PNG) em um único arquivo PDF.
+    Combina uma ou múltiplas imagens (JPG, PNG) em um único arquivo PDF,
+    corrigindo automaticamente a orientação EXIF de fotos de celular.
     """
+    from PIL import ImageOps
+
     if not isinstance(files, list):
         files = [files]
     if not files:
@@ -4167,17 +4291,31 @@ def images_to_pdf(files, temp_dir):
 
     first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files[0].filename else "imagens"
     images = []
-    for file in files:
-        img_path = os.path.join(temp_dir, secure_filename(file.filename))
-        file.save(img_path)
-        img = Image.open(img_path)
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        images.append(img)
+    opened_images = []
+    try:
+        for file in files:
+            img_path = os.path.join(temp_dir, secure_filename(file.filename))
+            file.save(img_path)
+            img = Image.open(img_path)
+            opened_images.append(img)
+            try:
+                img = ImageOps.exif_transpose(img)
+            except Exception:
+                pass
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            images.append(img)
 
-    pdf_path = os.path.join(temp_dir, f"{first_base}_convertido.pdf")
-    images[0].save(pdf_path, save_all=True, append_images=images[1:])
-    return [pdf_path]
+        pdf_path = os.path.join(temp_dir, f"{first_base}_convertido.pdf")
+        images[0].save(pdf_path, save_all=True, append_images=images[1:])
+        return [pdf_path]
+    finally:
+        for img in opened_images:
+            try:
+                img.close()
+            except Exception:
+                pass
+
 
 
 def merge_pdfs(files, temp_dir):
@@ -4360,16 +4498,78 @@ def pdf_to_excel(file, temp_dir):
 
 
 def compress_pdf(file, temp_dir):
+    """
+    Comprime o PDF utilizando Ghostscript (ebook setting) quando disponível
+    e otimização avançada PyMuPDF (deflate_images, deflate_fonts, garbage cleanup),
+    selecionando automaticamente o arquivo de menor tamanho e máxima fidelidade.
+    """
     base_name = os.path.splitext(secure_filename(file.filename))[0] or "documento"
     pdf_path = os.path.join(temp_dir, secure_filename(file.filename))
     file.save(pdf_path)
 
-    doc = fitz.open(pdf_path)
     output_path = os.path.join(temp_dir, f"{base_name}_comprimido.pdf")
-    doc.save(output_path, garbage=4, deflate=True, clean=True)
-    doc.close()
+
+    # 1. Tentar compressão com Ghostscript se disponível
+    gs_cmd = get_ghostscript_command()
+    gs_output = os.path.join(temp_dir, f"{base_name}_gs_comp.pdf")
+    gs_success = False
+    if gs_cmd or ghostscript is not None:
+        try:
+            gs_args = [
+                "-sDEVICE=pdfwrite",
+                "-dCompatibilityLevel=1.4",
+                "-dPDFSETTINGS=/ebook",
+                "-dNOPAUSE",
+                "-dQUIET",
+                "-dBATCH",
+                f"-sOutputFile={gs_output}",
+                pdf_path,
+            ]
+            if gs_cmd:
+                import subprocess
+
+                res = subprocess.run([gs_cmd] + gs_args, capture_output=True, timeout=60)
+                if res.returncode == 0 and os.path.isfile(gs_output) and os.path.getsize(gs_output) > 0:
+                    gs_success = True
+            elif ghostscript is not None:
+                ghostscript.Ghostscript(*(["gs"] + gs_args))
+                if os.path.isfile(gs_output) and os.path.getsize(gs_output) > 0:
+                    gs_success = True
+        except Exception as e:
+            app.logger.warning("Falha na compressão via Ghostscript: %s", e)
+
+    # 2. Compressão via PyMuPDF com limpeza de lixo e deflação profunda
+    pymupdf_output = os.path.join(temp_dir, f"{base_name}_mupdf_comp.pdf")
+    try:
+        doc = fitz.open(pdf_path)
+        doc.save(
+            pymupdf_output,
+            garbage=4,
+            deflate=True,
+            clean=True,
+            deflate_images=True,
+            deflate_fonts=True,
+        )
+        doc.close()
+    except Exception as e:
+        app.logger.warning("Falha na compressão PyMuPDF: %s", e)
+        pymupdf_output = None
+
+    # 3. Comparar e selecionar o melhor resultado
+    candidates = []
+    if gs_success and os.path.isfile(gs_output):
+        candidates.append((os.path.getsize(gs_output), gs_output))
+    if pymupdf_output and os.path.isfile(pymupdf_output):
+        candidates.append((os.path.getsize(pymupdf_output), pymupdf_output))
+
+    if candidates:
+        candidates.sort(key=lambda x: x[0])
+        shutil.copyfile(candidates[0][1], output_path)
+    else:
+        shutil.copyfile(pdf_path, output_path)
 
     return [output_path]
+
 
 
 def protect_pdf(file, temp_dir, password):
@@ -4497,10 +4697,15 @@ def page_numbers_pdf(file, temp_dir, position):
 
 
 def pdf_to_pdfa(files, temp_dir):
-    """Converte um ou mais PDFs para PDF/A-1b usando Ghostscript."""
-    if ghostscript is None:
+    """
+    Converte um ou mais PDFs para PDF/A-1b usando Ghostscript (módulo Python ou CLI).
+    """
+    gs_cmd = get_ghostscript_command()
+    if ghostscript is None and gs_cmd is None:
         raise RuntimeError(
-            "Ghostscript não está instalado no sistema. Instale-o para usar PDF/A."
+            "Ghostscript não está instalado no sistema ou na pasta vendor. "
+            "Para converter para PDF/A, instale o Ghostscript (https://www.ghostscript.com/) "
+            "ou adicione os binários na pasta vendor."
         )
     if not isinstance(files, list):
         files = [files]
@@ -4515,7 +4720,6 @@ def pdf_to_pdfa(files, temp_dir):
         output_path = os.path.join(temp_dir, f"{base_name}_pdfa.pdf")
 
         gs_args = [
-            "gs",
             "-dPDFA=1",
             "-dBATCH",
             "-dNOPAUSE",
@@ -4528,16 +4732,34 @@ def pdf_to_pdfa(files, temp_dir):
             f"-sOutputFile={output_path}",
             input_path,
         ]
-        gs_args = [
-            arg.encode("utf-8") if isinstance(arg, str) else arg for arg in gs_args
-        ]
 
-        try:
-            ghostscript.Ghostscript(*gs_args)
-        except Exception as e:
+        converted = False
+        if gs_cmd:
+            try:
+                import subprocess
+
+                res = subprocess.run([gs_cmd] + gs_args, capture_output=True, timeout=120)
+                if res.returncode == 0 and os.path.isfile(output_path) and os.path.getsize(output_path) > 0:
+                    converted = True
+            except Exception as e:
+                app.logger.warning("Erro ao executar Ghostscript CLI: %s", e)
+
+        if not converted and ghostscript is not None:
+            try:
+                encoded_args = [
+                    arg.encode("utf-8") if isinstance(arg, str) else arg for arg in ["gs"] + gs_args
+                ]
+                ghostscript.Ghostscript(*encoded_args)
+                if os.path.isfile(output_path) and os.path.getsize(output_path) > 0:
+                    converted = True
+            except Exception as e:
+                raise RuntimeError(f"Erro ao converter {file.filename} para PDF/A: {e}") from e
+
+        if not converted:
             raise RuntimeError(
-                f"Erro ao converter {file.filename} para PDF/A: {e}"
-            ) from e
+                f"Não foi possível converter {file.filename} para PDF/A. "
+                "Verifique a compatibilidade do documento original."
+            )
 
         output_files.append(output_path)
 
@@ -4546,115 +4768,146 @@ def pdf_to_pdfa(files, temp_dir):
 
 def word_to_pdf(files, temp_dir):
     """
-    Converte um ou múltiplos arquivos DOCX para PDF
-    Se houver múltiplos arquivos, mescla todos em um único PDF
+    Converte um ou múltiplos arquivos DOCX para PDF profissional com suporte a títulos,
+    parágrafos estilizados, negrito, itálico e tabelas estruturadas com paginação automática.
     """
     from docx import Document
-    from reportlab.lib.pagesizes import letter
-    from reportlab.pdfgen import canvas
 
-    # Criar PDF de saída
-    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files and files[0].filename else "documento"
-    pdf_path = os.path.join(temp_dir, f"{first_base}.pdf")
-    c = canvas.Canvas(pdf_path, pagesize=letter)
-    width, height = letter
-    y_position = height - 50
-
-    # Se for apenas um arquivo (compatibilidade)
     if not isinstance(files, list):
         files = [files]
+    if len(files) < 1:
+        raise ValueError("Envie pelo menos um arquivo Word para conversão.")
 
-    # Processar cada arquivo DOCX
-    for file_idx, file in enumerate(files):
+    first_base = os.path.splitext(secure_filename(files[0].filename))[0] if files[0].filename else "documento"
+    pdf_path = os.path.join(temp_dir, f"{first_base}.pdf")
+
+    styles = getSampleStyleSheet()
+    normal_style = ParagraphStyle(
+        "DocxNormal",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=10,
+        leading=14,
+        textColor=colors.HexColor("#1e293b"),
+    )
+    title_style = ParagraphStyle(
+        "DocxTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=18,
+        leading=22,
+        textColor=colors.HexColor("#0f172a"),
+        spaceAfter=12,
+    )
+    h1_style = ParagraphStyle(
+        "DocxH1",
+        parent=styles["Heading1"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        textColor=colors.HexColor("#1e40af"),
+        spaceBefore=10,
+        spaceAfter=6,
+    )
+    h2_style = ParagraphStyle(
+        "DocxH2",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=16,
+        textColor=colors.HexColor("#1e3a8a"),
+        spaceBefore=8,
+        spaceAfter=4,
+    )
+
+    doc_pdf = SimpleDocTemplate(
+        pdf_path,
+        pagesize=A4,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=36,
+        bottomMargin=36,
+    )
+
+    story = []
+    width_usable = A4[0] - 72
+
+    for doc_idx, file in enumerate(files):
         docx_path = os.path.join(temp_dir, secure_filename(file.filename))
         file.save(docx_path)
 
-        # Lê o documento Word
+        if doc_idx > 0:
+            story.append(PageBreak())
+
         doc = Document(docx_path)
 
-        # Adicionar separador visual (exceto no primeiro documento)
-        if file_idx > 0:
-            # Quebra de página
-            c.showPage()
-            y_position = height - 50
+        for p in doc.paragraphs:
+            text = p.text.strip()
+            if not text:
+                story.append(Spacer(1, 6))
+                continue
 
-            # Adicionar cabeçalho com nome do arquivo
-            c.setFont("Helvetica-Bold", 12)
-            c.drawString(50, y_position, f"{'=' * 60}")
-            y_position -= 20
-            c.drawString(50, y_position, f"Documento: {file.filename}")
-            y_position -= 20
-            c.drawString(50, y_position, f"{'=' * 60}")
-            y_position -= 30
-            c.setFont("Helvetica", 11)
+            # Build formatted text from runs (bold, italic, underline)
+            formatted_parts = []
+            for run in p.runs:
+                chunk = escape(run.text)
+                if not chunk:
+                    continue
+                if run.bold:
+                    chunk = f"<b>{chunk}</b>"
+                if run.italic:
+                    chunk = f"<i>{chunk}</i>"
+                if run.underline:
+                    chunk = f"<u>{chunk}</u>"
+                formatted_parts.append(chunk)
 
-        # Processar parágrafos
-        for paragraph in doc.paragraphs:
-            if paragraph.text.strip():
-                # Quebra texto longo em múltiplas linhas
-                text = paragraph.text
-                max_width = width - 100
+            formatted_text = "".join(formatted_parts) or escape(p.text)
+            p_style = p.style.name.lower() if p.style and p.style.name else ""
 
-                # Estimativa simples de largura de texto
-                approx_char_width = 6
-                chars_per_line = int(max_width / approx_char_width)
+            if "title" in p_style:
+                story.append(Paragraph(formatted_text, title_style))
+            elif "heading 1" in p_style:
+                story.append(Paragraph(formatted_text, h1_style))
+            elif "heading 2" in p_style or "heading 3" in p_style:
+                story.append(Paragraph(formatted_text, h2_style))
+            else:
+                story.append(Paragraph(formatted_text, normal_style))
+                story.append(Spacer(1, 4))
 
-                words = text.split()
-                lines = []
-                current_line = []
-
-                for word in words:
-                    if len(" ".join(current_line + [word])) <= chars_per_line:
-                        current_line.append(word)
-                    else:
-                        if current_line:
-                            lines.append(" ".join(current_line))
-                            current_line = [word]
-                        else:
-                            lines.append(word)
-
-                if current_line:
-                    lines.append(" ".join(current_line))
-
-                for line in lines:
-                    if y_position < 50:
-                        c.showPage()
-                        y_position = height - 50
-
-                    c.drawString(50, y_position, line)
-                    y_position -= 20
-
-        # Processar tabelas (se houver)
+        # Tabelas
         for table in doc.tables:
-            # Adicionar espaçamento antes da tabela
-            y_position -= 10
+            table_data = []
+            num_cols = len(table.columns) if table.columns else 1
+            col_width = width_usable / max(num_cols, 1)
 
-            if y_position < 100:
-                c.showPage()
-                y_position = height - 50
-
-            # Desenhar linhas da tabela
-            c.setFont("Helvetica", 9)
             for row in table.rows:
-                row_text = " | ".join([cell.text for cell in row.cells])
+                row_cells = []
+                for cell in row.cells:
+                    cell_text = escape(cell.text.strip() or "")
+                    row_cells.append(Paragraph(cell_text, normal_style))
+                table_data.append(row_cells)
 
-                # Quebrar texto da linha se necessário
-                if len(row_text) > 100:
-                    row_text = row_text[:97] + "..."
+            if table_data:
+                t = Table(table_data, colWidths=[col_width] * num_cols)
+                t.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f8fafc")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#0f172a")),
+                    ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ]))
+                story.append(Spacer(1, 8))
+                story.append(t)
+                story.append(Spacer(1, 8))
 
-                if y_position < 50:
-                    c.showPage()
-                    y_position = height - 50
+    if not story:
+        story.append(Paragraph("(Documento vazio)", normal_style))
 
-                c.drawString(50, y_position, row_text)
-                y_position -= 15
-
-            # Espaçamento após tabela
-            y_position -= 10
-            c.setFont("Helvetica", 11)
-
-    c.save()
+    doc_pdf.build(story)
     return [pdf_path]
+
 
 
 def pdf_to_word(file, temp_dir):
@@ -4727,6 +4980,7 @@ def _ocr_image(img):
 def ocr_pdf(file, temp_dir):
     """
     Extrai texto de um PDF ou imagem usando Tesseract OCR.
+    Se Tesseract não estiver disponível, realiza fallback inteligente para o texto nativo do documento.
     Retorna um arquivo TXT com o texto extraído.
     """
     filename = secure_filename(file.filename)
@@ -4736,19 +4990,50 @@ def ocr_pdf(file, temp_dir):
     ext = filename.rsplit(".", 1)[1].lower()
     extracted_text = []
 
+    tess_available = False
+    try:
+        tess_cmd = pytesseract.pytesseract.tesseract_cmd
+        if tess_cmd and (os.path.isfile(tess_cmd) or shutil.which(tess_cmd)):
+            tess_available = True
+        elif shutil.which("tesseract"):
+            tess_available = True
+    except Exception:
+        pass
+
     if ext == "pdf":
         with fitz.open(input_path) as doc:
             for page_num in range(len(doc)):
                 page = doc.load_page(page_num)
-                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x resolução
-                img_path = os.path.join(temp_dir, f"ocr_page_{page_num + 1}.png")
-                pix.save(img_path)
+                page_text = ""
+                if tess_available:
+                    try:
+                        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x resolução
+                        img_path = os.path.join(temp_dir, f"ocr_page_{page_num + 1}.png")
+                        pix.save(img_path)
 
-                with Image.open(img_path) as img:
-                    text = _ocr_image(img)
-                extracted_text.append(f"--- Página {page_num + 1} ---\n{text}")
+                        with Image.open(img_path) as img:
+                            page_text = _ocr_image(img)
+                    except Exception as ocr_err:
+                        app.logger.warning("Falha no OCR da página %d: %s", page_num + 1, ocr_err)
+
+                # Fallback inteligente se OCR não estiver disponível ou tiver retornado texto vazio
+                if not page_text.strip():
+                    native_text = page.get_text("text").strip()
+                    if native_text:
+                        page_text = native_text
+                    elif not tess_available:
+                        page_text = (
+                            "[Aviso: O Tesseract OCR não está configurado nesta instalação. "
+                            "Para reconhecer texto em PDFs escaneados ou imagens, instale o Tesseract OCR.]"
+                        )
+
+                extracted_text.append(f"--- Página {page_num + 1} ---\n{page_text}")
     elif ext in ("jpg", "jpeg", "png"):
-        # Aplicar OCR diretamente na imagem
+        if not tess_available:
+            raise RuntimeError(
+                "O Tesseract OCR não está instalado no sistema para extrair texto de imagens. "
+                "Instale o Tesseract OCR para habilitar esta função."
+            )
         with Image.open(input_path) as img:
             text = _ocr_image(img)
         extracted_text.append(text)
@@ -4762,6 +5047,7 @@ def ocr_pdf(file, temp_dir):
         f.write("\n\n".join(extracted_text))
 
     return [txt_path]
+
 
 
 def build_response(output_files, temp_dir, download_name=None, default_zip_name=None):

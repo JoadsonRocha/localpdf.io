@@ -1,38 +1,97 @@
 import ctypes
+import io
 import os
 import pathlib
 import socket
 import sys
+import tempfile
 import threading
 import time
 import webbrowser
 
+# Ensure stdout and stderr exist even in PyInstaller --noconsole mode
+if sys.stdout is None:
+    sys.stdout = io.StringIO()
+if sys.stderr is None:
+    sys.stderr = io.StringIO()
+
 ROOT = pathlib.Path(sys.executable if getattr(sys, "frozen", False) else __file__).resolve().parent
 VENDOR = ROOT / "vendor"
 
-# Keep native OCR/PDF dependencies inside the portable package.
 os.environ.setdefault("LOCALPDF_MODE", "local")
 os.environ.setdefault("LOCALPDF_HOST", "127.0.0.1")
 os.environ.setdefault("LOCALPDF_PORT", "5000")
-os.environ.setdefault("TESSDATA_PREFIX", str(VENDOR / "tesseract" / "tessdata"))
 
-gs_bin = VENDOR / "ghostscript" / "bin"
-tess_bin = VENDOR / "tesseract"
 
-os.environ["PATH"] = os.pathsep.join(
-    [
-        str(tess_bin),
-        str(gs_bin),
-        os.environ.get("PATH", ""),
+def configure_native_dependencies():
+    """Auto-detects Tesseract OCR and Ghostscript in vendor or system directories."""
+    # 1. Tesseract
+    tess_candidates = [
+        VENDOR / "tesseract",
+        pathlib.Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Tesseract-OCR",
+        pathlib.Path("C:/Program Files/Tesseract-OCR"),
+        pathlib.Path("C:/Program Files (x86)/Tesseract-OCR"),
     ]
-)
+    detected_tess_dir = None
+    for cand in tess_candidates:
+        if cand and (cand / "tesseract.exe").exists():
+            detected_tess_dir = cand
+            break
 
-# Register DLL directory for Ghostscript on Python 3.8+ (PEP 578)
-if gs_bin.is_dir() and hasattr(os, "add_dll_directory"):
-    try:
-        os.add_dll_directory(str(gs_bin))
-    except OSError:
-        pass
+    if detected_tess_dir:
+        tess_exe = str(detected_tess_dir / "tesseract.exe")
+        tessdata_dir = detected_tess_dir / "tessdata"
+        if tessdata_dir.is_dir():
+            os.environ["TESSDATA_PREFIX"] = str(tessdata_dir)
+        try:
+            import pytesseract
+
+            pytesseract.pytesseract.tesseract_cmd = tess_exe
+        except Exception:
+            pass
+
+    # 2. Ghostscript
+    gs_bin_candidates = [
+        VENDOR / "ghostscript" / "bin",
+    ]
+    for base in [pathlib.Path("C:/Program Files/gs"), pathlib.Path("C:/Program Files (x86)/gs")]:
+        if base.exists():
+            try:
+                for child in sorted(base.iterdir(), reverse=True):
+                    if child.is_dir() and (child / "bin").is_dir():
+                        gs_bin_candidates.append(child / "bin")
+            except OSError:
+                pass
+
+    detected_gs_bin = None
+    for cand in gs_bin_candidates:
+        if cand and cand.is_dir():
+            if (
+                (cand / "gswin64c.exe").exists()
+                or (cand / "gswin32c.exe").exists()
+                or (cand / "gsdll64.dll").exists()
+                or (cand / "gsdll32.dll").exists()
+            ):
+                detected_gs_bin = cand
+                break
+
+    # Register DLL directory for Ghostscript on Python 3.8+ (PEP 578)
+    if detected_gs_bin and hasattr(os, "add_dll_directory"):
+        try:
+            os.add_dll_directory(str(detected_gs_bin))
+        except OSError:
+            pass
+
+    path_parts = []
+    if detected_tess_dir:
+        path_parts.append(str(detected_tess_dir))
+    if detected_gs_bin:
+        path_parts.append(str(detected_gs_bin))
+    if path_parts:
+        os.environ["PATH"] = os.pathsep.join(path_parts + [os.environ.get("PATH", "")])
+
+
+configure_native_dependencies()
 
 from waitress import serve
 
@@ -46,6 +105,7 @@ except ImportError:
 MUTEX_NAME = "LocalPDF_io_SingleInstance_Mutex"
 ERROR_ALREADY_EXISTS = 183
 WINDOW_TITLE = "LocalPDF.io"
+PORT_FILE = pathlib.Path(tempfile.gettempdir()) / "localpdf_active.port"
 
 
 class DesktopAPI:
@@ -65,22 +125,24 @@ class DesktopAPI:
         """
         Opens a native Windows SaveFileDialog and returns the chosen absolute path,
         or None if cancelled.
+        Uses valid pywebview filter syntax: ('Description (*.ext)', ...).
         """
         if not self._window:
             return None
         try:
             ext = pathlib.Path(filename).suffix.lower()
             filter_map = {
-                ".pdf": "PDF Documents (*.pdf)|*.pdf",
-                ".docx": "Word Documents (*.docx)|*.docx",
-                ".xlsx": "Excel Spreadsheets (*.xlsx)|*.xlsx",
-                ".zip": "ZIP Archives (*.zip)|*.zip",
-                ".txt": "Text Files (*.txt)|*.txt",
-                ".png": "PNG Images (*.png)|*.png",
-                ".jpg": "JPEG Images (*.jpg)|*.jpg",
+                ".pdf": "PDF Documents (*.pdf)",
+                ".docx": "Word Documents (*.docx)",
+                ".xlsx": "Excel Spreadsheets (*.xlsx)",
+                ".zip": "ZIP Archives (*.zip)",
+                ".txt": "Text Files (*.txt)",
+                ".png": "PNG Images (*.png)",
+                ".jpg": "JPEG Images (*.jpg;*.jpeg)",
+                ".jpeg": "JPEG Images (*.jpg;*.jpeg)",
             }
-            primary_filter = filter_map.get(ext, "All Files (*.*)|*.*")
-            file_types = (primary_filter, "All Files (*.*)|*.*")
+            primary_filter = filter_map.get(ext, "All Files (*.*)")
+            file_types = (primary_filter, "All Files (*.*)")
 
             initial_dir = self.get_downloads_dir()
             res = self._window.create_file_dialog(
@@ -137,12 +199,12 @@ class DesktopAPI:
             if os.path.exists(path):
                 import subprocess
 
-                subprocess.Popen(["explorer.exe", f"/select,{path}"])
+                subprocess.Popen(f'explorer.exe /select,"{path}"')
                 return True
             elif os.path.exists(os.path.dirname(path)):
                 import subprocess
 
-                subprocess.Popen(["explorer.exe", os.path.dirname(path)])
+                subprocess.Popen(f'explorer.exe "{os.path.dirname(path)}"')
                 return True
         except Exception:
             pass
@@ -162,6 +224,18 @@ class DesktopAPI:
         return False
 
 
+def get_active_port():
+    """Reads the active port from the port lockfile or fallback to env var."""
+    if PORT_FILE.exists():
+        try:
+            val = int(PORT_FILE.read_text().strip())
+            if 1024 <= val <= 65535:
+                return val
+        except Exception:
+            pass
+    return int(os.environ.get("LOCALPDF_PORT", "5000"))
+
+
 def acquire_single_instance_mutex():
     """
     Ensures only one instance of LocalPDF runs at a time.
@@ -176,7 +250,7 @@ def acquire_single_instance_mutex():
     last_error = kernel32.GetLastError()
 
     if last_error == ERROR_ALREADY_EXISTS:
-        port = int(os.environ.get("LOCALPDF_PORT", "5000"))
+        port = get_active_port()
         user32 = ctypes.windll.user32
         hwnd = user32.FindWindowW(None, WINDOW_TITLE)
         if hwnd:
@@ -208,6 +282,13 @@ def open_browser(port):
 if __name__ == "__main__":
     _mutex = acquire_single_instance_mutex()
     port = find_port(int(os.environ.get("LOCALPDF_PORT", "5000")))
+    os.environ["LOCALPDF_PORT"] = str(port)
+
+    # Persist the active port for subsequent instances
+    try:
+        PORT_FILE.write_text(str(port))
+    except Exception:
+        pass
 
     # Start the local server in a background daemon thread
     server_thread = threading.Thread(
@@ -234,13 +315,30 @@ if __name__ == "__main__":
                 js_api=desktop_api,
             )
             desktop_api.set_window(window)
-            webview.start(gui="edgechromium")
-            launched_native_window = True
+            try:
+                webview.start(gui="edgechromium")
+                launched_native_window = True
+            except Exception:
+                try:
+                    webview.start()
+                    launched_native_window = True
+                except Exception:
+                    launched_native_window = False
         except Exception:
             launched_native_window = False
 
     # Fallback to default browser if native window could not be opened
     if not launched_native_window:
         threading.Thread(target=open_browser, args=(port,), daemon=True).start()
-        while True:
-            time.sleep(1)
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+
+    # Cleanup port file on exit
+    try:
+        if PORT_FILE.exists():
+            PORT_FILE.unlink(missing_ok=True)
+    except Exception:
+        pass

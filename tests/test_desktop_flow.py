@@ -129,6 +129,33 @@ class DesktopFlowTests(unittest.TestCase):
             with open(out_file, "rb") as f:
                 self.assertEqual(f.read(), raw_data)
 
+    def test_pywebview_filter_syntax_validity(self):
+        """Verifies that choose_save_path generates filters conforming to pywebview's parse_file_type format."""
+        try:
+            from webview.util import parse_file_type
+        except ImportError:
+            self.skipTest("webview not installed")
+
+        api = DesktopAPI()
+        mock_win = MagicMock()
+
+        # Capture kwargs passed to create_file_dialog
+        def fake_create_dialog(dialog_type, directory='', allow_multiple=False, save_filename='', file_types=()):
+            for ft in file_types:
+                # This should NOT throw ValueError!
+                desc, specs = parse_file_type(ft)
+                self.assertTrue(len(desc) > 0)
+                self.assertTrue(len(specs) > 0)
+            return ["C:\\valid\\test.pdf"]
+
+        mock_win.create_file_dialog.side_effect = fake_create_dialog
+        api.set_window(mock_win)
+
+        for sample in ["doc.pdf", "sheet.xlsx", "text.txt", "archive.zip", "word.docx", "img.png", "photo.jpg"]:
+            res = api.choose_save_path(sample)
+            self.assertIsNotNone(res)
+
 
 if __name__ == "__main__":
     unittest.main()
+
