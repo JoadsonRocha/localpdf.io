@@ -8,6 +8,14 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Não lançado]
 
 ### Adicionado
+- 🪟 Interface Desktop nativa com PyWebView (EdgeChromium) e integração direta com o Windows SaveFileDialog
+- 📂 Ações desktop integradas: botões "Abrir Pasta" no Windows Explorer e "Abrir Arquivo" no leitor padrão
+- ⚙️ Detecção automática de instalações do Tesseract OCR e Ghostscript no sistema e diretório vendor
+- 🧠 Fallback inteligente no OCR para texto nativo embutido quando o motor Tesseract não estiver disponível
+- 📝 Conversão de Word para PDF aprimorada via ReportLab SimpleDocTemplate (títulos, negrito, itálico, sublinhado e tabelas estruturadas)
+- 📊 Conversão de Excel para PDF otimizada com colunas auto-ajustadas e renderização de células/fórmulas
+- 🛡️ Coordenação de porta ativa e restauração/foco de janela única via Mutex do Windows
+- 📑 Rotas dedicadas diretas para cada ferramenta (`/tool/<nome>`, `/editor`, `/about`) com metadados de SEO e abas de categorias
 - 🌐 Opção de interface em inglês com preferência salva localmente
 - 🎨 Identidade visual azul, favicon e layout responsivo para mobile
 - 🛡️ Testes automatizados de segurança para entradas inválidas e limites de upload
