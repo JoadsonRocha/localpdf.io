@@ -439,6 +439,9 @@ HTML_TEMPLATE = """
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ seo.canonical_url if seo else 'https://localpdf.io/' }}">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Open Graph / Redes Sociais / WhatsApp -->
     <meta property="og:type" content="website">
