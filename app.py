@@ -170,6 +170,22 @@ SEO_CONFIG = {
             }
         ]
     },
+    "edit-text-pdf": {
+        "title": "Editar Texto do PDF Online Grátis — Altere Frases e Corrija Erros | LocalPDF.io",
+        "description": "Edite textos diretamente em qualquer PDF como no WPS Office ou Word. Altere palavras, corrija erros e adicione frases preservando a qualidade vetorial.",
+        "keywords": "editar texto pdf, modificar texto pdf, corrigir pdf, wps pdf editor, alterar texto pdf gratis, localpdf",
+        "canonical": "/tool/edit-text-pdf",
+        "faq": [
+            {
+                "q": "Como editar textos existentes no PDF?",
+                "a": "Abra seu PDF no LocalPDF, clique diretamente sobre qualquer frase ou palavra para editá-la e clique em Salvar PDF."
+            },
+            {
+                "q": "O PDF editado perde qualidade?",
+                "a": "Não, o LocalPDF realiza edição vetorial direta com PyMuPDF, preservando nitidez máxima e fontes sem rasterizar a página."
+            }
+        ]
+    },
     "about": {
         "title": "Sobre o LocalPDF.io — Suíte de PDF com Privacidade Absoluta",
         "description": "Conheça o LocalPDF.io: ferramentas de PDF criadas com foco total em privacidade. Modo nuvem com processamento efêmero e app desktop 100% offline.",
@@ -2612,7 +2628,8 @@ HTML_TEMPLATE = """
             'txt-to-pdf': ['TXT to PDF', 'Convert plain text files to formatted PDF'],
             'pdf-to-word': ['PDF to Word', 'Convert PDF documents into editable DOCX files'],
             'pdf-to-text': ['PDF to Text', 'Extract selectable text from every PDF page'],
-            'ocr-pdf': ['OCR PDF', 'Extract text from scanned PDFs and images using OCR']
+            'ocr-pdf': ['OCR PDF', 'Extract text from scanned PDFs and images using OCR'],
+            'edit-text-pdf': ['Edit PDF Text', 'Edit text directly in your PDF in-place like in WPS Office or Word']
         };
 
         function translatePage() {
@@ -2754,6 +2771,12 @@ HTML_TEMPLATE = """
                 description: 'Extraia texto de PDFs e imagens escaneadas usando reconhecimento óptico de caracteres',
                 accept: '.pdf,.jpg,.jpeg,.png',
                 multiple: false
+            },
+            'edit-text-pdf': {
+                title: 'Editar Texto do PDF',
+                description: 'Altere frases, corrija erros e adicione novos textos diretamente no documento',
+                accept: '.pdf',
+                multiple: false
             }
         };
 
@@ -2838,8 +2861,16 @@ HTML_TEMPLATE = """
             const editorView = document.getElementById('editor-view');
             if (editorView && !editorView.classList.contains('hidden')) {
                 try {
-                    await openEditorFiles(files, true);
-                    showToast(t(`${files.length} arquivo(s) importado(s) para o editor!`, `${files.length} file(s) imported to editor!`), 'success');
+                    if (currentEditorMode === 'text') {
+                        textEditorFile = files[0];
+                        document.getElementById('editor-upload-area').classList.add('hidden');
+                        document.getElementById('text-editor-studio').classList.remove('hidden');
+                        await loadTextEditorPage(0);
+                        showToast(t('PDF aberto no editor de texto!', 'PDF opened in text editor!'), 'success');
+                    } else {
+                        await openEditorFiles(files, true);
+                        showToast(t(`${files.length} arquivo(s) importado(s) para o editor!`, `${files.length} file(s) imported to editor!`), 'success');
+                    }
                 } catch (err) {
                     showToast(err.message || 'Erro ao carregar arquivos no editor', 'error');
                 }
@@ -2966,6 +2997,14 @@ HTML_TEMPLATE = """
         }
 
         function showTool(toolName, push = true) {
+            if (toolName === 'edit-text-pdf') {
+                showEditor(push, 'text');
+                return;
+            }
+            if (toolName === 'edit-pdf' || toolName === 'editor') {
+                showEditor(push, 'pages');
+                return;
+            }
             currentTool = toolName;
             const tool = tools[toolName];
             if (!tool) return;
@@ -3732,22 +3771,34 @@ HTML_TEMPLATE = """
         let editorPendingPages = [];
         let editorPendingFiles = [];
 
-        function showEditor(push = true) {
-            currentTool = 'edit-pdf';
+        let currentEditorMode = 'text';
+        let textEditorFile = null;
+        let textEditorPageIndex = 0;
+        let textEditorTotalPages = 1;
+        let textEditorPageData = null;
+        let textEditorEdits = [];
+        let textEditorAdditions = [];
+        let textEditorActiveColor = [0, 0, 0];
+        let textEditorActiveSize = 12;
+        let textEditorAddMode = false;
+
+        function showEditor(push = true, defaultMode = 'text') {
+            currentTool = defaultMode === 'text' ? 'edit-text-pdf' : 'edit-pdf';
             document.getElementById('home-view').classList.add('hidden');
             document.getElementById('tool-views').classList.add('hidden');
             const aboutView = document.getElementById('about-view');
             if (aboutView) aboutView.classList.add('hidden');
             document.getElementById('editor-view').classList.remove('hidden');
             resetEditor();
+            switchEditorMode(defaultMode);
 
-            updateDocumentSEO('editor');
+            updateDocumentSEO(defaultMode === 'text' ? 'edit-text-pdf' : 'editor');
 
             if (push) {
                 hasNavigatedInApp = true;
-                const targetUrl = '/editor';
+                const targetUrl = defaultMode === 'text' ? '/tool/edit-text-pdf' : '/editor';
                 if (window.location.pathname !== targetUrl && window.location.pathname !== '/tool/edit-pdf') {
-                    history.pushState({ localpdf: true, view: 'editor' }, '', targetUrl);
+                    history.pushState({ localpdf: true, view: 'editor', mode: defaultMode }, '', targetUrl);
                 }
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3757,6 +3808,48 @@ HTML_TEMPLATE = """
             navigateBack();
         }
 
+        function switchEditorMode(mode) {
+            currentEditorMode = mode;
+            const tabText = document.getElementById('tab-mode-text');
+            const tabPages = document.getElementById('tab-mode-pages');
+            const studio = document.getElementById('text-editor-studio');
+            const shell = document.getElementById('editor-shell');
+            const uploadArea = document.getElementById('editor-upload-area');
+
+            if (mode === 'text') {
+                if (tabText) tabText.classList.add('active');
+                if (tabPages) tabPages.classList.remove('active');
+                if (textEditorFile) {
+                    if (uploadArea) uploadArea.classList.add('hidden');
+                    if (studio) studio.classList.remove('hidden');
+                    if (shell) shell.classList.add('hidden');
+                    if (!textEditorPageData) {
+                        loadTextEditorPage(textEditorPageIndex);
+                    }
+                } else {
+                    if (uploadArea) uploadArea.classList.remove('hidden');
+                    if (studio) studio.classList.add('hidden');
+                    if (shell) shell.classList.add('hidden');
+                }
+            } else {
+                if (tabPages) tabPages.classList.add('active');
+                if (tabText) tabText.classList.remove('active');
+                if (editorPages.length > 0) {
+                    if (uploadArea) uploadArea.classList.add('hidden');
+                    if (shell) shell.classList.remove('hidden');
+                    if (studio) studio.classList.add('hidden');
+                } else if (textEditorFile) {
+                    if (uploadArea) uploadArea.classList.add('hidden');
+                    if (studio) studio.classList.add('hidden');
+                    openEditorFiles([textEditorFile]);
+                } else {
+                    if (uploadArea) uploadArea.classList.remove('hidden');
+                    if (studio) studio.classList.add('hidden');
+                    if (shell) shell.classList.add('hidden');
+                }
+            }
+        }
+
         function resetEditor() {
             editorFiles = [];
             editorPages = [];
@@ -3764,13 +3857,344 @@ HTML_TEMPLATE = """
             editorFuture = [];
             editorPendingPages = [];
             editorPendingFiles = [];
+            textEditorFile = null;
+            textEditorPageIndex = 0;
+            textEditorTotalPages = 1;
+            textEditorPageData = null;
+            textEditorEdits = [];
+            textEditorAdditions = [];
+            textEditorActiveColor = [0, 0, 0];
+            textEditorActiveSize = 12;
+            textEditorAddMode = false;
             document.getElementById('editor-file-input').value = '';
             document.getElementById('editor-add-input').value = '';
+            const uploadArea = document.getElementById('editor-upload-area');
+            if (uploadArea) uploadArea.classList.remove('hidden');
+            const studio = document.getElementById('text-editor-studio');
+            if (studio) studio.classList.add('hidden');
             document.getElementById('editor-shell').classList.add('hidden');
             document.getElementById('editor-insert-panel').classList.add('hidden');
             document.getElementById('editor-result').classList.add('hidden');
+            const bgImg = document.getElementById('text-editor-bg');
+            if (bgImg) bgImg.src = '';
+            const overlay = document.getElementById('text-editor-overlay');
+            if (overlay) overlay.innerHTML = '';
             renderEditorPages();
             updateEditorHistoryButtons();
+        }
+
+        function prevTextPage() {
+            if (textEditorPageIndex > 0) {
+                loadTextEditorPage(textEditorPageIndex - 1);
+            }
+        }
+
+        function nextTextPage() {
+            if (textEditorPageIndex < textEditorTotalPages - 1) {
+                loadTextEditorPage(textEditorPageIndex + 1);
+            }
+        }
+
+        function onFontSizeChange(size) {
+            textEditorActiveSize = parseFloat(size) || 12;
+        }
+
+        function selectTextColor(rgbArray, el) {
+            textEditorActiveColor = rgbArray;
+            document.querySelectorAll('.color-palette .color-swatch').forEach(btn => btn.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        function toggleAddTextMode() {
+            textEditorAddMode = !textEditorAddMode;
+            const btn = document.getElementById('btn-add-text-mode');
+            if (textEditorAddMode) {
+                if (btn) btn.style.outline = '2px solid #2563eb';
+                showToast(t('Clique na página onde deseja adicionar o texto.', 'Click on the page where you want to add text.'), 'info');
+            } else {
+                if (btn) btn.style.outline = 'none';
+            }
+        }
+
+        function onCanvasClick(event) {
+            if (!textEditorAddMode || !textEditorPageData) return;
+            if (event.target.closest('.pdf-text-span') || event.target.closest('.pdf-floating-text')) return;
+
+            const canvas = document.getElementById('text-editor-canvas');
+            const rect = canvas.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const clickY = event.clientY - rect.top;
+
+            const scaleX = textEditorPageData.page_width / rect.width;
+            const scaleY = textEditorPageData.page_height / rect.height;
+            const pdfX = clickX * scaleX;
+            const pdfY = clickY * scaleY;
+
+            toggleAddTextMode();
+
+            const newAddition = {
+                id: 'add-' + Date.now(),
+                page: textEditorPageIndex,
+                x: pdfX,
+                y: pdfY,
+                text: 'Novo texto',
+                font_size: textEditorActiveSize,
+                color: [...textEditorActiveColor]
+            };
+            textEditorAdditions.push(newAddition);
+            renderAdditionsOnCanvas();
+
+            setTimeout(() => {
+                const input = document.getElementById(`input-${newAddition.id}`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 60);
+        }
+
+        async function loadTextEditorPage(pageIndex) {
+            if (!textEditorFile) return;
+            const status = document.getElementById('text-editor-status');
+            if (status) status.textContent = t(`Carregando página ${pageIndex + 1}...`, `Loading page ${pageIndex + 1}...`);
+
+            const formData = new FormData();
+            formData.append('file', textEditorFile);
+            formData.append('page', pageIndex);
+
+            try {
+                const resp = await fetch('/api/pdf/inspect-text', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || 'Erro ao inspecionar textos da página');
+
+                textEditorPageIndex = data.page_index;
+                textEditorTotalPages = data.total_pages;
+                textEditorPageData = data;
+
+                const counter = document.getElementById('text-page-counter');
+                if (counter) counter.textContent = t(`Página ${data.page_index + 1} / ${data.total_pages}`, `Page ${data.page_index + 1} / ${data.total_pages}`);
+
+                const prevBtn = document.getElementById('btn-prev-page');
+                if (prevBtn) prevBtn.disabled = data.page_index <= 0;
+                const nextBtn = document.getElementById('btn-next-page');
+                if (nextBtn) nextBtn.disabled = data.page_index >= data.total_pages - 1;
+
+                const bgImg = document.getElementById('text-editor-bg');
+                if (bgImg) bgImg.src = data.page_image;
+
+                renderTextSpans(data);
+                renderAdditionsOnCanvas();
+
+                if (status) status.textContent = t('💡 Clique diretamente sobre qualquer texto para alterar as palavras, ou use "Adicionar Novo Texto".', '💡 Click directly on any text to edit words, or use "Add New Text".');
+            } catch (err) {
+                if (status) status.textContent = 'Erro: ' + err.message;
+                showToast(err.message, 'error');
+            }
+        }
+
+        function renderTextSpans(data) {
+            const overlay = document.getElementById('text-editor-overlay');
+            if (!overlay) return;
+            overlay.innerHTML = '';
+
+            const pageWidth = data.page_width;
+            const pageHeight = data.page_height;
+
+            data.spans.forEach((span) => {
+                if (!span.text || !span.text.trim()) return;
+
+                const bbox = span.bbox;
+                const leftPct = (bbox[0] / pageWidth) * 100;
+                const topPct = (bbox[1] / pageHeight) * 100;
+                const widthPct = ((bbox[2] - bbox[0]) / pageWidth) * 100;
+                const heightPct = ((bbox[3] - bbox[1]) / pageHeight) * 100;
+
+                const existingEdit = textEditorEdits.find(e =>
+                    e.page === textEditorPageIndex &&
+                    Math.abs(e.original_bbox[0] - bbox[0]) < 1 &&
+                    Math.abs(e.original_bbox[1] - bbox[1]) < 1
+                );
+
+                const spanEl = document.createElement('div');
+                spanEl.className = 'pdf-text-span' + (existingEdit ? ' modified' : '');
+                spanEl.style.left = `${leftPct}%`;
+                spanEl.style.top = `${topPct}%`;
+                spanEl.style.width = `max(${widthPct}%, 18px)`;
+                spanEl.style.height = `max(${heightPct}%, 14px)`;
+                spanEl.title = `Clique para editar: "${span.text}"`;
+
+                if (existingEdit) {
+                    spanEl.textContent = existingEdit.new_text;
+                    spanEl.style.color = `rgb(${Math.round(existingEdit.color[0]*255)}, ${Math.round(existingEdit.color[1]*255)}, ${Math.round(existingEdit.color[2]*255)})`;
+                }
+
+                spanEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (spanEl.classList.contains('editing')) return;
+                    startEditingSpan(spanEl, span, existingEdit);
+                });
+
+                overlay.appendChild(spanEl);
+            });
+        }
+
+        function startEditingSpan(spanEl, span, existingEdit) {
+            const currentVal = existingEdit ? existingEdit.new_text : span.text;
+            spanEl.classList.add('editing');
+            spanEl.innerHTML = '';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'inline-editor';
+            input.value = currentVal;
+            spanEl.appendChild(input);
+
+            input.focus();
+            input.select();
+
+            function commitChange() {
+                const newVal = input.value.trim();
+                spanEl.classList.remove('editing');
+                if (newVal === span.text) {
+                    textEditorEdits = textEditorEdits.filter(e =>
+                        !(e.page === textEditorPageIndex &&
+                          Math.abs(e.original_bbox[0] - span.bbox[0]) < 1 &&
+                          Math.abs(e.original_bbox[1] - span.bbox[1]) < 1)
+                    );
+                    spanEl.classList.remove('modified');
+                    spanEl.textContent = '';
+                } else if (newVal.length > 0) {
+                    spanEl.classList.add('modified');
+                    spanEl.textContent = newVal;
+
+                    textEditorEdits = textEditorEdits.filter(e =>
+                        !(e.page === textEditorPageIndex &&
+                          Math.abs(e.original_bbox[0] - span.bbox[0]) < 1 &&
+                          Math.abs(e.original_bbox[1] - span.bbox[1]) < 1)
+                    );
+
+                    textEditorEdits.push({
+                        page: textEditorPageIndex,
+                        original_bbox: span.bbox,
+                        new_text: newVal,
+                        font_size: span.size,
+                        color: textEditorActiveColor
+                    });
+
+                    spanEl.style.color = `rgb(${Math.round(textEditorActiveColor[0]*255)}, ${Math.round(textEditorActiveColor[1]*255)}, ${Math.round(textEditorActiveColor[2]*255)})`;
+                    showToast(t('Texto atualizado! Clique em "Salvar PDF" para baixar.', 'Text updated! Click "Save PDF" to download.'), 'info');
+                }
+            }
+
+            input.addEventListener('blur', commitChange);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    input.value = currentVal;
+                    input.blur();
+                }
+            });
+        }
+
+        function renderAdditionsOnCanvas() {
+            document.querySelectorAll('.pdf-floating-text').forEach(el => el.remove());
+            if (!textEditorPageData) return;
+
+            const overlay = document.getElementById('text-editor-overlay');
+            if (!overlay) return;
+            const pageWidth = textEditorPageData.page_width;
+            const pageHeight = textEditorPageData.page_height;
+
+            const pageAdds = textEditorAdditions.filter(a => a.page === textEditorPageIndex);
+            pageAdds.forEach(add => {
+                const leftPct = (add.x / pageWidth) * 100;
+                const topPct = (add.y / pageHeight) * 100;
+
+                const floatEl = document.createElement('div');
+                floatEl.className = 'pdf-floating-text';
+                floatEl.style.left = `${leftPct}%`;
+                floatEl.style.top = `${topPct}%`;
+
+                const input = document.createElement('input');
+                input.id = `input-${add.id}`;
+                input.value = add.text;
+                input.style.fontSize = `${Math.max(12, add.font_size)}px`;
+                input.style.color = `rgb(${Math.round(add.color[0]*255)}, ${Math.round(add.color[1]*255)}, ${Math.round(add.color[2]*255)})`;
+
+                input.addEventListener('change', () => {
+                    add.text = input.value;
+                });
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'btn-del-addition';
+                delBtn.innerHTML = '&times;';
+                delBtn.title = 'Remover este texto';
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    textEditorAdditions = textEditorAdditions.filter(a => a.id !== add.id);
+                    floatEl.remove();
+                });
+
+                floatEl.appendChild(input);
+                floatEl.appendChild(delBtn);
+                overlay.appendChild(floatEl);
+            });
+        }
+
+        async function saveAllTextEdits() {
+            if (!textEditorFile) return;
+            if (textEditorEdits.length === 0 && textEditorAdditions.length === 0) {
+                showToast(t('Nenhum texto foi alterado ainda.', 'No text has been changed yet.'), 'info');
+                return;
+            }
+
+            const status = document.getElementById('text-editor-status');
+            const btn = document.getElementById('btn-save-text-edits');
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = t('Aplicando edições e gerando PDF vetorial...', 'Applying edits and generating vector PDF...');
+
+            const formData = new FormData();
+            formData.append('file', textEditorFile);
+            formData.append('edits', JSON.stringify(textEditorEdits));
+            formData.append('additions', JSON.stringify(textEditorAdditions));
+
+            try {
+                const resp = await fetch('/api/pdf/apply-text-edits', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!resp.ok) {
+                    const errData = await resp.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Erro ao aplicar alterações no PDF');
+                }
+
+                const blob = await resp.blob();
+                const baseName = textEditorFile.name.replace(/\\.[^/.]+$/, '');
+                const filename = `${baseName}_editado.pdf`;
+
+                const saveRes = await saveDocumentResult(blob, filename);
+                if (saveRes.cancelled) {
+                    if (status) status.textContent = t('Salvamento cancelado.', 'Save cancelled.');
+                } else if (saveRes.path) {
+                    if (status) status.textContent = t(`PDF salvo em: ${saveRes.path}`, `PDF saved to: ${saveRes.path}`);
+                    showToast(t('PDF editado salvo com sucesso!', 'Edited PDF saved successfully!'), 'success');
+                } else {
+                    if (status) status.textContent = t('PDF editado baixado com sucesso.', 'Edited PDF downloaded successfully.');
+                    showToast(t('PDF editado baixado com sucesso!', 'Edited PDF downloaded successfully!'), 'success');
+                }
+            } catch (err) {
+                if (status) status.textContent = 'Erro: ' + err.message;
+                showToast(err.message, 'error');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function editorSnapshot() {
@@ -4037,9 +4461,23 @@ HTML_TEMPLATE = """
 
         document.getElementById('editor-file-input').addEventListener('change', async event => {
             try {
-                await openEditorFiles(Array.from(event.target.files));
+                const files = Array.from(event.target.files);
+                if (!files.length) return;
+                textEditorFile = files[0];
+                if (currentEditorMode === 'text') {
+                    const uploadArea = document.getElementById('editor-upload-area');
+                    if (uploadArea) uploadArea.classList.add('hidden');
+                    const studio = document.getElementById('text-editor-studio');
+                    if (studio) studio.classList.remove('hidden');
+                    await loadTextEditorPage(0);
+                } else {
+                    await openEditorFiles(files);
+                }
             } catch (error) {
-                document.getElementById('editor-status').textContent = error.message;
+                const status = document.getElementById('text-editor-status');
+                if (status) status.textContent = error.message;
+                const editorStatus = document.getElementById('editor-status');
+                if (editorStatus) editorStatus.textContent = error.message;
             }
         });
 
@@ -4122,8 +4560,10 @@ HTML_TEMPLATE = """
         (function initHistoryState() {
             const path = window.location.pathname.replace(/^[/]+|[/]+$/g, '');
             let initialViewState = { localpdf: true, view: 'home' };
-            if (path === 'editor' || path === 'tool/edit-pdf' || path === 'tools/edit-pdf') {
-                initialViewState = { localpdf: true, view: 'editor' };
+            if (path === 'tool/edit-text-pdf' || path === 'tools/edit-text-pdf') {
+                initialViewState = { localpdf: true, view: 'editor', mode: 'text' };
+            } else if (path === 'editor' || path === 'tool/edit-pdf' || path === 'tools/edit-pdf') {
+                initialViewState = { localpdf: true, view: 'editor', mode: 'pages' };
             } else if (path === 'about' || path === 'sobre') {
                 initialViewState = { localpdf: true, view: 'about' };
             } else if (path.startsWith('tool/') || path.startsWith('tools/')) {
@@ -4139,8 +4579,10 @@ HTML_TEMPLATE = """
 
         const initialToolFromRoute = "{{ initial_tool or '' }}";
         if (initialToolFromRoute) {
-            if (initialToolFromRoute === 'edit-pdf' || initialToolFromRoute === 'editor') {
-                showEditor(false);
+            if (initialToolFromRoute === 'edit-text-pdf') {
+                showEditor(false, 'text');
+            } else if (initialToolFromRoute === 'edit-pdf' || initialToolFromRoute === 'editor') {
+                showEditor(false, 'pages');
             } else if (initialToolFromRoute === 'about' || initialToolFromRoute === 'sobre') {
                 showAbout(false);
             } else if (tools[initialToolFromRoute]) {
@@ -4158,7 +4600,7 @@ HTML_TEMPLATE = """
                 } else if (state.view === 'tool' && state.tool) {
                     showTool(state.tool, false);
                 } else if (state.view === 'editor') {
-                    showEditor(false);
+                    showEditor(false, state.mode || 'text');
                 } else if (state.view === 'about') {
                     showAbout(false);
                 }
@@ -4168,8 +4610,10 @@ HTML_TEMPLATE = """
             // Fallback URL routing if state is null
             if (!path) {
                 showHome(false);
+            } else if (path === 'tool/edit-text-pdf' || path === 'tools/edit-text-pdf') {
+                showEditor(false, 'text');
             } else if (path === 'editor' || path === 'tool/edit-pdf' || path === 'tools/edit-pdf') {
-                showEditor(false);
+                showEditor(false, 'pages');
             } else if (path === 'about' || path === 'sobre') {
                 showAbout(false);
             } else if (path.startsWith('tool/') || path.startsWith('tools/')) {
@@ -4289,7 +4733,10 @@ def sitemap_xml():
 @app.route("/sobre")
 def index(tool_name=None):
     raw_path = request.path.rstrip("/")
-    if raw_path in ("/editor", "/tool/edit-pdf", "/tools/edit-pdf"):
+    if raw_path in ("/tool/edit-text-pdf", "/tools/edit-text-pdf"):
+        seo_key = "edit-text-pdf"
+        client_initial_tool = "edit-text-pdf"
+    elif raw_path in ("/editor", "/tool/edit-pdf", "/tools/edit-pdf"):
         seo_key = "editor"
         client_initial_tool = "edit-pdf"
     elif raw_path in ("/about", "/sobre"):

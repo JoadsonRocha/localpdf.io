@@ -56,6 +56,13 @@ class WebFeaturesTests(unittest.TestCase):
         html = response.get_data(as_text=True)
         self.assertIn('const initialToolFromRoute = "edit-pdf";', html)
 
+    def test_edit_text_pdf_direct_route(self):
+        response = self.client.get("/tool/edit-text-pdf")
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('const initialToolFromRoute = "edit-text-pdf";', html)
+        self.assertIn('id="text-editor-studio"', html)
+
     def test_favicon_route(self):
         response = self.client.get("/favicon.svg")
         self.assertEqual(response.status_code, 200)

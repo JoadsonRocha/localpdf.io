@@ -35,13 +35,13 @@
 - Modify: `app.py`
 - Test: `tests/test_pdf_text_editor.py`
 
-- [ ] Step 1: Write unit tests in `tests/test_pdf_text_editor.py` testing `/api/pdf/inspect-text` for extracting text spans with bounding boxes, font size, and color.
-- [ ] Step 2: Run `python -m unittest tests/test_pdf_text_editor.py` and verify it fails (endpoint not found).
-- [ ] Step 3: Implement `/api/pdf/inspect-text` endpoint in `app.py`:
+- [x] Step 1: Write unit tests in `tests/test_pdf_text_editor.py` testing `/api/pdf/inspect-text` for extracting text spans with bounding boxes, font size, and color.
+- [x] Step 2: Run `python -m unittest tests/test_pdf_text_editor.py` and verify it fails (endpoint not found).
+- [x] Step 3: Implement `/api/pdf/inspect-text` endpoint in `app.py`:
   - Receives `file` (PDF) and optional `page` index (default 0).
   - Uses `doc[page].get_text("blocks")` and `get_text("dict")` to extract spans with normalized bounding boxes `[x0, y0, x1, y1]`, text, size, color.
   - Returns JSON with `page_width`, `page_height`, `total_pages`, `page_index`, and `spans`.
-- [ ] Step 4: Run unit tests and confirm they pass.
+- [x] Step 4: Run unit tests and confirm they pass.
 
 ---
 
@@ -51,17 +51,17 @@
 - Modify: `app.py`
 - Test: `tests/test_pdf_text_editor.py`
 
-- [ ] Step 1: Write unit tests in `tests/test_pdf_text_editor.py` testing `/api/pdf/apply-text-edits`:
+- [x] Step 1: Write unit tests in `tests/test_pdf_text_editor.py` testing `/api/pdf/apply-text-edits`:
   - Test replacing an existing name in a PDF.
   - Test adding a new text label at coordinates `(100, 200)`.
   - Verify output PDF contains the new text and has old text redacted.
-- [ ] Step 2: Run unit tests and verify they fail.
-- [ ] Step 3: Implement `/api/pdf/apply-text-edits` in `app.py`:
+- [x] Step 2: Run unit tests and verify they fail.
+- [x] Step 3: Implement `/api/pdf/apply-text-edits` in `app.py`:
   - Accepts `file` (multipart) + `edits` (JSON string containing `{ page: int, original_bbox: [x0, y0, x1, y1], new_text: str, font_size: float, color: [r, g, b] }` and `additions: [...]`).
   - Iterates over edits per page: calls `page.add_redact_annot(rect, fill=(1,1,1))` then `page.apply_redactions()`, then `page.insert_textbox(rect, new_text, fontname="helv", fontsize=font_size, color=color)`.
   - For additions: calls `page.insert_text((x, y), text, fontname="helv", fontsize=font_size, color=color)`.
   - Returns modified PDF stream with `Content-Disposition` header.
-- [ ] Step 4: Run unit tests and confirm they pass.
+- [x] Step 4: Run unit tests and confirm they pass.
 
 ---
 
@@ -70,18 +70,18 @@
 **Files:**
 - Modify: `app.py`
 
-- [ ] Step 1: Add a "Modo Edição de Texto" toolbar and visual page canvas inside `#editor-view`:
+- [x] Step 1: Add a "Modo Edição de Texto" toolbar and visual page canvas inside `#editor-view`:
   - Mode switcher: `[📋 Organizar Páginas]` vs `[✏️ Editar Texto do PDF]`.
   - Visual page container with high-DPI page render and relative overlay container.
   - Bounding box spans over detected text with hover highlight and click-to-edit.
   - "＋ Adicionar Texto" button to click on canvas and place a new floating text box.
   - Text formatting controls: Font size selector (10, 12, 14, 18, 24, 32), Color picker/swatches (Preto, Azul, Vermelho, Cinza), and Delete button.
-- [ ] Step 2: Implement frontend JavaScript logic:
+- [x] Step 2: Implement frontend JavaScript logic:
   - `loadPageForTextEditing(pageIndex)`: calls `/api/pdf/inspect-text` and renders text block overlays.
   - `onSpanClick(spanEl)`: transforms span into editable input/contenteditable.
   - `addFloatingTextBox(x, y)`: creates a draggable/resizable new text element.
   - `saveTextEdits()`: bundles modifications into JSON and calls `/api/pdf/apply-text-edits`, downloading the resulting vector PDF.
-- [ ] Step 3: Style text editing overlay with CSS design tokens (`var(--primary)`, `var(--bg-surface)`, etc.).
+- [x] Step 3: Style text editing overlay with CSS design tokens (`var(--primary)`, `var(--bg-surface)`, etc.).
 
 ---
 
@@ -91,7 +91,7 @@
 - Modify: `app.py`
 - Modify: `tests/test_web_features.py`
 
-- [ ] Step 1: Add "Editar Texto do PDF" tool card in `app.py` `.tools-grid` under "Organizar PDF" category with badge `<span class="tool-badge badge-new">Texto</span>`.
-- [ ] Step 2: Wire up route `/tool/edit-text-pdf` to open the text editor directly.
-- [ ] Step 3: Run full test suite: `.venv\Scripts\python.exe -m unittest discover tests`.
-- [ ] Step 4: Restart local server and verify end-to-end in browser.
+- [x] Step 1: Add "Editar Texto do PDF" tool card in `app.py` `.tools-grid` under "Organizar PDF" category with badge `<span class="tool-badge badge-new">Texto</span>`.
+- [x] Step 2: Wire up route `/tool/edit-text-pdf` to open the text editor directly.
+- [x] Step 3: Run full test suite: `.venv\Scripts\python.exe -m unittest discover tests`.
+- [x] Step 4: Restart local server and verify end-to-end in browser.
