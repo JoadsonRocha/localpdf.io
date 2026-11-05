@@ -298,6 +298,27 @@ class WebFeaturesTests(unittest.TestCase):
                     pass
 
 
+    def test_modern_ui_components_presence(self):
+        """Verifies presence of modern design elements: theme toggle, badges, global drag overlay."""
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.get_data(as_text=True)
+
+        # Dark mode toggle
+        self.assertIn('id="theme-toggle"', html)
+        self.assertIn("toggleTheme()", html)
+        self.assertIn("initTheme()", html)
+
+        # Global drag overlay
+        self.assertIn('id="global-drag-overlay"', html)
+        self.assertIn("initGlobalDragAndDrop()", html)
+
+        # Tool badges
+        self.assertIn('class="tool-badge badge-popular"', html)
+        self.assertIn('class="tool-badge badge-ai"', html)
+        self.assertIn('class="tool-badge badge-new"', html)
+
+
 if __name__ == "__main__":
     unittest.main()
 

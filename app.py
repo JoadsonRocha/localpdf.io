@@ -1149,9 +1149,406 @@ HTML_TEMPLATE = """
             .web-mode-banner-text { white-space: normal; }
             .web-mode-banner-actions { width: 100%; justify-content: space-between; margin-top: 4px; }
         }
+
+        /* ══════════════════════════════════════════════════════════════════
+           MODERN DESIGN SYSTEM & THEME TOKENS (Light / Dark Mode)
+        ══════════════════════════════════════════════════════════════════ */
+        :root {
+            --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-surface-elevated: #ffffff;
+            --bg-surface-subtle: #f1f5f9;
+            --bg-surface-input: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-subtle: #e2e8f0;
+            --border-hover: #93c5fd;
+            --border-focus: #3b82f6;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --primary-ring: rgba(37, 99, 235, 0.16);
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+            --card-hover-shadow: 0 14px 28px -4px rgba(37, 99, 235, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+            --modal-overlay: rgba(15, 23, 42, 0.6);
+            --kbd-bg: #f1f5f9;
+            --kbd-text: #475569;
+        }
+
+        body.dark-theme {
+            --bg-body: #090d16;
+            --bg-surface: #111827;
+            --bg-surface-elevated: #1a2234;
+            --bg-surface-subtle: #1e293b;
+            --bg-surface-input: #1a2234;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-subtle: #1e293b;
+            --border-hover: #3b82f6;
+            --border-focus: #60a5fa;
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --primary-light: #172554;
+            --primary-ring: rgba(59, 130, 246, 0.3);
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --card-hover-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.65), 0 0 1px 1px rgba(59, 130, 246, 0.35);
+            --modal-overlay: rgba(0, 0, 0, 0.82);
+            --kbd-bg: #1e293b;
+            --kbd-text: #94a3b8;
+        }
+
+        body {
+            font-family: var(--font-sans) !important;
+            background: var(--bg-body) !important;
+            color: var(--text-primary) !important;
+            transition: background-color 0.25s ease, color 0.25s ease;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .site-nav {
+            border-bottom: 1px solid var(--border-subtle) !important;
+            padding: 18px 0 !important;
+        }
+        .site-brand {
+            color: var(--text-primary) !important;
+            font-family: var(--font-sans) !important;
+        }
+        .site-brand span { color: var(--primary) !important; }
+        .site-nav-links a {
+            color: var(--text-secondary) !important;
+            font-family: var(--font-sans) !important;
+            transition: color 0.15s ease;
+        }
+        .site-nav-links a:hover { color: var(--primary) !important; }
+
+        /* ── Dark Mode Toggle Button ─────────────────────────────── */
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+        .theme-toggle:hover {
+            background: var(--primary-light);
+            border-color: var(--border-hover);
+            color: var(--primary);
+            transform: scale(1.06);
+        }
+        body.dark-theme .theme-icon-light { display: none; }
+        body:not(.dark-theme) .theme-icon-dark { display: none; }
+
+        .language-toggle {
+            border: 1px solid var(--border-subtle) !important;
+            background: var(--bg-surface) !important;
+            color: var(--primary) !important;
+            font-family: var(--font-sans) !important;
+        }
+        .language-toggle:hover {
+            background: var(--primary-light) !important;
+            border-color: var(--border-hover) !important;
+        }
+
+        .header h1 {
+            color: var(--text-primary) !important;
+            font-family: var(--font-sans) !important;
+            letter-spacing: -0.025em !important;
+            font-weight: 800 !important;
+        }
+        .header p { color: var(--text-muted) !important; font-family: var(--font-sans) !important; }
+
+        /* ── Full-Page Drag & Drop Overlay ───────────────────────── */
+        .global-drag-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .global-drag-overlay.hidden { display: none !important; }
+        .drag-overlay-card {
+            background: var(--bg-surface);
+            border: 3px dashed var(--primary);
+            border-radius: 24px;
+            padding: 48px 56px;
+            text-align: center;
+            max-width: 520px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+            animation: overlayPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes overlayPop {
+            from { opacity: 0; transform: scale(0.92); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .drag-overlay-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 18px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .drag-overlay-icon svg { width: 36px; height: 36px; }
+        .drag-overlay-card h3 {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-family: var(--font-sans);
+        }
+        .drag-overlay-card p {
+            color: var(--text-muted);
+            font-size: 0.94rem;
+            line-height: 1.5;
+            font-family: var(--font-sans);
+        }
+
+        /* ── Category Tabs ───────────────────────────────────────── */
+        .category-tab {
+            background: var(--bg-surface) !important;
+            border: 1px solid var(--border-subtle) !important;
+            color: var(--text-secondary) !important;
+            font-family: var(--font-sans) !important;
+        }
+        .category-tab:hover {
+            border-color: var(--border-hover) !important;
+            color: var(--primary) !important;
+            background: var(--primary-light) !important;
+        }
+        .category-tab.active {
+            background: var(--primary) !important;
+            color: #ffffff !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 4px 14px var(--primary-ring) !important;
+        }
+
+        /* ── Tools Grid & Cards ──────────────────────────────────── */
+        .tools-grid .tool-card {
+            background: var(--bg-surface) !important;
+            border: 1px solid var(--border-subtle) !important;
+            border-radius: 14px !important;
+            box-shadow: var(--card-shadow) !important;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease !important;
+        }
+        .tools-grid .tool-card:hover {
+            transform: translateY(-4px) !important;
+            border-color: var(--border-hover) !important;
+            box-shadow: var(--card-hover-shadow) !important;
+        }
+        .tools-grid .tool-card:active {
+            transform: translateY(-1px) scale(0.99) !important;
+        }
+        .tools-grid .tool-card h3 {
+            color: var(--text-primary) !important;
+            font-family: var(--font-sans) !important;
+            font-size: 1.05rem !important;
+            font-weight: 700 !important;
+            letter-spacing: -0.015em !important;
+        }
+        .tools-grid .tool-card p {
+            color: var(--text-muted) !important;
+            font-family: var(--font-sans) !important;
+            font-size: 0.88rem !important;
+        }
+        .tool-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: var(--bg-surface-subtle);
+            color: var(--text-muted);
+            border: 1px solid var(--border-subtle);
+        }
+        .tool-badge.badge-popular {
+            background: #eff6ff;
+            color: #2563eb;
+            border-color: #bfdbfe;
+        }
+        body.dark-theme .tool-badge.badge-popular {
+            background: #172554;
+            color: #60a5fa;
+            border-color: #1e3a8a;
+        }
+        .tool-badge.badge-ai {
+            background: #faf5ff;
+            color: #9333ea;
+            border-color: #e9d5ff;
+        }
+        body.dark-theme .tool-badge.badge-ai {
+            background: #3b0764;
+            color: #c084fc;
+            border-color: #581c87;
+        }
+        .tool-badge.badge-new {
+            background: #fff1f2;
+            color: #e11d48;
+            border-color: #fecdd3;
+        }
+        body.dark-theme .tool-badge.badge-new {
+            background: #4c0519;
+            color: #fb7185;
+            border-color: #881337;
+        }
+
+        /* ── Active Tool Workspaces ──────────────────────────────── */
+        #tool-views .tool-card, #editor-view .tool-card {
+            background: var(--bg-surface) !important;
+            border-color: var(--border-subtle) !important;
+            box-shadow: var(--card-shadow) !important;
+            border-radius: 18px !important;
+        }
+        #tool-views .tool-card h3, #editor-view .tool-card h3 {
+            color: var(--text-primary) !important;
+            font-family: var(--font-sans) !important;
+            font-weight: 800 !important;
+        }
+        #tool-views .tool-card p#tool-description, #editor-view .tool-card > p {
+            color: var(--text-muted) !important;
+            font-family: var(--font-sans) !important;
+        }
+        .upload-area {
+            border: 2px dashed var(--border-subtle) !important;
+            background: var(--bg-surface-subtle) !important;
+            border-radius: 14px !important;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary) !important;
+            background: var(--primary-light) !important;
+        }
+        .upload-area p:first-child { color: var(--text-primary) !important; }
+        .upload-area p { color: var(--text-muted) !important; }
+        .upload-btn {
+            background: var(--primary) !important;
+            font-family: var(--font-sans) !important;
+            border-radius: 999px !important;
+            box-shadow: 0 4px 14px var(--primary-ring) !important;
+        }
+        .upload-btn:hover { background: var(--primary-hover) !important; }
+        .convert-btn {
+            background: var(--primary) !important;
+            font-family: var(--font-sans) !important;
+            border-radius: 999px !important;
+            box-shadow: 0 4px 14px var(--primary-ring) !important;
+        }
+        .convert-btn:hover:not(:disabled) { background: var(--primary-hover) !important; }
+        .file-item {
+            background: var(--bg-surface) !important;
+            border: 1px solid var(--border-subtle) !important;
+            border-radius: 12px !important;
+        }
+        .file-name-text { color: var(--text-primary) !important; }
+        .file-size-text { color: var(--text-muted) !important; }
+        .file-ext-badge { background: var(--primary-light) !important; color: var(--primary) !important; }
+        #options label { color: var(--text-primary) !important; }
+        #options input, #options select {
+            background: var(--bg-surface-input) !important;
+            border-color: var(--border-subtle) !important;
+            color: var(--text-primary) !important;
+        }
+        #options input:focus, #options select:focus {
+            border-color: var(--border-focus) !important;
+            box-shadow: 0 0 0 3px var(--primary-ring) !important;
+        }
+
+        /* ── Editor & About ──────────────────────────────────────── */
+        .editor-shell {
+            background: var(--bg-surface-subtle) !important;
+            border: 1px solid var(--border-subtle) !important;
+        }
+        .editor-page {
+            background: var(--bg-surface) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        .editor-page.selected { border-color: var(--primary) !important; }
+        .editor-toolbar button {
+            background: var(--bg-surface) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-subtle) !important;
+        }
+        .about-shell {
+            background: var(--bg-surface) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        .about-card {
+            background: var(--bg-surface-subtle) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        .about-card h3 { color: var(--text-primary) !important; font-family: var(--font-sans) !important; }
+        .about-card p { color: var(--text-muted) !important; font-family: var(--font-sans) !important; }
+        .about-hero h2 { color: var(--text-primary) !important; font-family: var(--font-sans) !important; }
+        .about-section-title { color: var(--text-primary) !important; font-family: var(--font-sans) !important; }
+        .compare-table th { background: var(--bg-surface-subtle) !important; color: var(--text-primary) !important; }
+        .compare-table td { border-bottom-color: var(--border-subtle) !important; }
+        .compare-table td.brand-col { background: var(--primary-light) !important; color: var(--primary) !important; }
+        .tech-pill {
+            background: var(--bg-surface) !important;
+            border-color: var(--border-subtle) !important;
+            color: var(--text-secondary) !important;
+        }
+        .tech-pill strong { color: var(--text-primary) !important; }
+        .footer {
+            border-top-color: var(--border-subtle) !important;
+            color: var(--text-muted) !important;
+        }
+        .footer-block h4 {
+            color: var(--text-primary) !important;
+            font-family: var(--font-sans) !important;
+        }
+        .footer-block a { color: var(--text-secondary) !important; }
+        .footer-block a:hover { color: var(--primary) !important; }
+        .web-mode-banner {
+            background: var(--bg-surface) !important;
+            border-color: var(--border-subtle) !important;
+            color: var(--text-primary) !important;
+            box-shadow: var(--card-shadow) !important;
+        }
+        .web-mode-banner-text { color: var(--text-secondary) !important; }
+        .result-filename {
+            color: var(--text-primary) !important;
+            background: var(--bg-surface) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        .saved-path-badge {
+            background: var(--bg-surface) !important;
+            border-color: var(--border-subtle) !important;
+            color: var(--text-primary) !important;
+        }
     </style>
 </head>
 <body>
+    <div id="global-drag-overlay" class="global-drag-overlay hidden">
+        <div class="drag-overlay-card">
+            <div class="drag-overlay-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <h3 id="drag-overlay-title">Solte seu arquivo em qualquer lugar</h3>
+            <p id="drag-overlay-desc">O LocalPDF detectará o formato automaticamente e abrirá a ferramenta ideal.</p>
+        </div>
+    </div>
     <div id="toast-container"></div>
     <div class="container">
         <nav class="site-nav">
@@ -1167,6 +1564,10 @@ HTML_TEMPLATE = """
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.949-1.801"/></svg>
                     <span>Baixar para Windows</span>
                 </a>
+                <button id="theme-toggle" class="theme-toggle" type="button" onclick="toggleTheme()" title="Alternar tema claro/escuro" aria-label="Alternar tema">
+                    <span class="theme-icon-light">🌙</span>
+                    <span class="theme-icon-dark">☀️</span>
+                </button>
                 <button id="language-toggle" class="language-toggle" type="button" onclick="toggleLanguage()">EN</button>
             </div>
         </nav>
@@ -1191,6 +1592,7 @@ HTML_TEMPLATE = """
                 <h1>Trabalhe com seus PDFs sem complicação</h1>
                 <p id="main-subtitle">Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.</p>
             </div>
+
             <div id="tools" class="category-tabs" role="tablist" aria-label="Categorias de ferramentas">
                 <button type="button" class="category-tab active" data-category="all" onclick="filterCategory('all', this)" role="tab" aria-selected="true">Todas</button>
                 <button type="button" class="category-tab" data-category="organizar" onclick="filterCategory('organizar', this)" role="tab" aria-selected="false">Organizar PDF</button>
@@ -1228,6 +1630,7 @@ HTML_TEMPLATE = """
                     <p>Combine várias imagens em um único PDF</p>
                 </a>
                 <a class="tool-card" href="/tool/merge-pdf" onclick="showTool('merge-pdf'); return false;" data-category="organizar">
+                    <span class="tool-badge badge-popular">Popular</span>
                     <div class="tool-icon" style="background: #fef2f2; color: #dc2626;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4"/><path d="M16 2h4a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-4"/><path d="M12 7v10"/><path d="m9 10 3-3 3 3"/><path d="m9 14 3 3 3-3"/></svg>
                     </div>
@@ -1242,6 +1645,7 @@ HTML_TEMPLATE = """
                     <p>Extraia todas ou páginas específicas por intervalo</p>
                 </a>
                 <a class="tool-card" href="/tool/compress-pdf" onclick="showTool('compress-pdf'); return false;" data-category="otimizar">
+                    <span class="tool-badge badge-popular">Popular</span>
                     <div class="tool-icon" style="background: #ecfdf5; color: #059669;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6m0 0v6m0-6L3 21"/><path d="M20 10h-6m0 0V4m0 6 7-7"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
                     </div>
@@ -1284,6 +1688,7 @@ HTML_TEMPLATE = """
                     <p>Padronize seu PDF para arquivamento (PDF/A)</p>
                 </a>
                 <a class="tool-card" href="/tool/word-to-pdf" onclick="showTool('word-to-pdf'); return false;" data-category="converter">
+                    <span class="tool-badge badge-popular">Popular</span>
                     <div class="tool-icon" style="background: #eff6ff; color: #1d4ed8;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13l1.5 5 2-4 2 4 1.5-5"/></svg>
                     </div>
@@ -1312,6 +1717,7 @@ HTML_TEMPLATE = """
                     <p>Converta arquivos de texto simples para PDF</p>
                 </a>
                 <a class="tool-card" href="/tool/pdf-to-word" onclick="showTool('pdf-to-word'); return false;" data-category="converter">
+                    <span class="tool-badge badge-popular">Popular</span>
                     <div class="tool-icon" style="background: #eff6ff; color: #2563eb;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6a2 2 0 0 0-2 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 12h8m-8 4h5"/></svg>
                     </div>
@@ -1326,6 +1732,7 @@ HTML_TEMPLATE = """
                     <p>Extraia o texto do PDF para um arquivo TXT editável</p>
                 </a>
                 <a class="tool-card" href="/tool/ocr-pdf" onclick="showTool('ocr-pdf'); return false;" data-category="ocr">
+                    <span class="tool-badge badge-ai">OCR</span>
                     <div class="tool-icon" style="background: #faf5ff; color: #9333ea;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="3" y1="12" x2="21" y2="12" stroke-dasharray="2 2"/><circle cx="12" cy="12" r="3"/></svg>
                     </div>
@@ -1333,6 +1740,7 @@ HTML_TEMPLATE = """
                     <p>Extraia texto de PDFs e imagens escaneadas com OCR</p>
                 </a>
                 <a class="tool-card" href="/editor" onclick="showEditor(); return false;" data-category="organizar">
+                    <span class="tool-badge badge-new">Interativo</span>
                     <div class="tool-icon" style="background: #fff1f2; color: #e11d48;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </div>
@@ -1605,6 +2013,23 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
+        // ── Theme Management (Dark Mode) ───────────────────────────
+        function initTheme() {
+            const savedTheme = localStorage.getItem('localpdf-theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-theme');
+            localStorage.setItem('localpdf-theme', isDark ? 'dark' : 'light');
+        }
+        initTheme();
+
         let currentTool = '';
         let currentLanguage = localStorage.getItem('localpdf-language') || 'pt';
         let isWebMode = false;
@@ -1668,6 +2093,13 @@ HTML_TEMPLATE = """
         }
 
         const languageTexts = {
+            'Solte seu arquivo em qualquer lugar': 'Drop your file anywhere',
+            'O LocalPDF detectará o formato automaticamente e abrirá a ferramenta ideal.': 'LocalPDF will auto-detect the format and open the best tool.',
+            'Nenhuma ferramenta encontrada': 'No tools found',
+            'Limpar filtro de busca': 'Clear search filter',
+            'Tente buscar por termos como "comprimir", "word", "excel", "juntar" ou limpar a busca.': 'Try searching for terms like "compress", "word", "excel", "merge" or clear search.',
+            'Popular': 'Popular',
+            'Interativo': 'Interactive',
             'Trabalhe com seus PDFs sem complicação': 'Work with your PDFs without the hassle',
             'Converta, organize e edite documentos diretamente no seu computador. Sem contas, sem nuvem e sem enviar seus arquivos para fora.': 'Convert, organize and edit documents directly on your computer. No accounts, no cloud and no files sent elsewhere.',
             'Juntar PDF': 'Merge PDF',
@@ -2008,6 +2440,131 @@ HTML_TEMPLATE = """
                     card.classList.add('card-hidden-filter');
                 }
             });
+        }
+
+        // ── Global Full-Page Drag & Drop ──────────────────────────────
+        let globalDragCounter = 0;
+
+        function initGlobalDragAndDrop() {
+            const overlay = document.getElementById('global-drag-overlay');
+            if (!overlay) return;
+
+            window.addEventListener('dragenter', (e) => {
+                if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
+                    globalDragCounter++;
+                    overlay.classList.remove('hidden');
+                }
+            });
+
+            window.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (e.dataTransfer) {
+                    e.dataTransfer.dropEffect = 'copy';
+                }
+            });
+
+            window.addEventListener('dragleave', (e) => {
+                globalDragCounter--;
+                if (globalDragCounter <= 0) {
+                    globalDragCounter = 0;
+                    overlay.classList.add('hidden');
+                }
+            });
+
+            window.addEventListener('drop', (e) => {
+                e.preventDefault();
+                globalDragCounter = 0;
+                overlay.classList.add('hidden');
+
+                if (!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length === 0) {
+                    return;
+                }
+
+                handleGlobalDroppedFiles(Array.from(e.dataTransfer.files));
+            });
+        }
+
+        async function handleGlobalDroppedFiles(files) {
+            if (!files || files.length === 0) return;
+
+            // Check if user is inside the Editor view
+            const editorView = document.getElementById('editor-view');
+            if (editorView && !editorView.classList.contains('hidden')) {
+                try {
+                    await openEditorFiles(files, true);
+                    showToast(t(`${files.length} arquivo(s) importado(s) para o editor!`, `${files.length} file(s) imported to editor!`), 'success');
+                } catch (err) {
+                    showToast(err.message || 'Erro ao carregar arquivos no editor', 'error');
+                }
+                return;
+            }
+
+            // Check if user is inside an active tool view
+            const toolViews = document.getElementById('tool-views');
+            if (toolViews && !toolViews.classList.contains('hidden') && currentTool && tools[currentTool]) {
+                const toolDef = tools[currentTool];
+                if (toolDef.multiple) {
+                    uploadedFiles = uploadedFiles.concat(files);
+                } else {
+                    uploadedFiles = files.slice(0, 1);
+                }
+                updateFileList();
+                showToast(t(`${files.length} arquivo(s) adicionado(s)!`, `${files.length} file(s) added!`), 'success');
+                return;
+            }
+
+            // Intelligent format routing based on file extensions
+            const exts = files.map(f => (f.name.split('.').pop() || '').toLowerCase());
+
+            const allImages = exts.every(ext => ['jpg', 'jpeg', 'png', 'webp'].includes(ext));
+            if (allImages) {
+                showTool('images-to-pdf');
+                uploadedFiles = files;
+                updateFileList();
+                showToast(t(`${files.length} imagem(ns) carregada(s) para converter em PDF!`, `${files.length} image(s) loaded to convert to PDF!`), 'success');
+                return;
+            }
+
+            if (exts.every(ext => ['docx', 'doc'].includes(ext))) {
+                showTool('word-to-pdf');
+                uploadedFiles = files;
+                updateFileList();
+                showToast(t(`${files.length} documento(s) Word carregado(s)!`, `${files.length} Word document(s) loaded!`), 'success');
+                return;
+            }
+
+            if (exts.every(ext => ['xlsx', 'xls', 'csv'].includes(ext))) {
+                showTool('excel-to-pdf');
+                uploadedFiles = files.slice(0, 1);
+                updateFileList();
+                showToast(t('Planilha Excel carregada!', 'Excel spreadsheet loaded!'), 'success');
+                return;
+            }
+
+            if (exts.every(ext => ext === 'txt')) {
+                showTool('txt-to-pdf');
+                uploadedFiles = files.slice(0, 1);
+                updateFileList();
+                showToast(t('Arquivo TXT carregado!', 'TXT file loaded!'), 'success');
+                return;
+            }
+
+            if (exts.every(ext => ext === 'pdf')) {
+                if (files.length > 1) {
+                    showTool('merge-pdf');
+                    uploadedFiles = files;
+                    updateFileList();
+                    showToast(t(`${files.length} PDFs prontos para mesclar!`, `${files.length} PDFs ready to merge!`), 'success');
+                } else {
+                    showTool('compress-pdf');
+                    uploadedFiles = files;
+                    updateFileList();
+                    showToast(t('PDF carregado na ferramenta de Compressão! Você também pode alternar a ferramenta no menu.', 'PDF loaded into Compress tool! You can also switch tools from menu.'), 'info');
+                }
+                return;
+            }
+
+            showToast(t('Formato de arquivo não reconhecido.', 'Unrecognized file format.'), 'error');
         }
 
         let hasNavigatedInApp = false;
@@ -3200,6 +3757,7 @@ HTML_TEMPLATE = """
 
         updateWebModeElements();
         translatePage();
+        initGlobalDragAndDrop();
 
         // ── Skeleton → visible animation for tool cards ───────────────
         (function animateToolCards() {
@@ -3547,9 +4105,13 @@ def desktop_save_to_downloads():
     if ext not in DESKTOP_ALLOWED_EXTENSIONS:
         return jsonify({"error": f"Extensão não permitida: {ext}"}), 400
 
-    downloads_dir = pathlib.Path.home() / "Downloads"
-    if not downloads_dir.exists():
-        downloads_dir = pathlib.Path.home()
+    custom_dir = os.environ.get("LOCALPDF_DOWNLOADS_DIR")
+    if custom_dir:
+        downloads_dir = pathlib.Path(custom_dir)
+    else:
+        downloads_dir = pathlib.Path.home() / "Downloads"
+        if not downloads_dir.exists():
+            downloads_dir = pathlib.Path.home()
 
     target = downloads_dir / filename
     stem = target.stem

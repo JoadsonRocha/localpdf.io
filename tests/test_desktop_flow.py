@@ -14,8 +14,17 @@ class DesktopFlowTests(unittest.TestCase):
     def setUp(self):
         self.client = app.test_client()
         self.orig_mode = os.environ.get("LOCALPDF_MODE")
+        self.temp_downloads = tempfile.TemporaryDirectory()
+        self.orig_downloads = os.environ.get("LOCALPDF_DOWNLOADS_DIR")
+        os.environ["LOCALPDF_DOWNLOADS_DIR"] = self.temp_downloads.name
 
     def tearDown(self):
+        self.temp_downloads.cleanup()
+        if self.orig_downloads is not None:
+            os.environ["LOCALPDF_DOWNLOADS_DIR"] = self.orig_downloads
+        elif "LOCALPDF_DOWNLOADS_DIR" in os.environ:
+            del os.environ["LOCALPDF_DOWNLOADS_DIR"]
+
         if self.orig_mode is not None:
             os.environ["LOCALPDF_MODE"] = self.orig_mode
         elif "LOCALPDF_MODE" in os.environ:
