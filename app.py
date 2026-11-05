@@ -2020,19 +2020,93 @@ HTML_TEMPLATE = """
                     <h3>Editar PDF</h3>
                     <p>Reordene, insira, gire, duplique e exclua páginas diretamente no PDF</p>
                 </a>
+                <a class="tool-card" href="/editor" onclick="showEditor(true, 'text'); return false;" data-category="organizar">
+                    <span class="tool-badge badge-new">WPS Style</span>
+                    <div class="tool-icon" style="background: #fdf2f8; color: #db2777;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="m15 5 4 4"/></svg>
+                    </div>
+                    <h3>Editar Texto do PDF</h3>
+                    <p>Altere frases, corrija erros e adicione novos textos diretamente no documento</p>
+                </a>
             </div>
         </div>
 
         <div id="editor-view" class="hidden">
             <button class="back-btn" onclick="navigateBack()">← Voltar</button>
             <div class="tool-card">
-                <h3>🖥️ Editor de páginas PDF</h3>
-                <p>Organize a estrutura do seu PDF sem alterar o arquivo original.</p>
+                <div class="editor-header-flex">
+                    <div>
+                        <h3 id="editor-main-title">🖥️ Editor de PDFs</h3>
+                        <p id="editor-main-subtitle">Altere textos existentes, adicione novos conteúdos ou organize a estrutura de páginas.</p>
+                    </div>
+                    <div class="editor-mode-tabs" id="editor-mode-tabs">
+                        <button type="button" id="tab-mode-text" class="editor-mode-tab active" onclick="switchEditorMode('text')">✏️ Editar Textos</button>
+                        <button type="button" id="tab-mode-pages" class="editor-mode-tab" onclick="switchEditorMode('pages')">📋 Organizar Páginas</button>
+                    </div>
+                </div>
+
                 <div class="upload-area" id="editor-upload-area" onclick="document.getElementById('editor-file-input').click()">
                     <input type="file" id="editor-file-input" class="editor-file-input" accept=".pdf">
-                    <p>📁 Escolha um PDF para começar</p>
+                    <p id="editor-upload-msg">📁 Escolha um PDF para começar</p>
                     <button class="upload-btn" type="button">Abrir PDF</button>
                 </div>
+
+                <!-- Text Editing Studio (WPS Style) -->
+                <div id="text-editor-studio" class="text-editor-studio hidden">
+                    <div class="text-editor-toolbar">
+                        <div class="toolbar-group">
+                            <button type="button" class="btn-tb" onclick="prevTextPage()" id="btn-prev-page" title="Página anterior">◀</button>
+                            <span id="text-page-counter" class="text-page-counter">Página 1 / 1</span>
+                            <button type="button" class="btn-tb" onclick="nextTextPage()" id="btn-next-page" title="Próxima página">▶</button>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-group">
+                            <button type="button" id="btn-add-text-mode" class="btn-tb btn-action" onclick="toggleAddTextMode()">
+                                <span>＋</span> Adicionar Novo Texto
+                            </button>
+                        </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-group">
+                            <label for="text-font-size-sel" class="tb-label">Tamanho:</label>
+                            <select id="text-font-size-sel" class="tb-select" onchange="onFontSizeChange(this.value)">
+                                <option value="10">10 pt</option>
+                                <option value="12" selected>12 pt</option>
+                                <option value="14">14 pt</option>
+                                <option value="16">16 pt</option>
+                                <option value="18">18 pt</option>
+                                <option value="22">22 pt</option>
+                                <option value="28">28 pt</option>
+                            </select>
+                        </div>
+                        <div class="toolbar-group">
+                            <label class="tb-label">Cor:</label>
+                            <div class="color-palette">
+                                <button type="button" class="color-swatch active" style="background:#0f172a;" onclick="selectTextColor([0,0,0], this)" title="Preto"></button>
+                                <button type="button" class="color-swatch" style="background:#2563eb;" onclick="selectTextColor([0.14,0.38,0.92], this)" title="Azul"></button>
+                                <button type="button" class="color-swatch" style="background:#dc2626;" onclick="selectTextColor([0.86,0.15,0.15], this)" title="Vermelho"></button>
+                                <button type="button" class="color-swatch" style="background:#16a34a;" onclick="selectTextColor([0.09,0.64,0.29], this)" title="Verde"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-editor-stage">
+                        <div id="text-editor-canvas" class="text-editor-canvas" onclick="onCanvasClick(event)">
+                            <img id="text-editor-bg" class="text-editor-bg" alt="Página do PDF">
+                            <div id="text-editor-overlay" class="text-editor-overlay"></div>
+                        </div>
+                    </div>
+
+                    <div class="text-editor-footer">
+                        <div class="text-editor-status" id="text-editor-status">
+                            💡 Clique diretamente sobre qualquer texto para alterar as palavras, ou use "Adicionar Novo Texto".
+                        </div>
+                        <div class="text-editor-actions">
+                            <button type="button" class="primary" onclick="saveAllTextEdits()" id="btn-save-text-edits">💾 Salvar PDF com Textos Editados</button>
+                            <button type="button" class="secondary" onclick="resetEditor()">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="editor-shell" class="editor-shell hidden">
                     <div class="editor-toolbar">
                         <button id="editor-undo" type="button" onclick="editorUndo()" disabled>↶ Desfazer</button>
