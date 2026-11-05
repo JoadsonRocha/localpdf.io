@@ -1682,28 +1682,35 @@ HTML_TEMPLATE = """
             box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--primary);
         }
         .text-editor-stage {
-            max-height: 70vh;
+            min-height: 480px;
+            max-height: calc(100vh - 210px);
             overflow: auto;
             display: flex;
             justify-content: center;
-            padding: 20px 10px;
-            background: rgba(0,0,0,0.03);
-            border-radius: 10px;
+            align-items: flex-start;
+            padding: 24px;
+            background: #eef2f6;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            position: relative;
         }
         body.dark-theme .text-editor-stage {
-            background: rgba(0,0,0,0.3);
+            background: #090d16;
+            border-color: rgba(255,255,255,0.08);
         }
         .text-editor-canvas {
             position: relative;
             background: #ffffff;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08);
+            border-radius: 4px;
+            margin: 0 auto;
             line-height: 0;
-            max-width: 100%;
+            transition: width 0.15s ease, height 0.15s ease;
         }
         .text-editor-bg {
             display: block;
             width: 100%;
-            height: auto;
+            height: 100%;
             user-select: none;
             pointer-events: none;
         }
@@ -1715,33 +1722,42 @@ HTML_TEMPLATE = """
         .pdf-text-span {
             position: absolute;
             box-sizing: border-box;
-            border: 1px dashed rgba(37,99,235,0.25);
+            border: 1px dashed rgba(37,99,235,0.22);
+            border-radius: 3px;
             background: rgba(255,255,255,0.01);
-            cursor: text;
-            transition: all 0.15s ease;
+            cursor: pointer;
+            transition: all 0.12s ease;
             overflow: visible;
             white-space: pre;
-            line-height: 1.1;
+            line-height: 1.15;
+            display: flex;
+            align-items: center;
         }
         .pdf-text-span:hover {
             border-color: #2563eb;
             background: rgba(37,99,235,0.08);
-            box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+            z-index: 25;
         }
         .pdf-text-span.editing {
-            border: 1.5px solid #2563eb;
+            border: 2px solid #2563eb;
             background: #ffffff;
-            z-index: 50;
-            box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+            z-index: 100;
+            box-shadow: 0 8px 24px rgba(37,99,235,0.25);
             outline: none;
         }
         .pdf-text-span.modified {
-            border: 1px solid #10b981;
-            background: rgba(16,185,129,0.12);
+            border: 1.5px solid #10b981;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(16,185,129,0.22);
+            z-index: 15;
+            padding: 0 4px;
         }
         .pdf-text-span input.inline-editor {
             width: 100%;
+            min-width: 100px;
             height: 100%;
+            min-height: 22px;
             border: none;
             background: #ffffff;
             color: #0f172a;
@@ -1749,6 +1765,94 @@ HTML_TEMPLATE = """
             outline: none;
             padding: 0 4px;
             box-sizing: border-box;
+            font-weight: 500;
+        }
+        .floating-mini-bar {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 0;
+            z-index: 250;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 6px 10px;
+            border-radius: 8px;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+            white-space: nowrap;
+            font-size: 0.82rem;
+            pointer-events: auto;
+            animation: popMiniBar 0.12s ease-out;
+        }
+        @keyframes popMiniBar {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        body.dark-theme .floating-mini-bar {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .floating-mini-bar button {
+            border: none;
+            border-radius: 5px;
+            padding: 3px 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.15s;
+        }
+        .floating-mini-bar .f-btn-action {
+            background: #334155;
+            color: #f8fafc;
+        }
+        .floating-mini-bar .f-btn-action:hover {
+            background: #475569;
+        }
+        .floating-mini-bar .f-btn-confirm {
+            background: #10b981;
+            color: #ffffff;
+        }
+        .floating-mini-bar .f-btn-confirm:hover {
+            background: #059669;
+        }
+        .floating-mini-bar .f-btn-delete {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .floating-mini-bar .f-btn-delete:hover {
+            background: #ef4444;
+            color: #ffffff;
+        }
+        .floating-mini-bar .f-btn-cancel {
+            background: transparent;
+            color: #94a3b8;
+        }
+        .floating-mini-bar .f-btn-cancel:hover {
+            color: #ffffff;
+        }
+        .floating-mini-bar .f-color-dot {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            cursor: pointer;
+            padding: 0;
+            transition: transform 0.12s;
+        }
+        .floating-mini-bar .f-color-dot:hover {
+            transform: scale(1.2);
+        }
+        .floating-mini-bar .f-color-dot.active {
+            box-shadow: 0 0 0 2px #38bdf8;
+        }
+        .floating-mini-bar.flipped-down {
+            bottom: auto;
+            top: calc(100% + 8px);
         }
         .pdf-floating-text {
             position: absolute;
@@ -2103,12 +2207,32 @@ HTML_TEMPLATE = """
                                 <button type="button" class="color-swatch" style="background:#16a34a;" onclick="selectTextColor([0.09,0.64,0.29], this)" title="Verde"></button>
                             </div>
                         </div>
+                        <div class="toolbar-divider"></div>
+                        <div class="toolbar-group">
+                            <button type="button" class="btn-tb" onclick="zoomTextCanvas(-0.15)" title="Diminuir Zoom">🔍−</button>
+                            <button type="button" class="btn-tb" id="btn-zoom-level" onclick="resetTextZoom()" title="Ajustar à tela">Ajustar</button>
+                            <button type="button" class="btn-tb" onclick="zoomTextCanvas(0.15)" title="Aumentar Zoom">🔍＋</button>
+                        </div>
                     </div>
 
-                    <div class="text-editor-stage">
+                    <div class="text-editor-stage" id="text-editor-stage">
                         <div id="text-editor-canvas" class="text-editor-canvas" onclick="onCanvasClick(event)">
                             <img id="text-editor-bg" class="text-editor-bg" alt="Página do PDF">
                             <div id="text-editor-overlay" class="text-editor-overlay"></div>
+                            <div id="floating-text-bar" class="floating-mini-bar hidden" onclick="event.stopPropagation()">
+                                <button type="button" class="f-btn-action" onclick="adjustActiveFontSize(-1)" title="Diminuir fonte">A−</button>
+                                <span id="f-bar-size-display" style="font-weight:700; min-width:28px; text-align:center;">12pt</span>
+                                <button type="button" class="f-btn-action" onclick="adjustActiveFontSize(1)" title="Aumentar fonte">A＋</button>
+                                <div class="toolbar-divider" style="height:14px; margin:0 2px;"></div>
+                                <button type="button" class="f-color-dot active" style="background:#0f172a;" onclick="setActiveTextColor([0,0,0], this)" title="Preto"></button>
+                                <button type="button" class="f-color-dot" style="background:#2563eb;" onclick="setActiveTextColor([0.14,0.38,0.92], this)" title="Azul"></button>
+                                <button type="button" class="f-color-dot" style="background:#dc2626;" onclick="setActiveTextColor([0.86,0.15,0.15], this)" title="Vermelho"></button>
+                                <button type="button" class="f-color-dot" style="background:#16a34a;" onclick="setActiveTextColor([0.09,0.64,0.29], this)" title="Verde"></button>
+                                <div class="toolbar-divider" style="height:14px; margin:0 2px;"></div>
+                                <button type="button" class="f-btn-delete" onclick="deleteActiveText()" title="Apagar este texto do PDF">🗑️ Apagar</button>
+                                <button type="button" class="f-btn-cancel" onclick="cancelActiveEdit()" title="Cancelar (Esc)">✕</button>
+                                <button type="button" class="f-btn-confirm" onclick="confirmActiveEdit()" title="Confirmar alteração (Enter)">✓ Salvar</button>
+                            </div>
                         </div>
                     </div>
 
@@ -3883,13 +4007,70 @@ HTML_TEMPLATE = """
             updateEditorHistoryButtons();
         }
 
+        let textEditorZoom = 1.0;
+        let textEditorBaseScale = 1.0;
+        let activeEditingSpan = null;
+
+        function applyCanvasDimensions() {
+            if (!textEditorPageData) return;
+            const stage = document.getElementById('text-editor-stage');
+            const canvas = document.getElementById('text-editor-canvas');
+            const bgImg = document.getElementById('text-editor-bg');
+            if (!stage || !canvas || !bgImg) return;
+
+            const availWidth = Math.max(stage.clientWidth - 48, 300);
+            const availHeight = Math.max(stage.clientHeight - 48, 380);
+
+            textEditorBaseScale = Math.min(availWidth / textEditorPageData.page_width, availHeight / textEditorPageData.page_height);
+            const effectiveScale = textEditorBaseScale * textEditorZoom;
+
+            const canvasWidth = Math.round(textEditorPageData.page_width * effectiveScale);
+            const canvasHeight = Math.round(textEditorPageData.page_height * effectiveScale);
+
+            canvas.style.width = canvasWidth + 'px';
+            canvas.style.height = canvasHeight + 'px';
+            bgImg.style.width = canvasWidth + 'px';
+            bgImg.style.height = canvasHeight + 'px';
+
+            const zoomBtn = document.getElementById('btn-zoom-level');
+            if (zoomBtn) {
+                if (Math.abs(textEditorZoom - 1.0) < 0.05) {
+                    zoomBtn.textContent = 'Ajustar';
+                } else {
+                    zoomBtn.textContent = Math.round(textEditorZoom * 100) + '%';
+                }
+            }
+
+            if (activeEditingSpan && activeEditingSpan.element) {
+                showFloatingMiniBar(activeEditingSpan.element, activeEditingSpan.currentSize, activeEditingSpan.currentColor);
+            }
+        }
+
+        function zoomTextCanvas(delta) {
+            textEditorZoom = Math.max(0.4, Math.min(2.5, textEditorZoom + delta));
+            applyCanvasDimensions();
+        }
+
+        function resetTextZoom() {
+            textEditorZoom = 1.0;
+            applyCanvasDimensions();
+        }
+
+        window.addEventListener('resize', () => {
+            if (currentEditorMode === 'text' && textEditorPageData) {
+                applyCanvasDimensions();
+            }
+        });
+
         function prevTextPage() {
+            if (activeEditingSpan) confirmActiveEdit();
             if (textEditorPageIndex > 0) {
                 loadTextEditorPage(textEditorPageIndex - 1);
             }
         }
 
         function nextTextPage() {
+            if (activeEditingSpan) confirmActiveEdit();
             if (textEditorPageIndex < textEditorTotalPages - 1) {
                 loadTextEditorPage(textEditorPageIndex + 1);
             }
@@ -3897,64 +4078,90 @@ HTML_TEMPLATE = """
 
         function onFontSizeChange(size) {
             textEditorActiveSize = parseFloat(size) || 12;
+            if (activeEditingSpan) {
+                activeEditingSpan.currentSize = textEditorActiveSize;
+                updateActiveSpanVisualFont();
+            }
         }
 
         function selectTextColor(rgbArray, el) {
             textEditorActiveColor = rgbArray;
             document.querySelectorAll('.color-palette .color-swatch').forEach(btn => btn.classList.remove('active'));
             if (el) el.classList.add('active');
+            if (activeEditingSpan) {
+                setActiveTextColor(rgbArray);
+            }
         }
 
         function toggleAddTextMode() {
+            if (activeEditingSpan) confirmActiveEdit();
             textEditorAddMode = !textEditorAddMode;
             const btn = document.getElementById('btn-add-text-mode');
+            const canvas = document.getElementById('text-editor-canvas');
             if (textEditorAddMode) {
-                if (btn) btn.style.outline = '2px solid #2563eb';
-                showToast(t('Clique na página onde deseja adicionar o texto.', 'Click on the page where you want to add text.'), 'info');
+                if (btn) btn.classList.add('active');
+                if (canvas) canvas.style.cursor = 'crosshair';
+                showToast(t('Clique no local da página onde deseja adicionar o texto.', 'Click on the page where you want to add text.'), 'info');
             } else {
-                if (btn) btn.style.outline = 'none';
+                if (btn) btn.classList.remove('active');
+                if (canvas) canvas.style.cursor = 'default';
             }
         }
 
         function onCanvasClick(event) {
-            if (!textEditorAddMode || !textEditorPageData) return;
-            if (event.target.closest('.pdf-text-span') || event.target.closest('.pdf-floating-text')) return;
+            if (event.target.closest('#floating-text-bar')) return;
 
-            const canvas = document.getElementById('text-editor-canvas');
-            const rect = canvas.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            const clickY = event.clientY - rect.top;
+            if (textEditorAddMode && textEditorPageData) {
+                if (event.target.closest('.pdf-text-span') || event.target.closest('.pdf-floating-text')) return;
 
-            const scaleX = textEditorPageData.page_width / rect.width;
-            const scaleY = textEditorPageData.page_height / rect.height;
-            const pdfX = clickX * scaleX;
-            const pdfY = clickY * scaleY;
+                const canvas = document.getElementById('text-editor-canvas');
+                const rect = canvas.getBoundingClientRect();
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
 
-            toggleAddTextMode();
+                const scaleX = textEditorPageData.page_width / rect.width;
+                const scaleY = textEditorPageData.page_height / rect.height;
+                const pdfX = clickX * scaleX;
+                const pdfY = clickY * scaleY;
 
-            const newAddition = {
-                id: 'add-' + Date.now(),
-                page: textEditorPageIndex,
-                x: pdfX,
-                y: pdfY,
-                text: 'Novo texto',
-                font_size: textEditorActiveSize,
-                color: [...textEditorActiveColor]
-            };
-            textEditorAdditions.push(newAddition);
-            renderAdditionsOnCanvas();
+                toggleAddTextMode();
 
-            setTimeout(() => {
-                const input = document.getElementById(`input-${newAddition.id}`);
-                if (input) {
-                    input.focus();
-                    input.select();
+                const newAddition = {
+                    id: 'add-' + Date.now(),
+                    page: textEditorPageIndex,
+                    x: pdfX,
+                    y: pdfY,
+                    text: 'Novo texto',
+                    font_size: textEditorActiveSize,
+                    color: [...textEditorActiveColor]
+                };
+                textEditorAdditions.push(newAddition);
+                renderAdditionsOnCanvas();
+                updateEditorStatusInfo();
+
+                setTimeout(() => {
+                    const input = document.getElementById(`input-${newAddition.id}`);
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }, 60);
+                return;
+            }
+
+            // Clicked outside active edit: confirm it
+            if (activeEditingSpan) {
+                if (!event.target.closest('.pdf-text-span.editing')) {
+                    confirmActiveEdit();
                 }
-            }, 60);
+            }
         }
 
         async function loadTextEditorPage(pageIndex) {
             if (!textEditorFile) return;
+            if (activeEditingSpan) confirmActiveEdit();
+            hideFloatingMiniBar();
+
             const status = document.getElementById('text-editor-status');
             if (status) status.textContent = t(`Carregando página ${pageIndex + 1}...`, `Loading page ${pageIndex + 1}...`);
 
@@ -3985,10 +4192,10 @@ HTML_TEMPLATE = """
                 const bgImg = document.getElementById('text-editor-bg');
                 if (bgImg) bgImg.src = data.page_image;
 
+                applyCanvasDimensions();
                 renderTextSpans(data);
                 renderAdditionsOnCanvas();
-
-                if (status) status.textContent = t('💡 Clique diretamente sobre qualquer texto para alterar as palavras, ou use "Adicionar Novo Texto".', '💡 Click directly on any text to edit words, or use "Add New Text".');
+                updateEditorStatusInfo();
             } catch (err) {
                 if (status) status.textContent = 'Erro: ' + err.message;
                 showToast(err.message, 'error');
@@ -4022,13 +4229,17 @@ HTML_TEMPLATE = """
                 spanEl.className = 'pdf-text-span' + (existingEdit ? ' modified' : '');
                 spanEl.style.left = `${leftPct}%`;
                 spanEl.style.top = `${topPct}%`;
-                spanEl.style.width = `max(${widthPct}%, 18px)`;
-                spanEl.style.height = `max(${heightPct}%, 14px)`;
+                spanEl.style.width = `max(${widthPct}%, 20px)`;
+                spanEl.style.height = `max(${heightPct}%, 15px)`;
                 spanEl.title = `Clique para editar: "${span.text}"`;
 
                 if (existingEdit) {
-                    spanEl.textContent = existingEdit.new_text;
+                    spanEl.textContent = existingEdit.new_text || '(apagado)';
                     spanEl.style.color = `rgb(${Math.round(existingEdit.color[0]*255)}, ${Math.round(existingEdit.color[1]*255)}, ${Math.round(existingEdit.color[2]*255)})`;
+                    if (!existingEdit.new_text) {
+                        spanEl.style.fontStyle = 'italic';
+                        spanEl.style.opacity = '0.6';
+                    }
                 }
 
                 spanEl.addEventListener('click', (e) => {
@@ -4042,63 +4253,188 @@ HTML_TEMPLATE = """
         }
 
         function startEditingSpan(spanEl, span, existingEdit) {
-            const currentVal = existingEdit ? existingEdit.new_text : span.text;
+            if (activeEditingSpan) {
+                confirmActiveEdit();
+            }
+
+            const initialText = existingEdit ? existingEdit.new_text : span.text;
+            const initialSize = existingEdit ? existingEdit.font_size : span.size;
+            const initialColor = existingEdit ? existingEdit.color : (span.color || [0, 0, 0]);
+
             spanEl.classList.add('editing');
-            spanEl.innerHTML = '';
+            spanEl.textContent = '';
 
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'inline-editor';
-            input.value = currentVal;
+            input.value = initialText;
+
+            const canvas = document.getElementById('text-editor-canvas');
+            const scaleFactor = canvas ? (canvas.clientHeight / textEditorPageData.page_height) : 1;
+            input.style.fontSize = `${Math.max(12, Math.round(initialSize * scaleFactor))}px`;
+            input.style.color = `rgb(${Math.round(initialColor[0]*255)}, ${Math.round(initialColor[1]*255)}, ${Math.round(initialColor[2]*255)})`;
+
             spanEl.appendChild(input);
+
+            activeEditingSpan = {
+                element: spanEl,
+                spanData: span,
+                existingEdit: existingEdit,
+                inputEl: input,
+                currentText: initialText,
+                currentSize: initialSize,
+                currentColor: [...initialColor]
+            };
+
+            showFloatingMiniBar(spanEl, initialSize, initialColor);
 
             input.focus();
             input.select();
 
-            function commitChange() {
-                const newVal = input.value.trim();
-                spanEl.classList.remove('editing');
-                if (newVal === span.text) {
-                    textEditorEdits = textEditorEdits.filter(e =>
-                        !(e.page === textEditorPageIndex &&
-                          Math.abs(e.original_bbox[0] - span.bbox[0]) < 1 &&
-                          Math.abs(e.original_bbox[1] - span.bbox[1]) < 1)
-                    );
-                    spanEl.classList.remove('modified');
-                    spanEl.textContent = '';
-                } else if (newVal.length > 0) {
-                    spanEl.classList.add('modified');
-                    spanEl.textContent = newVal;
+            input.addEventListener('input', () => {
+                activeEditingSpan.currentText = input.value;
+            });
 
-                    textEditorEdits = textEditorEdits.filter(e =>
-                        !(e.page === textEditorPageIndex &&
-                          Math.abs(e.original_bbox[0] - span.bbox[0]) < 1 &&
-                          Math.abs(e.original_bbox[1] - span.bbox[1]) < 1)
-                    );
-
-                    textEditorEdits.push({
-                        page: textEditorPageIndex,
-                        original_bbox: span.bbox,
-                        new_text: newVal,
-                        font_size: span.size,
-                        color: textEditorActiveColor
-                    });
-
-                    spanEl.style.color = `rgb(${Math.round(textEditorActiveColor[0]*255)}, ${Math.round(textEditorActiveColor[1]*255)}, ${Math.round(textEditorActiveColor[2]*255)})`;
-                    showToast(t('Texto atualizado! Clique em "Salvar PDF" para baixar.', 'Text updated! Click "Save PDF" to download.'), 'info');
-                }
-            }
-
-            input.addEventListener('blur', commitChange);
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    input.blur();
+                    confirmActiveEdit();
                 } else if (e.key === 'Escape') {
-                    input.value = currentVal;
-                    input.blur();
+                    e.preventDefault();
+                    cancelActiveEdit();
                 }
             });
+        }
+
+        function showFloatingMiniBar(targetEl, fontSize, color) {
+            const bar = document.getElementById('floating-text-bar');
+            if (!bar) return;
+
+            const sizeDisplay = document.getElementById('f-bar-size-display');
+            if (sizeDisplay) sizeDisplay.textContent = Math.round(fontSize) + 'pt';
+
+            updateMiniBarColorSelection(color);
+
+            const canvas = document.getElementById('text-editor-canvas');
+            const targetRect = targetEl.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect();
+
+            const topPos = targetRect.top - canvasRect.top;
+            const leftPos = Math.max(4, targetRect.left - canvasRect.left);
+
+            bar.classList.remove('hidden');
+
+            if (topPos < 50) {
+                bar.classList.add('flipped-down');
+                bar.style.top = (topPos + targetRect.height + 6) + 'px';
+                bar.style.bottom = 'auto';
+            } else {
+                bar.classList.remove('flipped-down');
+                bar.style.top = (topPos - 44) + 'px';
+                bar.style.bottom = 'auto';
+            }
+            bar.style.left = leftPos + 'px';
+        }
+
+        function hideFloatingMiniBar() {
+            const bar = document.getElementById('floating-text-bar');
+            if (bar) bar.classList.add('hidden');
+        }
+
+        function updateMiniBarColorSelection(color) {
+            document.querySelectorAll('#floating-text-bar .f-color-dot').forEach(dot => dot.classList.remove('active'));
+        }
+
+        function adjustActiveFontSize(delta) {
+            if (!activeEditingSpan) return;
+            const newSize = Math.max(8, Math.min(72, activeEditingSpan.currentSize + delta * 2));
+            activeEditingSpan.currentSize = newSize;
+
+            const sizeDisplay = document.getElementById('f-bar-size-display');
+            if (sizeDisplay) sizeDisplay.textContent = Math.round(newSize) + 'pt';
+
+            updateActiveSpanVisualFont();
+        }
+
+        function updateActiveSpanVisualFont() {
+            if (!activeEditingSpan || !textEditorPageData) return;
+            const canvas = document.getElementById('text-editor-canvas');
+            const scaleFactor = canvas ? (canvas.clientHeight / textEditorPageData.page_height) : 1;
+            activeEditingSpan.inputEl.style.fontSize = `${Math.max(12, Math.round(activeEditingSpan.currentSize * scaleFactor))}px`;
+        }
+
+        function setActiveTextColor(rgbArray, el) {
+            if (!activeEditingSpan) return;
+            activeEditingSpan.currentColor = rgbArray;
+            activeEditingSpan.inputEl.style.color = `rgb(${Math.round(rgbArray[0]*255)}, ${Math.round(rgbArray[1]*255)}, ${Math.round(rgbArray[2]*255)})`;
+
+            document.querySelectorAll('#floating-text-bar .f-color-dot').forEach(dot => dot.classList.remove('active'));
+            if (el) el.classList.add('active');
+        }
+
+        function confirmActiveEdit() {
+            if (!activeEditingSpan) return;
+            const { element, spanData, inputEl, currentSize, currentColor } = activeEditingSpan;
+            const newVal = inputEl.value;
+
+            element.classList.remove('editing');
+            hideFloatingMiniBar();
+
+            textEditorEdits = textEditorEdits.filter(e =>
+                !(e.page === textEditorPageIndex &&
+                  Math.abs(e.original_bbox[0] - spanData.bbox[0]) < 1 &&
+                  Math.abs(e.original_bbox[1] - spanData.bbox[1]) < 1)
+            );
+
+            if (newVal === spanData.text) {
+                element.classList.remove('modified');
+                element.textContent = '';
+            } else {
+                element.classList.add('modified');
+                element.textContent = newVal || '(texto apagado)';
+                if (!newVal) {
+                    element.style.fontStyle = 'italic';
+                    element.style.opacity = '0.6';
+                } else {
+                    element.style.fontStyle = 'normal';
+                    element.style.opacity = '1.0';
+                }
+
+                textEditorEdits.push({
+                    page: textEditorPageIndex,
+                    original_bbox: spanData.bbox,
+                    new_text: newVal,
+                    font_size: currentSize,
+                    color: currentColor
+                });
+
+                element.style.color = `rgb(${Math.round(currentColor[0]*255)}, ${Math.round(currentColor[1]*255)}, ${Math.round(currentColor[2]*255)})`;
+                showToast(t('Texto alterado com sucesso!', 'Text modified successfully!'), 'info');
+            }
+
+            activeEditingSpan = null;
+            updateEditorStatusInfo();
+        }
+
+        function deleteActiveText() {
+            if (!activeEditingSpan) return;
+            activeEditingSpan.inputEl.value = '';
+            confirmActiveEdit();
+        }
+
+        function cancelActiveEdit() {
+            if (!activeEditingSpan) return;
+            const { element, existingEdit } = activeEditingSpan;
+            element.classList.remove('editing');
+            hideFloatingMiniBar();
+
+            if (existingEdit) {
+                element.textContent = existingEdit.new_text || '(texto apagado)';
+            } else {
+                element.textContent = '';
+                element.classList.remove('modified');
+            }
+            activeEditingSpan = null;
         }
 
         function renderAdditionsOnCanvas() {
@@ -4128,6 +4464,7 @@ HTML_TEMPLATE = """
 
                 input.addEventListener('change', () => {
                     add.text = input.value;
+                    updateEditorStatusInfo();
                 });
 
                 const delBtn = document.createElement('button');
@@ -4139,6 +4476,7 @@ HTML_TEMPLATE = """
                     e.stopPropagation();
                     textEditorAdditions = textEditorAdditions.filter(a => a.id !== add.id);
                     floatEl.remove();
+                    updateEditorStatusInfo();
                 });
 
                 floatEl.appendChild(input);
@@ -4147,8 +4485,21 @@ HTML_TEMPLATE = """
             });
         }
 
+        function updateEditorStatusInfo() {
+            const status = document.getElementById('text-editor-status');
+            if (!status) return;
+            const totalModifs = textEditorEdits.length + textEditorAdditions.length;
+            if (totalModifs > 0) {
+                status.innerHTML = `✏️ <strong>${totalModifs} alteração(ões)</strong> realizada(s). Clique em <strong>"Salvar PDF com Textos Editados"</strong> quando terminar.`;
+            } else {
+                status.textContent = t('💡 Clique diretamente sobre qualquer frase do PDF para editar, ou use "Adicionar Novo Texto".', '💡 Click directly on any PDF sentence to edit, or use "Add New Text".');
+            }
+        }
+
         async function saveAllTextEdits() {
             if (!textEditorFile) return;
+            if (activeEditingSpan) confirmActiveEdit();
+
             if (textEditorEdits.length === 0 && textEditorAdditions.length === 0) {
                 showToast(t('Nenhum texto foi alterado ainda.', 'No text has been changed yet.'), 'info');
                 return;
@@ -4897,33 +5248,41 @@ def inspect_pdf_text():
         img_bytes = pix.tobytes("jpeg", jpg_quality=85)
         page_image_b64 = f"data:image/jpeg;base64,{base64.b64encode(img_bytes).decode('ascii')}"
 
-        # Extract text blocks and spans
+        # Extract text blocks and spans grouped by line for natural, practical editing
         text_data = page.get_text("dict")
         spans = []
         span_id = 0
 
         for block in text_data.get("blocks", []):
-            if "lines" in block:
-                for line in block["lines"]:
-                    for s in line.get("spans", []):
-                        raw_text = s.get("text", "")
-                        if not raw_text.strip():
-                            continue
-                        bbox = list(s.get("bbox", [0, 0, 0, 0]))
-                        raw_col = s.get("color", 0)
-                        r = ((raw_col >> 16) & 255) / 255.0
-                        g = ((raw_col >> 8) & 255) / 255.0
-                        b = (raw_col & 255) / 255.0
+            if "lines" not in block:
+                continue
+            for line in block["lines"]:
+                line_spans = [s for s in line.get("spans", []) if s.get("text", "").strip()]
+                if not line_spans:
+                    continue
 
-                        spans.append({
-                            "id": f"span-{span_id}",
-                            "text": raw_text,
-                            "bbox": [round(c, 2) for c in bbox],
-                            "size": round(s.get("size", 12.0), 1),
-                            "font": s.get("font", "Helvetica"),
-                            "color": [round(r, 2), round(g, 2), round(b, 2)],
-                        })
-                        span_id += 1
+                line_bbox = list(line.get("bbox", [0, 0, 0, 0]))
+                line_text = "".join(s.get("text", "") for s in line.get("spans", []))
+                if not line_text.strip():
+                    continue
+
+                main_span = max(line_spans, key=lambda s: len(s.get("text", "")))
+                font_size = round(main_span.get("size", 12.0), 1)
+                font_name = main_span.get("font", "Helvetica")
+                raw_col = main_span.get("color", 0)
+                r = ((raw_col >> 16) & 255) / 255.0
+                g = ((raw_col >> 8) & 255) / 255.0
+                b = (raw_col & 255) / 255.0
+
+                spans.append({
+                    "id": f"span-{span_id}",
+                    "text": line_text,
+                    "bbox": [round(c, 2) for c in line_bbox],
+                    "size": font_size,
+                    "font": font_name,
+                    "color": [round(r, 2), round(g, 2), round(b, 2)],
+                })
+                span_id += 1
 
         doc.close()
 
@@ -5000,8 +5359,10 @@ def apply_pdf_text_edits():
                     col = ed.get("color", [0, 0, 0])
                     color_tuple = (float(col[0]), float(col[1]), float(col[2])) if len(col) == 3 else (0, 0, 0)
 
-                    if bbox and len(bbox) == 4 and new_text:
-                        rect = fitz.Rect(bbox[0], bbox[1], max(bbox[2] + 80, bbox[0] + len(new_text) * (font_size * 0.7)), bbox[3] + 4)
+                    if bbox and len(bbox) == 4 and new_text and new_text.strip():
+                        calc_w = max(bbox[2] - bbox[0] + 120, len(new_text) * (font_size * 0.8))
+                        calc_h = max(bbox[3] - bbox[1] + 8, font_size * 1.6)
+                        rect = fitz.Rect(bbox[0], bbox[1], bbox[0] + calc_w, bbox[1] + calc_h)
                         page.insert_textbox(rect, new_text, fontname="helv", fontsize=font_size, color=color_tuple)
 
             # 2. Insert additions
@@ -5013,8 +5374,11 @@ def apply_pdf_text_edits():
                     font_size = float(add.get("font_size", 14.0))
                     col = add.get("color", [0, 0, 0])
                     color_tuple = (float(col[0]), float(col[1]), float(col[2])) if len(col) == 3 else (0, 0, 0)
-                    if text:
-                        page.insert_text((x, y), text, fontname="helv", fontsize=font_size, color=color_tuple)
+                    if text and text.strip():
+                        calc_w = max(200.0, len(text) * (font_size * 0.8))
+                        calc_h = max(30.0, font_size * 1.6)
+                        rect = fitz.Rect(x, y, x + calc_w, y + calc_h)
+                        page.insert_textbox(rect, text, fontname="helv", fontsize=font_size, color=color_tuple)
 
         output_stream = io.BytesIO()
         doc.save(output_stream, garbage=3, deflate=True)
