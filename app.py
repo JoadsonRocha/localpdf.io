@@ -1537,6 +1537,279 @@ HTML_TEMPLATE = """
             border-color: var(--border-subtle) !important;
             color: var(--text-primary) !important;
         }
+
+        /* ── In-Place Text Editor (WPS Style) ─────────────────────── */
+        .editor-header-flex {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        .editor-mode-tabs {
+            display: inline-flex;
+            background: var(--bg-surface-subtle);
+            padding: 4px;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            gap: 4px;
+        }
+        .editor-mode-tab {
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            padding: 7px 16px;
+            border-radius: 999px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .editor-mode-tab.active {
+            background: var(--bg-surface);
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+        body.dark-theme .editor-mode-tab.active {
+            background: var(--bg-surface-elevated);
+            color: var(--primary);
+        }
+        .text-editor-studio {
+            margin-top: 18px;
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 18px;
+        }
+        .text-editor-toolbar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+        }
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-subtle);
+            margin: 0 4px;
+        }
+        .btn-tb {
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-tb:hover {
+            border-color: var(--border-hover);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .btn-tb.btn-action.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+        }
+        .tb-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .tb-select {
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 0.84rem;
+            font-family: inherit;
+        }
+        .color-palette {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .color-swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .color-swatch:hover {
+            transform: scale(1.18);
+        }
+        .color-swatch.active {
+            border-color: var(--text-primary);
+            box-shadow: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--primary);
+        }
+        .text-editor-stage {
+            max-height: 70vh;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            padding: 20px 10px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 10px;
+        }
+        body.dark-theme .text-editor-stage {
+            background: rgba(0,0,0,0.3);
+        }
+        .text-editor-canvas {
+            position: relative;
+            background: #ffffff;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            line-height: 0;
+            max-width: 100%;
+        }
+        .text-editor-bg {
+            display: block;
+            width: 100%;
+            height: auto;
+            user-select: none;
+            pointer-events: none;
+        }
+        .text-editor-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: auto;
+        }
+        .pdf-text-span {
+            position: absolute;
+            box-sizing: border-box;
+            border: 1px dashed rgba(37,99,235,0.25);
+            background: rgba(255,255,255,0.01);
+            cursor: text;
+            transition: all 0.15s ease;
+            overflow: visible;
+            white-space: pre;
+            line-height: 1.1;
+        }
+        .pdf-text-span:hover {
+            border-color: #2563eb;
+            background: rgba(37,99,235,0.08);
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+        }
+        .pdf-text-span.editing {
+            border: 1.5px solid #2563eb;
+            background: #ffffff;
+            z-index: 50;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+            outline: none;
+        }
+        .pdf-text-span.modified {
+            border: 1px solid #10b981;
+            background: rgba(16,185,129,0.12);
+        }
+        .pdf-text-span input.inline-editor {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #ffffff;
+            color: #0f172a;
+            font-family: inherit;
+            outline: none;
+            padding: 0 4px;
+            box-sizing: border-box;
+        }
+        .pdf-floating-text {
+            position: absolute;
+            background: #ffffff;
+            border: 1.5px solid #2563eb;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            padding: 4px 8px;
+            z-index: 60;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pdf-floating-text input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-weight: 600;
+        }
+        .pdf-floating-text button.btn-del-addition {
+            border: none;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .text-editor-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-subtle);
+        }
+        .text-editor-status {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .text-editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .text-editor-actions button.primary {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px var(--primary-ring);
+        }
+        .text-editor-actions button.primary:hover {
+            background: var(--primary-hover);
+        }
+        .text-editor-actions button.secondary {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 600;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -4066,6 +4339,182 @@ def preview_page():
         return jsonify({"error": "Não foi possível gerar o preview."}), 500
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@app.route("/api/pdf/inspect-text", methods=["POST"])
+def inspect_pdf_text():
+    """Inspects a PDF page, returning:
+    - total_pages, page_index, page_width, page_height
+    - page_image: base64 rendered JPEG of the page for high-res canvas display
+    - spans: list of text spans with { id, text, bbox: [x0, y0, x1, y1], size, font, color }
+    """
+    file = request.files.get("file")
+    if not file or not file.filename:
+        return jsonify({"error": "Nenhum arquivo enviado."}), 400
+    filename = secure_filename(file.filename)
+    if not filename.lower().endswith(".pdf"):
+        return jsonify({"error": "Apenas arquivos PDF são aceitos."}), 400
+
+    page_index = int(request.form.get("page", 0))
+
+    try:
+        pdf_bytes = file.read()
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        total_pages = len(doc)
+        if page_index < 0 or page_index >= total_pages:
+            page_index = 0
+
+        page = doc[page_index]
+        rect = page.rect
+        page_width = rect.width
+        page_height = rect.height
+
+        # Render high-res page image for visual canvas background
+        zoom = 2.0  # 2x scale for crisp text display on canvas
+        mat = fitz.Matrix(zoom, zoom)
+        pix = page.get_pixmap(matrix=mat, alpha=False)
+        img_bytes = pix.tobytes("jpeg", jpg_quality=85)
+        page_image_b64 = f"data:image/jpeg;base64,{base64.b64encode(img_bytes).decode('ascii')}"
+
+        # Extract text blocks and spans
+        text_data = page.get_text("dict")
+        spans = []
+        span_id = 0
+
+        for block in text_data.get("blocks", []):
+            if "lines" in block:
+                for line in block["lines"]:
+                    for s in line.get("spans", []):
+                        raw_text = s.get("text", "")
+                        if not raw_text.strip():
+                            continue
+                        bbox = list(s.get("bbox", [0, 0, 0, 0]))
+                        raw_col = s.get("color", 0)
+                        r = ((raw_col >> 16) & 255) / 255.0
+                        g = ((raw_col >> 8) & 255) / 255.0
+                        b = (raw_col & 255) / 255.0
+
+                        spans.append({
+                            "id": f"span-{span_id}",
+                            "text": raw_text,
+                            "bbox": [round(c, 2) for c in bbox],
+                            "size": round(s.get("size", 12.0), 1),
+                            "font": s.get("font", "Helvetica"),
+                            "color": [round(r, 2), round(g, 2), round(b, 2)],
+                        })
+                        span_id += 1
+
+        doc.close()
+
+        return jsonify({
+            "success": True,
+            "filename": filename,
+            "total_pages": total_pages,
+            "page_index": page_index,
+            "page_width": round(page_width, 1),
+            "page_height": round(page_height, 1),
+            "page_image": page_image_b64,
+            "spans": spans,
+        })
+    except Exception as e:
+        app.logger.exception("Erro ao inspecionar PDF")
+        return jsonify({"error": f"Erro ao inspecionar PDF: {str(e)}"}), 500
+
+
+@app.route("/api/pdf/apply-text-edits", methods=["POST"])
+def apply_pdf_text_edits():
+    """Applies vector redaction to modified text spans, inserts replacement text,
+    and inserts new text additions. Returns the modified PDF without rasterization.
+    """
+    file = request.files.get("file")
+    if not file or not file.filename:
+        return jsonify({"error": "Nenhum arquivo enviado."}), 400
+    filename = secure_filename(file.filename)
+    if not filename.lower().endswith(".pdf"):
+        return jsonify({"error": "Apenas arquivos PDF são aceitos."}), 400
+
+    edits_raw = request.form.get("edits", "[]")
+    additions_raw = request.form.get("additions", "[]")
+
+    try:
+        edits = json.loads(edits_raw) if edits_raw else []
+        additions = json.loads(additions_raw) if additions_raw else []
+    except Exception:
+        return jsonify({"error": "Formato de dados JSON inválido."}), 400
+
+    try:
+        pdf_bytes = file.read()
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+
+        # Group edits and additions by page
+        edits_by_page = {}
+        for ed in edits:
+            p = int(ed.get("page", 0))
+            edits_by_page.setdefault(p, []).append(ed)
+
+        additions_by_page = {}
+        for add in additions:
+            p = int(add.get("page", 0))
+            additions_by_page.setdefault(p, []).append(add)
+
+        for page_idx in range(len(doc)):
+            page = doc[page_idx]
+            page_edits = edits_by_page.get(page_idx, [])
+            page_adds = additions_by_page.get(page_idx, [])
+
+            # 1. Apply redactions for modified spans
+            if page_edits:
+                for ed in page_edits:
+                    bbox = ed.get("original_bbox")
+                    if bbox and len(bbox) == 4:
+                        rect = fitz.Rect(bbox[0] - 0.5, bbox[1] - 0.5, bbox[2] + 0.5, bbox[3] + 0.5)
+                        page.add_redact_annot(rect, fill=(1, 1, 1))
+                page.apply_redactions()
+
+                # Insert new replacement text
+                for ed in page_edits:
+                    bbox = ed.get("original_bbox")
+                    new_text = ed.get("new_text", "")
+                    font_size = float(ed.get("font_size", 12.0))
+                    col = ed.get("color", [0, 0, 0])
+                    color_tuple = (float(col[0]), float(col[1]), float(col[2])) if len(col) == 3 else (0, 0, 0)
+
+                    if bbox and len(bbox) == 4 and new_text:
+                        rect = fitz.Rect(bbox[0], bbox[1], max(bbox[2] + 80, bbox[0] + len(new_text) * (font_size * 0.7)), bbox[3] + 4)
+                        page.insert_textbox(rect, new_text, fontname="helv", fontsize=font_size, color=color_tuple)
+
+            # 2. Insert additions
+            if page_adds:
+                for add in page_adds:
+                    x = float(add.get("x", 50))
+                    y = float(add.get("y", 50))
+                    text = add.get("text", "")
+                    font_size = float(add.get("font_size", 14.0))
+                    col = add.get("color", [0, 0, 0])
+                    color_tuple = (float(col[0]), float(col[1]), float(col[2])) if len(col) == 3 else (0, 0, 0)
+                    if text:
+                        page.insert_text((x, y), text, fontname="helv", fontsize=font_size, color=color_tuple)
+
+        output_stream = io.BytesIO()
+        doc.save(output_stream, garbage=3, deflate=True)
+        doc.close()
+        output_stream.seek(0)
+
+        out_name = f"{os.path.splitext(filename)[0]}_editado.pdf"
+        response = send_file(
+            output_stream,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=out_name,
+        )
+        response.headers["Content-Disposition"] = f'attachment; filename="{out_name}"'
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        return response
+    except Exception as e:
+        app.logger.exception("Erro ao aplicar edições no PDF")
+        return jsonify({"error": f"Erro ao aplicar edições no PDF: {str(e)}"}), 500
 # ── Desktop Integration Endpoints (Local Mode Only) ─────────────────────────
 DESKTOP_ALLOWED_EXTENSIONS = ALLOWED_EXTENSIONS | {"zip"}
 
